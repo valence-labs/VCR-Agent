@@ -1,0 +1,14 @@
+[project]
+name = "hooke-explain"
+version = "0.1.0"
+description = "Global repository for the Hooke Explain project"
+readme = "README.md"
+authors = [
+    {name = "Recursion Pharmaceuticals", email = "devs@recursionpharma.com"},
+]
+requires-python = ">=3.12,<3.13"
+
+dependencies = [
+  "numpy",
+  "gitingest",
+]
