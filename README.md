@@ -2,8 +2,15 @@
 [![scorecard-status](https://github.com/recursionpharma/octo-guard-badges/blob/trunk/badges/repo/hooke-explain/scorecard_status.svg?raw=true)](https://infosec-docs.prod.rxrx.io/octoguard/scorecards/hooke-explain)
 
 # hooke-explain
-The codebase for the explain component of Hooke
+We are building hooke-explain!
 
+
+## Repository Structure
+
+This repository is organized into several key directories:
+
+*   `src/`: Contains the installable source code for the `hooke-explain` package.
+*   `tests/`: Contains unit tests for the project.
 
 
 ## Installation:
