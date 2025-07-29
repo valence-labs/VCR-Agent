@@ -1,6 +1,5 @@
 [![scorecard-score](https://github.com/recursionpharma/octo-guard-badges/blob/trunk/badges/repo/hooke-explain/maturity_score.svg?raw=true)](https://infosec-docs.prod.rxrx.io/octoguard/scorecards/hooke-explain)
 [![scorecard-status](https://github.com/recursionpharma/octo-guard-badges/blob/trunk/badges/repo/hooke-explain/scorecard_status.svg?raw=true)](https://infosec-docs.prod.rxrx.io/octoguard/scorecards/hooke-explain)
-[![team-status](https://github.com/recursionpharma/octo-guard-badges/blob/trunk/badges/team/None/team_status.svg?raw=true)](https://infosec-docs.prod.rxrx.io/octoguard/team-reports/None)
 
 # hooke-explain
 The codebase for the explain component of Hooke
