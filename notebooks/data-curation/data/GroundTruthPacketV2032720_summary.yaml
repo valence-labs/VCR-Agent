@@ -1,0 +1,1639 @@
+Angiogenic factor/tumors:
+  HGNC gene names:
+  - VEGFA
+  - FLT1
+  - KDR
+  - FLT4
+  - PIK3C3
+  - PIK3CD
+  - PIK3CA
+  - PIK3CB
+  - PIK3CG
+  - PIK3C2A
+  - PIK3C2B
+  - PIK3C2G
+  - PTEN
+  - PDPK1
+  - AKT1
+  - AKT2
+  - AKT3
+  - TSC2
+  - Rheb
+  - mTOR
+  - EGF
+  - EGFR
+  drug:
+  - Bevacizumab:
+      target: VEGFR
+      type: antibody
+  - Nintedanib:
+      rec_id: REC-1169677
+      smiles_pubchem: CN1CCN(CC1)CC(=O)N(C)C2=CC=C(C=C2)N=C(C3=CC=CC=C3)C4=C(NC5=C4C=CC(=C5)C(=O)OC)O
+      smiles_rxrx: COC(=O)C1=CC2=C(C=C1)C(C(=NC1=CC=C(C=C1)N(C)C(=O)CN1CCN(C)CC1)C1=CC=CC=C1)=C(O)N2
+      target: VEGFR
+      type: inhibitor
+  - Apatinib:
+      rec_id: .nan
+      smiles_pubchem: CS(=O)(=O)O.C1CCC(C1)(C#N)C2=CC=C(C=C2)NC(=O)C3=C(N=CC=C3)NCC4=CC=NC=C4
+      smiles_rxrx: .nan
+      target: VEGFR
+      type: inhibitor
+  - Lenvatinib:
+      rec_id: REC-0000545
+      smiles_pubchem: COC1=CC2=NC=CC(=C2C=C1C(=O)N)OC3=CC(=C(C=C3)NC(=O)NC4CC4)Cl
+      smiles_rxrx: COC1=C(C(N)=O)C=C2C(OC3=CC(Cl)=C(NC(=O)NC4CC4)C=C3)=CC=NC2=C1
+      target: VEGFR
+      type: inhibitor
+  - Motesanib:
+      rec_id: REC-0000881
+      smiles_pubchem: CC1(CNC2=C1C=CC(=C2)NC(=O)C3=C(N=CC=C3)NCC4=CC=NC=C4)C
+      smiles_rxrx: CC1(C)CNC2=CC(NC(=O)C3=C(NCC4=CC=NC=C4)N=CC=C3)=CC=C12
+      target: VEGFR
+      type: inhibitor
+  - Sunitinib:
+      rec_id: REC-0000776
+      smiles_pubchem: CCN(CC)CCNC(=O)C1=C(NC(=C1C)/C=C\2/C3=C(C=CC(=C3)F)NC2=O)C
+      smiles_rxrx: CCN(CC)CCNC(=O)C1=C(C)NC(/C=C2\C(=O)NC3=CC=C(F)C=C23)=C1C
+      target: VEGFR
+      type: inhibitor
+  - Ponatinib:
+      rec_id: REC-0001616
+      smiles_pubchem: CC1=C(C=C(C=C1)C(=O)NC2=CC(=C(C=C2)CN3CCN(CC3)C)C(F)(F)F)C#CC4=CN=C5N4N=CC=C5
+      smiles_rxrx: CN1CCN(CC2=C(C(F)(F)F)C=C(NC(=O)C3=CC(C#CC4=CN=C5C=CC=NN45)=C(C)C=C3)C=C2)CC1
+      target: VEGFR
+      type: inhibitor
+  - Regorafenib:
+      rec_id: REC-0001441
+      smiles_pubchem: CNC(=O)C1=NC=CC(=C1)OC2=CC(=C(C=C2)NC(=O)NC3=CC(=C(C=C3)Cl)C(F)(F)F)F
+      smiles_rxrx: CNC(=O)C1=CC(OC2=CC(F)=C(NC(=O)NC3=CC=C(Cl)C(C(F)(F)F)=C3)C=C2)=CC=N1
+      target: VEGFR
+      type: inhibitor
+  - RAF265:
+      rec_id: REC-0001511
+      smiles_pubchem: CN1C2=C(C=C(C=C2)OC3=CC(=NC=C3)C4=NC=C(N4)C(F)(F)F)N=C1NC5=CC=C(C=C5)C(F)(F)F
+      smiles_rxrx: CN1C(NC2=CC=C(C(F)(F)F)C=C2)=NC2=C1C=CC(OC1=CC=NC(C3=NC=C(C(F)(F)F)N3)=C1)=C2
+      target: VEGFR
+      type: inhibitor
+  - Pazopanib:
+      rec_id: REC-0000907
+      smiles_pubchem: CC1=C(C=C(C=C1)NC2=NC=CC(=N2)N(C)C3=CC4=NN(C(=C4C=C3)C)C)S(=O)(=O)N
+      smiles_rxrx: CN(C1=CC2=NN(C)C(C)=C2C=C1)C1=NC(NC2=CC=C(C)C(S(N)(=O)=O)=C2)=NC=C1
+      target: VEGFR
+      type: inhibitor
+  - Sorafenib:
+      rec_id: REC-0000764
+      smiles_pubchem: CNC(=O)C1=NC=CC(=C1)OC2=CC=C(C=C2)NC(=O)NC3=CC(=C(C=C3)Cl)C(F)(F)F
+      smiles_rxrx: CNC(=O)C1=CC(OC2=CC=C(NC(=O)NC3=CC=C(Cl)C(C(F)(F)F)=C3)C=C2)=CC=N1
+      target: VEGFR
+      type: inhibitor
+  - Axitinib:
+      rec_id: REC-0000850
+      smiles_pubchem: CNC(=O)C1=CC=CC=C1SC2=CC3=C(C=C2)C(=NN3)/C=C/C4=CC=CC=N4
+      smiles_rxrx: CNC(=O)C1=CC=CC=C1SC1=CC2=C(C=C1)C(/C=C/C1=CC=CC=N1)=NN2
+      target: VEGFR
+      type: inhibitor
+  - Tivozanib:
+      rec_id: REC-0000702
+      smiles_pubchem: CC1=CC(=NO1)NC(=O)NC2=C(C=C(C=C2)OC3=C4C=C(C(=CC4=NC=C3)OC)OC)Cl
+      smiles_rxrx: COC1=CC2=C(C=C1OC)C(OC1=CC=C(NC(=O)NC3=NOC(C)=C3)C(Cl)=C1)=CC=N2
+      target: VEGFR
+      type: inhibitor
+  - Vandetanib:
+      rec_id: REC-0001485
+      smiles_pubchem: CN1CCC(CC1)COC2=C(C=C3C(=C2)N=CN=C3NC4=C(C=C(C=C4)Br)F)OC
+      smiles_rxrx: COC1=CC2=C(C=C1OCC1CCN(C)CC1)N=CN=C2NC1=C(F)C=C(Br)C=C1
+      target: VEGFR
+      type: inhibitor
+  - Cabozantinib:
+      rec_id: REC-0001482
+      smiles_pubchem: COC1=CC2=C(C=CN=C2C=C1OC)OC3=CC=C(C=C3)NC(=O)C4(CC4)C(=O)NC5=CC=C(C=C5)F
+      smiles_rxrx: COC1=CC2=C(C=C1OC)C(OC1=CC=C(NC(=O)C3(C(=O)NC4=CC=C(F)C=C4)CC3)C=C1)=CC=N2
+      target: VEGFR
+      type: inhibitor
+  - Linifanib:
+      rec_id: REC-0001529
+      smiles_pubchem: CC1=CC(=C(C=C1)F)NC(=O)NC2=CC=C(C=C2)C3=C4C(=CC=C3)NN=C4N
+      smiles_rxrx: CC1=CC(NC(=O)NC2=CC=C(C3=C4C(N)=NNC4=CC=C3)C=C2)=C(F)C=C1
+      target: VEGFR
+      type: inhibitor
+  - Dovitinib:
+      rec_id: .nan
+      smiles_pubchem: CN1CCN(CC1)C2=CC3=C(C=C2)N=C(N3)C4=C(C5=C(C=CC=C5F)NC4=O)N
+      smiles_rxrx: .nan
+      target: VEGFR
+      type: inhibitor
+  - Semaxanib:
+      rec_id: REC-0001322
+      smiles_pubchem: CC1=CC(=C(N1)/C=C\2/C3=CC=CC=C3NC2=O)C
+      smiles_rxrx: CC1=CC(C)=C(/C=C2\C(=O)NC3=CC=CC=C23)N1
+      target: VEGFR
+      type: inhibitor
+  - Vatalanib:
+      rec_id: REC-0000790
+      smiles_pubchem: C1=CC=C2C(=C1)C(=NN=C2NC3=CC=C(C=C3)Cl)CC4=CC=NC=C4
+      smiles_rxrx: ClC1=CC=C(NC2=NN=C(CC3=CC=NC=C3)C3=CC=CC=C23)C=C1
+      target: VEGFR
+      type: inhibitor
+  - Brivanib:
+      rec_id: REC-0001478
+      smiles_pubchem: CC1=CC2=C(N1)C=CC(=C2F)OC3=NC=NN4C3=C(C(=C4)OC[C@@H](C)O)C
+      smiles_rxrx: C[C@@H](O)COC1=CN2N=CN=C(OC3=C(F)C4=C(NC(C)=C4)C=C3)C2=C1C
+      target: VEGFR
+      type: inhibitor
+  - Golvatinib:
+      rec_id: REC-0001171
+      smiles_pubchem: CN1CCN(CC1)C2CCN(CC2)C(=O)NC3=NC=CC(=C3)OC4=CC(=C(C=C4)NC(=O)C5(CC5)C(=O)NC6=CC=C(C=C6)F)F
+      smiles_rxrx: CN1CCN(C2CCN(C(=O)NC3=NC=CC(OC4=CC(F)=C(NC(=O)C5(C(=O)NC6=CC=C(F)C=C6)CC5)C=C4)=C3)CC2)CC1
+      target: VEGFR
+      type: inhibitor
+  - Cediranib:
+      rec_id: REC-0000547
+      smiles_pubchem: CC1=CC2=C(N1)C=CC(=C2F)OC3=NC=NC4=CC(=C(C=C43)OC)OCCCN5CCCC5
+      smiles_rxrx: COC1=C(OCCCN2CCCC2)C=C2N=CN=C(OC3=C(F)C4=C(NC(C)=C4)C=C3)C2=C1
+      target: VEGFR
+      type: inhibitor
+  - Foretinib:
+      rec_id: REC-0000746
+      smiles_pubchem: COC1=CC2=C(C=CN=C2C=C1OCCCN3CCOCC3)OC4=C(C=C(C=C4)NC(=O)C5(CC5)C(=O)NC6=CC=C(C=C6)F)F
+      smiles_rxrx: COC1=CC2=C(C=C1OCCCN1CCOCC1)N=CC=C2OC1=C(F)C=C(NC(=O)C2(C(=O)NC3=CC=C(F)C=C3)CC2)C=C1
+      target: VEGFR
+      type: inhibitor
+  pathway:
+  - VEGF
+  - VEGFR
+  - PI-3K
+  - PTEN
+  - PDPK1
+  - AKT
+  - TSC2
+  - Rheb
+  - mTOR
+  - EGF
+  - EGFR
+  perturbation:
+    gene: VEGF
+    name: Soluble factor addition of VEGF
+    rec_id: REC-SF-00432
+    type: soluble factor
+Asthma and allergy - IL-13:
+  HGNC gene names:
+  - IL4
+  - IL4R
+  - IL2RG
+  - JAK1
+  - JAK2
+  - JAK3
+  - STAT1
+  - STAT2
+  - STAT3
+  - STAT4
+  - STAT5A
+  - STAT5B
+  - STAT6
+  - IL13
+  - IL13RA1
+  - IL6
+  - IL6R
+  - IL6ST
+  drug:
+  - Lebrikizumab:
+      target: IL13
+      type: antibody
+  - CNT0607:
+      target: IL13
+      type: antibody
+  - Tofacitinib:
+      rec_id: REC-2121622
+      smiles_pubchem: C[C@@H]1CCN(C[C@@H]1N(C)C2=NC=NC3=C2C=CN3)C(=O)CC#N
+      smiles_rxrx: C[C@@H]1CCN(C(=O)CC#N)C[C@@H]1N(C)C1=C2C=CNC2=NC=N1
+      target: JAK
+      type: inhibitor
+  - Peficitinib:
+      rec_id: .nan
+      smiles_pubchem: C1[C@@H]2CC3(C[C@@H](C2NC4=C5C=CNC5=NC=C4C(=O)N)CC1C3)O
+      smiles_rxrx: .nan
+      target: JAK
+      type: inhibitor
+  - Ruxolitinib:
+      rec_id: REC-0000267
+      smiles_pubchem: C1CCC(C1)[C@@H](CC#N)N2C=C(C=N2)C3=C4C=CNC4=NC=N3
+      smiles_rxrx: C1(C2=CN([C@@H](C3CCCC3)CC#N)N=C2)=NC=NC2=C1C=CN2
+      target: JAK
+      type: inhibitor
+  - Baricitinib:
+      rec_id: REC-0001884
+      smiles_pubchem: CCS(=O)(=O)N1CC(C1)(CC#N)N2C=C(C=N2)C3=C4C=CNC4=NC=N3
+      smiles_rxrx: CCS(=O)(=O)N1CC(CC#N)(N2C=C(C3=C4C=CNC4=NC=N3)C=N2)C1
+      target: JAK
+      type: inhibitor
+  - Oclacitinib:
+      rec_id: REC-0005428
+      smiles_pubchem: CNS(=O)(=O)CC1CCC(CC1)N(C)C2=NC=NC3=C2C=CN3
+      smiles_rxrx: CNS(=O)(=O)CC1CCC(CC1)N(C)C1=NC=NC2=C1C=CN2
+      target: JAK
+      type: inhibitor
+  - Solcitinib:
+      rec_id: REC-0064467
+      smiles_pubchem: CC1(CN(C1)C(=O)C2=CC=C(C=C2)C3=CC=CC4=NC(=NN43)NC(=O)C5CC5)C
+      smiles_rxrx: CC1(C)CN(C(=O)C2=CC=C(C3=CC=CC4=NC(NC(=O)C5CC5)=NN34)C=C2)C1
+      target: JAK
+      type: inhibitor
+  - TG 101348:
+      rec_id: REC-0000750
+      smiles_pubchem: CC1=CN=C(N=C1NC2=CC(=CC=C2)S(=O)(=O)NC(C)(C)C)NC3=CC=C(C=C3)OCCN4CCCC4
+      smiles_rxrx: CC1=C(NC2=CC=CC(S(=O)(=O)NC(C)(C)C)=C2)N=C(NC2=CC=C(OCCN3CCCC3)C=C2)N=C1
+      target: JAK
+      type: inhibitor
+  - NVP-BSK 805:
+      rec_id: null
+      smiles_rxrx: null
+      target: JAK
+      type: inhibitor
+  - LY 2784544:
+      rec_id: REC-0001556
+      smiles_pubchem: CC1=CC(=NN1)NC2=NN3C(=C(N=C3C(=C2)CN4CCOCC4)C)CC5=C(C=C(C=C5)Cl)F
+      smiles_rxrx: CC1=NNC(NC2=NN3C(CC4=CC=C(Cl)C=C4F)=C(C)N=C3C(CN3CCOCC3)=C2)=C1
+      target: JAK
+      type: inhibitor
+  - Filgotinib:
+      rec_id: REC-0001615
+      smiles_pubchem: C1CC1C(=O)NC2=NN3C(=N2)C=CC=C3C4=CC=C(C=C4)CN5CCS(=O)(=O)CC5
+      smiles_rxrx: O=C(NC1=NN2C(=N1)C=CC=C2C1=CC=C(CN2CCS(=O)(=O)CC2)C=C1)C1CC1
+      target: JAK
+      type: inhibitor
+  - Decernotinib:
+      rec_id: REC-0003935
+      smiles_pubchem: CC[C@](C)(C(=O)NCC(F)(F)F)NC1=NC(=NC=C1)C2=CNC3=C2C=CC=N3
+      smiles_rxrx: CC[C@@](C)(NC1=NC(C2=CNC3=NC=CC=C23)=NC=C1)C(=O)NCC(F)(F)F
+      target: JAK
+      type: inhibitor
+  - CYT387:
+      rec_id: REC-0001152
+      smiles_pubchem: C1COCCN1C2=CC=C(C=C2)NC3=NC=CC(=N3)C4=CC=C(C=C4)C(=O)NCC#N
+      smiles_rxrx: O=C(NCC#N)C1=CC=C(C2=NC(NC3=CC=C(N4CCOCC4)C=C3)=NC=C2)C=C1
+      target: JAK
+      type: inhibitor
+  - Cerdulatinib:
+      rec_id: REC-0001886
+      smiles_pubchem: CCS(=O)(=O)N1CCN(CC1)C2=CC=C(C=C2)NC3=NC=C(C(=N3)NC4CC4)C(=O)N
+      smiles_rxrx: CCS(=O)(=O)N1CCN(C2=CC=C(NC3=NC=C(C(N)=O)C(NC4CC4)=N3)C=C2)CC1
+      target: JAK
+      type: inhibitor
+  - AZ 960:
+      rec_id: REC-0001076
+      smiles_pubchem: CC1=CC(=NN1)NC2=C(C=C(C(=N2)N[C@@H](C)C3=CC=C(C=C3)F)C#N)F
+      smiles_rxrx: C[C@H](NC1=NC(NC2=NNC(C)=C2)=C(F)C=C1C#N)C1=CC=C(F)C=C1
+      target: JAK
+      type: inhibitor
+  - CEP 33779:
+      target: JAK
+      type: inhibitor
+  - TG 101209:
+      rec_id: REC-0001084
+      smiles_pubchem: CC1=CN=C(N=C1NC2=CC(=CC=C2)S(=O)(=O)NC(C)(C)C)NC3=CC=C(C=C3)N4CCN(CC4)C
+      smiles_rxrx: CN1CCN(C2=CC=C(NC3=NC=C(C)C(NC4=CC(S(=O)(=O)NC(C)(C)C)=CC=C4)=N3)C=C2)CC1
+      target: JAK
+      type: inhibitor
+  pathway:
+  - IL-4
+  - IL-4 receptor alpha
+  - yC
+  - JAK
+  - STAT
+  - IL-13
+  - IL-13 receptor alpha1
+  - IL-6
+  - IL-6 receptor
+  perturbation:
+    gene: IL13
+    name: Soluble factor addition of IL-13
+    rec_id: REC-SF-01154
+    type: soluble factor
+Buschke-Ollendorff syndrome:
+  HGNC gene names:
+  - TGFBR1
+  - TGFBR2
+  - TGFBR3
+  - SMAD2
+  - SMAD3
+  - SMAD4
+  - LEMD3
+  drug:
+  - LY2157299:
+      rec_id: REC-0000843
+      smiles_pubchem: CC1=NC(=CC=C1)C2=NN3CCCC3=C2C4=C5C=C(C=CC5=NC=C4)C(=O)N
+      smiles_rxrx: CC1=CC=CC(C2=NN3CCCC3=C2C2=CC=NC3=C2C=C(C(N)=O)C=C3)=N1
+      target: ALK5
+      type: inhibitor
+  - EW-7197:
+      rec_id: null
+      smiles_rxrx: null
+      target: ALK5
+      type: inhibitor
+  - SD-208:
+      target: ALK5
+      type: inhibitor
+  - GW788388:
+      rec_id: REC-0000430
+      smiles_pubchem: C1COCCC1NC(=O)C2=CC=C(C=C2)C3=NC=CC(=C3)C4=C(NN=C4)C5=CC=CC=N5
+      smiles_rxrx: O=C(NC1CCOCC1)C1=CC=C(C2=NC=CC(C3=CNN=C3C3=NC=CC=C3)=C2)C=C1
+      target: ALK5
+      type: inhibitor
+  pathway:
+  - TGF beta receptor
+  - SMAD2
+  - SMAD3
+  - SMAD4
+  - LEMD3
+  perturbation:
+    gene: LEMD3
+    name: CRISPR knockdown of the LEMD3 gene
+    type: loss-of-function
+Cowden syndrome:
+  HGNC gene names:
+  - EGFR
+  - FLT1
+  - KDR
+  - FLT4
+  - PTEN
+  - PIK3C3
+  - PIK3CD
+  - PIK3CA
+  - PIK3CB
+  - PIK3CG
+  - PIK3C2A
+  - PIK3C2B
+  - PIK3C2G
+  - PDPK1
+  - AKT1
+  - AKT2
+  - AKT3
+  - TSC2
+  - Rheb
+  - mTOR
+  drug:
+  - GW788388:
+      rec_id: REC-0000430
+      smiles_pubchem: C1COCCC1NC(=O)C2=CC=C(C=C2)C3=NC=CC(=C3)C4=C(NN=C4)C5=CC=CC=N5
+      smiles_rxrx: O=C(NC1CCOCC1)C1=CC=C(C2=NC=CC(C3=CNN=C3C3=NC=CC=C3)=C2)C=C1
+      target: PI-3K
+      type: inhibitor
+  - AZD 6482:
+      rec_id: REC-0000420
+      smiles_pubchem: CC1=CN2C(=O)C=C(N=C2C(=C1)[C@@H](C)NC3=CC=CC=C3C(=O)O)N4CCOCC4
+      smiles_rxrx: C[C@@H](NC1=CC=CC=C1C(O)=O)C1=CC(C)=CN2C(=O)C=C(N3CCOCC3)N=C12
+      target: PI-3K
+      type: inhibitor
+  - BGT 226:
+      rec_id: REC-0000389
+      smiles_pubchem: CN1C2=CN=C3C=CC(=CC3=C2N(C1=O)C4=CC(=C(C=C4)N5CCNCC5)C(F)(F)F)C6=CN=C(C=C6)OC
+      smiles_rxrx: COC1=CC=C(C2=CC=C3N=CC4=C(N(C5=CC=C(N6CCNCC6)C(C(F)(F)F)=C5)C(=O)N4C)C3=C2)C=N1
+      target: PI-3K
+      type: inhibitor
+  - BKM 120:
+      rec_id: REC-0001193
+      smiles_pubchem: C1COCCN1C2=NC(=NC(=C2)C3=CN=C(C=C3C(F)(F)F)N)N4CCOCC4
+      smiles_rxrx: NC1=CC(C(F)(F)F)=C(C2=NC(N3CCOCC3)=NC(N3CCOCC3)=C2)C=N1
+      target: PI-3K
+      type: inhibitor
+  - BYL 719:
+      rec_id: REC-0001993
+      smiles_pubchem: CC1=C(SC(=N1)NC(=O)N2CCC[C@H]2C(=O)N)C3=CC(=NC=C3)C(C)(C)C(F)(F)F
+      smiles_rxrx: CC1=C(C2=CC(C(C)(C)C(F)(F)F)=NC=C2)SC(NC(=O)N2CCC[C@H]2C(N)=O)=N1
+      target: PI-3K
+      type: inhibitor
+  - CH-5132799:
+      rec_id: null
+      smiles_rxrx: null
+      target: PI-3K
+      type: inhibitor
+  - IPI-145:
+      rec_id: null
+      smiles_rxrx: null
+      target: PI-3K
+      type: inhibitor
+  - Pilaralisib:
+      rec_id: REC-0002228
+      smiles_pubchem: CC(C)(C(=O)NC1=CC(=CC=C1)S(=O)(=O)NC2=NC3=CC=CC=C3N=C2NC4=C(C=CC(=C4)OC)Cl)N
+      smiles_rxrx: COC1=CC(NC2=NC3=CC=CC=C3N=C2NS(=O)(=O)C2=CC=CC(NC(=O)C(C)(C)N)=C2)=C(Cl)C=C1
+      target: PI-3K
+      type: inhibitor
+  - SAR245409:
+      rec_id: REC-0064066
+      smiles_pubchem: CCN1C2=NC(=NC(=C2C=C(C1=O)C3=CC=NN3)C)N
+      smiles_rxrx: CCN1C(=O)C(C2=CC=NN2)=CC2=C(C)N=C(N)N=C12
+      target: PI-3K
+      type: inhibitor
+  - GDC-0032:
+      rec_id: null
+      smiles_rxrx: null
+      target: PI-3K
+      type: inhibitor
+  - GDC-0941:
+      rec_id: null
+      smiles_rxrx: null
+      target: PI-3K
+      type: inhibitor
+  - PF 04691502:
+      rec_id: .nan
+      smiles_pubchem: CC1=C2C=C(C(=O)N(C2=NC(=N1)N)C3CCC(CC3)OCCO)C4=CN=C(C=C4)OC
+      smiles_rxrx: .nan
+      target: PI-3K
+      type: inhibitor
+  - VS 5584:
+      target: PI-3K
+      type: inhibitor
+  - GDC-0980:
+      rec_id: null
+      smiles_rxrx: null
+      target: PI-3K
+      type: inhibitor
+  - MLN 1117:
+      rec_id: REC-0003924
+      smiles_pubchem: C1COCCN1C(=O)C2=CN=C3N2C=C(C=C3)C4=CC5=C(C=C4)OC(=N5)N
+      smiles_rxrx: NC1=NC2=CC(C3=CN4C(=NC=C4C(=O)N4CCOCC4)C=C3)=CC=C2O1
+      target: PI-3K
+      type: inhibitor
+  - CUDC-907:
+      rec_id: null
+      smiles_rxrx: null
+      target: PI-3K
+      type: inhibitor
+  - PI 103:
+      rec_id: REC-0001518
+      smiles_pubchem: C1COCCN1C2=NC(=NC3=C2OC4=C3C=CC=N4)C5=CC(=CC=C5)O
+      smiles_rxrx: OC1=CC(C2=NC3=C(OC4=C3C=CC=N4)C(N3CCOCC3)=N2)=CC=C1
+      target: PI-3K
+      type: inhibitor
+  - GDC-0349:
+      rec_id: null
+      smiles_rxrx: null
+      target: PI-3K
+      type: inhibitor
+  - LY 3023414:
+      target: PI-3K
+      type: inhibitor
+  - TGX 221:
+      rec_id: REC-0001086
+      smiles_pubchem: CC1=CN2C(=O)C=C(N=C2C(=C1)C(C)NC3=CC=CC=C3)N4CCOCC4
+      smiles_rxrx: CC(NC1=CC=CC=C1)C1=CC(C)=CN2C(=O)C=C(N3CCOCC3)N=C12
+      target: PI-3K
+      type: inhibitor
+  - PF 04691502:
+      rec_id: .nan
+      smiles_pubchem: CC1=C2C=C(C(=O)N(C2=NC(=N1)N)C3CCC(CC3)OCCO)C4=CN=C(C=C4)OC
+      smiles_rxrx: .nan
+      target: PI-3K
+      type: inhibitor
+  pathway:
+  - EGFR
+  - VEGFR
+  - PTEN
+  - PI-3K
+  - PDPK1
+  - AKT
+  - TSC2
+  - Rheb
+  - mTOR
+  perturbation:
+    gene: PTEN
+    name: CRISPR knockdown of the PTEN gene
+    type: loss-of-function
+Fibrosis diseases & cancers:
+  HGNC gene names:
+  - TGFB2
+  - TGFBR1
+  - TGFBR2
+  - TGFBR3
+  - SRC
+  - MAP3K7
+  - TAB1
+  drug:
+  - Fresolimumab:
+      target: TGF-beta
+      type: antibody
+  - EW 7197:
+      target: ALK5
+      type: inhibitor
+  - GW 788388:
+      rec_id: REC-0000430
+      smiles_pubchem: C1COCCC1NC(=O)C2=CC=C(C=C2)C3=NC=CC(=C3)C4=C(NN=C4)C5=CC=CC=N5
+      smiles_rxrx: O=C(NC1CCOCC1)C1=CC=C(C2=NC=CC(C3=CNN=C3C3=NC=CC=C3)=C2)C=C1
+      target: ALK5
+      type: inhibitor
+  - SB 431542:
+      rec_id: REC-0001404
+      smiles_pubchem: C1OC2=C(O1)C=C(C=C2)C3=C(NC(=N3)C4=CC=C(C=C4)C(=O)N)C5=CC=CC=N5
+      smiles_rxrx: NC(=O)C1=CC=C(C2=NC(C3=CC4=C(OCO4)C=C3)=C(C3=NC=CC=C3)N2)C=C1
+      target: ALK5
+      type: inhibitor
+  - Repsox:
+      rec_id: REC-0002132
+      smiles_pubchem: CC1=NC(=CC=C1)C2=C(C=NN2)C3=NC4=C(C=C3)N=CC=C4
+      smiles_rxrx: CC1=CC=CC(C2=NNC=C2C2=CC=C3N=CC=CC3=N2)=N1
+      target: ALK5
+      type: inhibitor
+  - SB 525334:
+      rec_id: REC-0000805
+      smiles_pubchem: CC1=NC(=CC=C1)C2=C(N=C(N2)C(C)(C)C)C3=CC4=NC=CN=C4C=C3
+      smiles_rxrx: CC1=NC(C2=C(C3=CC=C4N=CC=NC4=C3)NC(C(C)(C)C)=N2)=CC=C1
+      target: ALK5
+      type: inhibitor
+  - SD 208:
+      rec_id: REC-0001224
+      smiles_pubchem: C1=CC(=C(C=C1Cl)C2=NC3=NC=CN=C3C(=N2)NC4=CC=NC=C4)F
+      smiles_rxrx: FC1=C(C2=NC3=NC=CN=C3C(NC3=CC=NC=C3)=N2)C=C(Cl)C=C1
+      target: ALK5
+      type: inhibitor
+  pathway:
+  - TGF beta-2
+  - TGF beta receptor
+  - SRC
+  - TAK1
+  - TAB1
+  perturbation:
+    gene: TGF beta-2
+    name: Soluble factor addition of TGF beta-2
+    rec_id: REC-SF-00434
+    type: soluble factor
+Li-Fraumeni Syndrome:
+  HGNC gene names:
+  - MDM2
+  - TP53
+  drug:
+  - RITA:
+      rec_id: REC-0002181
+      smiles_pubchem: C1=C(SC(=C1)C2=CC=C(O2)C3=CC=C(S3)CO)CO
+      smiles_rxrx: OCC1=CC=C(C2=CC=C(C3=CC=C(CO)S3)O2)S1
+      target: p53
+      type: activator
+  pathway:
+  - MDM2
+  - P53
+  perturbation:
+    gene: P53
+    name: CRISPR knockdown of the P53 gene
+    type: loss-of-function
+Multiple cancers - BRAF V600E:
+  HGNC gene names:
+  - EGFR
+  - HRAS
+  - KRAS
+  - NRAS
+  - RAF1
+  - MAP2K1
+  - MAP2K2
+  - MAPK3
+  - MAPK1
+  - BRAF
+  drug:
+  - Ulixertinib:
+      rec_id: REC-0001736
+      smiles_pubchem: CC(C)NC1=NC=C(C(=C1)C2=CNC(=C2)C(=O)N[C@H](CO)C3=CC(=CC=C3)Cl)Cl
+      smiles_rxrx: CC(C)NC1=NC=C(Cl)C(C2=CNC(C(=O)N[C@H](CO)C3=CC(Cl)=CC=C3)=C2)=C1
+      target: ERK
+      type: inhibitor
+  - Dabrafenib:
+      rec_id: REC-0000911
+      smiles_pubchem: CC(C)(C)C1=NC(=C(S1)C2=NC(=NC=C2)N)C3=C(C(=CC=C3)NS(=O)(=O)C4=C(C=CC=C4F)F)F
+      smiles_rxrx: CC(C)(C)C1=NC(C2=C(F)C(NS(=O)(=O)C3=C(F)C=CC=C3F)=CC=C2)=C(C2=NC(N)=NC=C2)S1
+      target: BRAF
+      type: inhibitor
+  - MEK162:
+      rec_id: REC-0001497
+      smiles_pubchem: CN1C=NC2=C1C=C(C(=C2F)NC3=C(C=C(C=C3)Br)F)C(=O)NOCCO
+      smiles_rxrx: CN1C=NC2=C1C=C(C(=O)NOCCO)C(NC1=C(F)C=C(Br)C=C1)=C2F
+      target: MEK
+      type: inhibitor
+  pathway:
+  - EGFR
+  - RAS
+  - CRAF
+  - MEK
+  - ERK
+  - BRAF V600E
+  perturbation:
+    gene: BRAF
+    name: BacMam gain-of-function expression of BRAF V600E
+    rec_id: REC-VIRUS-00018
+    type: gain-of-function
+Multiple cancers - colon cancer - APC:
+  HGNC gene names:
+  - APC
+  - AXIN1
+  - AXIN2
+  - CSNK1A1
+  - GSK3B
+  - CTNNB1
+  - TCF7
+  - LEF1
+  - TCF7L1
+  - TCF7L2
+  - MAP2K1
+  - MAP2K2
+  - MAPK3
+  - MAPK1
+  - HRAS
+  - KRAS
+  - NRAS
+  drug:
+  - PD 0325901:
+      rec_id: REC-0001214
+      smiles_pubchem: C1=CC(=C(C=C1I)F)NC2=C(C=CC(=C2F)F)C(=O)NOC[C@@H](CO)O
+      smiles_rxrx: OC[C@@H](O)CONC(=O)C1=C(NC2=CC=C(I)C=C2F)C(F)=C(F)C=C1
+      target: MEK
+      type: inhibitor
+  - Trametinib:
+      rec_id: REC-0000990
+      smiles_pubchem: CC1=C2C(=C(N(C1=O)C)NC3=C(C=C(C=C3)I)F)C(=O)N(C(=O)N2C4=CC=CC(=C4)NC(=O)C)C5CC5
+      smiles_rxrx: CN1C(=O)C(C)=C2N(C3=CC(NC(C)=O)=CC=C3)C(=O)N(C3CC3)C(=O)C2=C1NC1=CC=C(I)C=C1F
+      target: MEK
+      type: inhibitor
+  - PD 318088:
+      rec_id: REC-0001053
+      smiles_pubchem: C1=CC(=C(C=C1I)F)NC2=C(C(=C(C=C2C(=O)NOCC(CO)O)Br)F)F
+      smiles_rxrx: OCC(O)CONC(=O)C1=C(NC2=CC=C(I)C=C2F)C(F)=C(F)C(Br)=C1
+      target: MEK
+      type: inhibitor
+  - Refametinib:
+      rec_id: REC-0000519
+      smiles_pubchem: COC1=CC(=C(C(=C1NS(=O)(=O)C2(CC2)C[C@@H](CO)O)NC3=C(C=C(C=C3)I)F)F)F
+      smiles_rxrx: COC1=C(NS(=O)(=O)C2(C[C@H](O)CO)CC2)C(NC2=CC=C(I)C=C2F)=C(F)C(F)=C1
+      target: MEK
+      type: inhibitor
+  - AZD8330:
+      rec_id: REC-0001173
+      smiles_pubchem: CC1=CC(=C(N(C1=O)C)NC2=C(C=C(C=C2)I)F)C(=O)NOCCO
+      smiles_rxrx: CN1C(=O)C(C)=CC(C(=O)NOCCO)=C1NC1=C(F)C=C(I)C=C1
+      target: MEK
+      type: inhibitor
+  - GDC-0623:
+      rec_id: null
+      smiles_rxrx: null
+      target: MEK
+      type: inhibitor
+  - PD 184352:
+      rec_id: REC-0001052
+      smiles_pubchem: C1CC1CONC(=O)C2=C(C(=C(C=C2)F)F)NC3=C(C=C(C=C3)I)Cl
+      smiles_rxrx: FC1=CC=C(C(=O)NOCC2CC2)C(NC2=CC=C(I)C=C2Cl)=C1F
+      target: MEK
+      type: inhibitor
+  - BI 847325:
+      rec_id: .nan
+      smiles_pubchem: CCNC(=O)C#CC1=CC2=C(C=C1)C(=C(N2)O)C(=NC3=CC=C(C=C3)CN(C)C)C4=CC=CC=C4
+      smiles_rxrx: .nan
+      target: MEK
+      type: inhibitor
+  - Pimasertib:
+      rec_id: REC-0001172
+      smiles_pubchem: C1=CC(=C(C=C1I)F)NC2=C(C=CN=C2)C(=O)NC[C@@H](CO)O
+      smiles_rxrx: OC[C@@H](O)CNC(=O)C1=CC=NC=C1NC1=C(F)C=C(I)C=C1
+      target: MEK
+      type: inhibitor
+  - PD184352:
+      rec_id: REC-0001052
+      smiles_pubchem: C1CC1CONC(=O)C2=C(C(=C(C=C2)F)F)NC3=C(C=C(C=C3)I)Cl
+      smiles_rxrx: FC1=CC=C(C(=O)NOCC2CC2)C(NC2=CC=C(I)C=C2Cl)=C1F
+      target: MEK
+      type: inhibitor
+  - RO 5126766:
+      rec_id: REC-0001768
+      smiles_pubchem: CC1=C(C(=O)OC2=C1C=CC(=C2)OC3=NC=CC=N3)CC4=C(C(=NC=C4)NS(=O)(=O)NC)F
+      smiles_rxrx: CNS(=O)(=O)NC1=NC=CC(CC2=C(C)C3=C(OC2=O)C=C(OC2=NC=CC=N2)C=C3)=C1F
+      target: MEK
+      type: inhibitor
+  - MEK 162:
+      rec_id: REC-0001497
+      smiles_pubchem: CN1C=NC2=C1C=C(C(=C2F)NC3=C(C=C(C=C3)Br)F)C(=O)NOCCO
+      smiles_rxrx: CN1C=NC2=C1C=C(C(=O)NOCCO)C(NC1=C(F)C=C(Br)C=C1)=C2F
+      target: MEK
+      type: inhibitor
+  pathway:
+  - APC
+  - Axin
+  - CK1
+  - GSK3beta
+  - beta-catenin
+  - TCF
+  - MEK
+  - ERK
+  - RAS
+  perturbation:
+    gene: APC
+    name: siRNA inhibition of APC expression
+    rec_id:
+    - REC-SIRNA-060387
+    - REC-SIRNA-007083
+    - REC-SIRNA-037963
+    - REC-SIRNA-73644
+    - REC-SIRNA-73643
+    - REC-SIRNA-74873
+    - REC-SIRNA-74874
+    - REC-SIRNA-74876
+    - REC-SIRNA-73646
+    - REC-SIRNA-73645
+    type: loss-of-function
+Neurofibromatosis type 1:
+  HGNC gene names:
+  - EGFR
+  - KDR
+  - FLT1
+  - FLT4
+  - FGFR1
+  - FGFR2
+  - FGFR3
+  - FGFR4
+  - HRAS
+  - KRAS
+  - NRAS
+  - MAP2K1
+  - MAP2K2
+  - MAPK3
+  - MAPK1
+  - NF1
+  drug:
+  - GDC-0623:
+      rec_id: null
+      smiles_rxrx: null
+      target: MEK
+      type: inhibitor
+  - Pimasertib:
+      rec_id: REC-0001172
+      smiles_pubchem: C1=CC(=C(C=C1I)F)NC2=C(C=CN=C2)C(=O)NC[C@@H](CO)O
+      smiles_rxrx: OC[C@@H](O)CNC(=O)C1=CC=NC=C1NC1=C(F)C=C(I)C=C1
+      target: MEK
+      type: inhibitor
+  - RO 5126766:
+      rec_id: REC-0001768
+      smiles_pubchem: CC1=C(C(=O)OC2=C1C=CC(=C2)OC3=NC=CC=N3)CC4=C(C(=NC=C4)NS(=O)(=O)NC)F
+      smiles_rxrx: CNS(=O)(=O)NC1=NC=CC(CC2=C(C)C3=C(OC2=O)C=C(OC2=NC=CC=N2)C=C3)=C1F
+      target: MEK
+      type: inhibitor
+  - PD 184352:
+      rec_id: REC-0001052
+      smiles_pubchem: C1CC1CONC(=O)C2=C(C(=C(C=C2)F)F)NC3=C(C=C(C=C3)I)Cl
+      smiles_rxrx: FC1=CC=C(C(=O)NOCC2CC2)C(NC2=CC=C(I)C=C2Cl)=C1F
+      target: MEK
+      type: inhibitor
+  - MEK162:
+      rec_id: REC-0001497
+      smiles_pubchem: CN1C=NC2=C1C=C(C(=C2F)NC3=C(C=C(C=C3)Br)F)C(=O)NOCCO
+      smiles_rxrx: CN1C=NC2=C1C=C(C(=O)NOCCO)C(NC1=C(F)C=C(Br)C=C1)=C2F
+      target: MEK
+      type: inhibitor
+  pathway:
+  - TKR
+  - RAS
+  - MEK
+  - ERK
+  - NF1
+  perturbation:
+    gene: NF1
+    name: CRISPR knockdown of the NF1 gene
+    type: loss-of-function
+Neurofibromatosis type 2:
+  HGNC gene names:
+  - TGFBR1
+  - PEBP1
+  - MAPK1
+  - MAPK3
+  - MAPK8
+  - MAPK9
+  - MAPK10
+  - MAPK14
+  - MAPK11
+  - MAPK12
+  - MAPK13
+  - SNAI1
+  - SNAI2
+  - TP53
+  - TGFBR2
+  - NF2
+  drug:
+  - LDK378:
+      rec_id: REC-0001217
+      smiles_pubchem: CC1=CC(=C(C=C1C2CCNCC2)OC(C)C)NC3=NC=C(C(=N3)NC4=CC=CC=C4S(=O)(=O)C(C)C)Cl
+      smiles_rxrx: CC(C)OC1=C(NC2=NC(NC3=C(S(=O)(=O)C(C)C)C=CC=C3)=C(Cl)C=N2)C=C(C)C(C2CCNCC2)=C1
+      target: ALK
+      type: inhibitor
+  - AP26113:
+      rec_id: REC-0000251
+      smiles_pubchem: CN(C)C1CCN(CC1)C2=CC(=C(C=C2)NC3=NC=C(C(=N3)NC4=CC=CC=C4P(=O)(C)C)Cl)OC
+      smiles_rxrx: COC1=CC(N2CCC(N(C)C)CC2)=CC=C1NC1=NC=C(Cl)C(NC2=CC=CC=C2P(C)(C)=O)=N1
+      target: ALK
+      type: inhibitor
+  - ASP3026:
+      rec_id: REC-0003972
+      smiles_pubchem: CC(C)S(=O)(=O)C1=CC=CC=C1NC2=NC(=NC=N2)NC3=C(C=C(C=C3)N4CCC(CC4)N5CCN(CC5)C)OC
+      smiles_rxrx: COC1=C(NC2=NC=NC(NC3=C(S(=O)(=O)C(C)C)C=CC=C3)=N2)C=CC(N2CCC(N3CCN(C)CC3)CC2)=C1
+      target: ALK
+      type: inhibitor
+  - EW-7197:
+      rec_id: null
+      smiles_rxrx: null
+      target: ALK
+      type: inhibitor
+  - A8301:
+      rec_id: REC-0062911
+      smiles_pubchem: CC1=NC(=CC=C1)C2=NN(C=C2C3=CC=NC4=CC=CC=C34)C(=S)NC5=CC=CC=C5
+      smiles_rxrx: CC1=CC=CC(C2=NN(C(=S)NC3=CC=CC=C3)C=C2C2=CC=NC3=CC=CC=C23)=N1
+      target: ALK
+      type: inhibitor
+  pathway:
+  - TGFBR1
+  - RKIP
+  - MAPK
+  - SNAIL
+  - P53
+  - TGFBR2
+  - NF2
+  perturbation:
+    gene: NF2
+    name: CRISPR knockdown of the NF2 gene
+    type: loss-of-function
+Pathway biology modulation:
+  HGNC gene names:
+  - JAK1
+  - JAK2
+  - JAK3
+  - STAT1
+  - STAT2
+  - STAT3
+  - STAT4
+  - STAT5A
+  - STAT5B
+  - STAT6
+  - IL4R
+  - IL2RG
+  - IL13RA1
+  - IL6ST
+  - IL6R
+  - SOCS3
+  drug:
+  - Cerdulatinib:
+      rec_id: REC-0001886
+      smiles_pubchem: CCS(=O)(=O)N1CCN(CC1)C2=CC=C(C=C2)NC3=NC=C(C(=N3)NC4CC4)C(=O)N
+      smiles_rxrx: CCS(=O)(=O)N1CCN(C2=CC=C(NC3=NC=C(C(N)=O)C(NC4CC4)=N3)C=C2)CC1
+      target: JAK
+      type: inhibitor
+  - Baricitinib:
+      rec_id: REC-0001884
+      smiles_pubchem: CCS(=O)(=O)N1CC(C1)(CC#N)N2C=C(C=N2)C3=C4C=CNC4=NC=N3
+      smiles_rxrx: CCS(=O)(=O)N1CC(CC#N)(N2C=C(C3=C4C=CNC4=NC=N3)C=N2)C1
+      target: JAK
+      type: inhibitor
+  - Oclacitinib:
+      rec_id: REC-0005428
+      smiles_pubchem: CNS(=O)(=O)CC1CCC(CC1)N(C)C2=NC=NC3=C2C=CN3
+      smiles_rxrx: CNS(=O)(=O)CC1CCC(CC1)N(C)C1=NC=NC2=C1C=CN2
+      target: JAK
+      type: inhibitor
+  - Ruxolitinib:
+      rec_id: REC-0000267
+      smiles_pubchem: C1CCC(C1)[C@@H](CC#N)N2C=C(C=N2)C3=C4C=CNC4=NC=N3
+      smiles_rxrx: C1(C2=CN([C@@H](C3CCCC3)CC#N)N=C2)=NC=NC2=C1C=CN2
+      target: JAK
+      type: inhibitor
+  - Tofacitinib:
+      rec_id: REC-2121622
+      smiles_pubchem: C[C@@H]1CCN(C[C@@H]1N(C)C2=NC=NC3=C2C=CN3)C(=O)CC#N
+      smiles_rxrx: C[C@@H]1CCN(C(=O)CC#N)C[C@@H]1N(C)C1=C2C=CNC2=NC=N1
+      target: JAK
+      type: inhibitor
+  - CEP-33779:
+      rec_id: null
+      smiles_rxrx: null
+      target: JAK
+      type: inhibitor
+  - CYT387:
+      rec_id: REC-0001152
+      smiles_pubchem: C1COCCN1C2=CC=C(C=C2)NC3=NC=CC(=N3)C4=CC=C(C=C4)C(=O)NCC#N
+      smiles_rxrx: O=C(NCC#N)C1=CC=C(C2=NC(NC3=CC=C(N4CCOCC4)C=C3)=NC=C2)C=C1
+      target: JAK
+      type: inhibitor
+  - Solcitinib:
+      rec_id: REC-0064467
+      smiles_pubchem: CC1(CN(C1)C(=O)C2=CC=C(C=C2)C3=CC=CC4=NC(=NN43)NC(=O)C5CC5)C
+      smiles_rxrx: CC1(C)CN(C(=O)C2=CC=C(C3=CC=CC4=NC(NC(=O)C5CC5)=NN34)C=C2)C1
+      target: JAK
+      type: inhibitor
+  - AZ960:
+      rec_id: REC-0001076
+      smiles_pubchem: CC1=CC(=NN1)NC2=C(C=C(C(=N2)N[C@@H](C)C3=CC=C(C=C3)F)C#N)F
+      smiles_rxrx: C[C@H](NC1=NC(NC2=NNC(C)=C2)=C(F)C=C1C#N)C1=CC=C(F)C=C1
+      target:
+      - JAK2
+      - JAK3
+      type: inhibitor
+  - Decernotinib:
+      rec_id: REC-0003935
+      smiles_pubchem: CC[C@](C)(C(=O)NCC(F)(F)F)NC1=NC(=NC=C1)C2=CNC3=C2C=CC=N3
+      smiles_rxrx: CC[C@@](C)(NC1=NC(C2=CNC3=NC=CC=C23)=NC=C1)C(=O)NCC(F)(F)F
+      target: JAK
+      type: inhibitor
+  - TPCA-1:
+      rec_id: null
+      smiles_rxrx: null
+      target: JAK
+      type: inhibitor
+  - NVP-BSK805:
+      rec_id: null
+      smiles_rxrx: null
+      target: JAK
+      type: inhibitor
+  - AZ960:
+      rec_id: REC-0001076
+      smiles_pubchem: CC1=CC(=NN1)NC2=C(C=C(C(=N2)N[C@@H](C)C3=CC=C(C=C3)F)C#N)F
+      smiles_rxrx: C[C@H](NC1=NC(NC2=NNC(C)=C2)=C(F)C=C1C#N)C1=CC=C(F)C=C1
+      target:
+      - JAK2
+      - JAK3
+      type: inhibitor
+  pathway:
+  - JAK
+  - STAT
+  - IL-4Ralpha
+  - gammaC
+  - IL-13Ralpha1
+  - gp130
+  - IL-6R
+  - SOCS3
+  perturbation:
+    gene: SOCS3
+    name: CRISPR knockdown of the SOCS3 gene
+    type: loss-of-function
+Pulmonary hypertension:
+  HGNC gene names:
+  - TGFBR1
+  - TGFBR2
+  - TGFBR3
+  - SRC
+  - MAP3K7
+  - TAB1
+  - ACVRL1
+  - BMPR2
+  disease_model: Pulmonary hypertension
+  drug:
+  - Saracatinib:
+      rec_id: REC-0001117
+      smiles_pubchem: CN1CCN(CC1)CCOC2=CC3=C(C(=C2)OC4CCOCC4)C(=NC=N3)NC5=C(C=CC6=C5OCO6)Cl
+      smiles_rxrx: CN1CCN(CCOC2=CC(OC3CCOCC3)=C3C(NC4=C(Cl)C=CC5=C4OCO5)=NC=NC3=C2)CC1
+      target: SRC
+      type: inhibitor
+  pathway:
+  - TGF beta receptor
+  - SRC
+  - TAK1
+  - TAB1
+  - ALK1
+  - BMPR2
+  perturbation:
+    gene: BMPR2
+    name: CRISPR knockdown of the BMPR2 gene
+    type: loss-of-function
+Systemic lupus erythematosus:
+  HGNC gene names:
+  - IFNA1
+  - IFNA2
+  - IFNA4
+  - IFNA5
+  - IFNAR1
+  - IFNAR2
+  - PIK3C3
+  - PIK3CD
+  - PIK3CA
+  - PIK3CB
+  - PIK3CG
+  - PIK3C2A
+  - PIK3C2B
+  - PIK3C2G
+  - AKT1
+  - AKT2
+  - AKT3
+  - CHUK
+  - IKBKB
+  - IKBKG
+  - NFKBIA
+  - NFKBIB
+  - NFKBIE
+  - RELA
+  - NFKB1
+  - NFKB2
+  - RELB
+  - REL
+  - JAK1
+  - JAK2
+  - JAK3
+  - STAT1
+  - STAT2
+  - STAT3
+  - STAT4
+  - STAT5A
+  - STAT5B
+  - STAT6
+  drug:
+  - Sifalimumab:
+      target: IFNalpha
+      type: antibody
+  - Anifrolumab:
+      target: IFNalpha
+      type: antibody
+  pathway:
+  - IFNalpha
+  - IFNAR
+  - PI-3K
+  - AKT
+  - IKK
+  - IkB
+  - NF-kB
+  - JAK
+  - STAT
+  perturbation:
+    gene: IFNalpha
+    name: Soluble factor addition of IFNalpha
+    rec_id: REC-SF-00781
+    type: soluble factor
+Tuberous sclerosis:
+  HGNC gene names:
+  - EGFR
+  - FLT1
+  - KDR
+  - FLT4
+  - PTEN
+  - PIK3C3
+  - PIK3CD
+  - PIK3CA
+  - PIK3CB
+  - PIK3CG
+  - PIK3C2A
+  - PIK3C2B
+  - PIK3C2G
+  - PDPK1
+  - AKT1
+  - AKT2
+  - AKT3
+  - TSC2
+  - Rheb
+  - mTOR
+  drug:
+  - Everolimus:
+      rec_id: REC-0000460
+      smiles_pubchem: C[C@@H]1CC[C@H]2C[C@@H](/C(=C/C=C/C=C/[C@H](C[C@H](C(=O)[C@@H]([C@@H](/C(=C/[C@H](C(=O)C[C@H](OC(=O)[C@@H]3CCCCN3C(=O)C(=O)[C@@]1(O2)O)[C@H](C)C[C@@H]4CC[C@H]([C@@H](C4)OC)OCCO)C)/C)O)OC)C)C)/C)OC
+      smiles_rxrx: O=C1[C@@]2(O)[C@H](C)CC[C@@H](C[C@H](OC)/C(C)=C/C=C/C=C/[C@@H](C)C[C@@H](C)C(=O)[C@H](OC)[C@H](O)/C(C)=C/[C@@H](C)C(=O)C[C@@H]([C@@H](C[C@H]3C[C@@H](OC)[C@H](OCCO)CC3)C)OC(=O)[C@H]3N(C1=O)CCCC3)O2
+      target: MTOR
+      type: inhibitor
+  - Ridaforolimus:
+      rec_id: .nan
+      smiles_pubchem: C[C@@H]1CC[C@H]2C[C@@H](/C(=C/C=C/C=C/[C@H](C[C@H](C(=O)[C@@H]([C@@H](/C(=C/[C@H](C(=O)C[C@H](OC(=O)[C@@H]3CCCCN3C(=O)C(=O)[C@@]1(O2)O)[C@H](C)C[C@@H]4CC[C@H]([C@@H](C4)OC)OP(=O)(C)C)C)/C)O)OC)C)C)/C)OC
+      smiles_rxrx: .nan
+      target: MTOR
+      type: inhibitor
+  - Temsirolimus:
+      rec_id: REC-0000358
+      smiles_pubchem: C[C@@H]1CC[C@H]2C[C@@H](/C(=C/C=C/C=C/[C@H](C[C@H](C(=O)[C@@H]([C@@H](/C(=C/[C@H](C(=O)C[C@H](OC(=O)[C@@H]3CCCCN3C(=O)C(=O)[C@@]1(O2)O)[C@H](C)C[C@@H]4CC[C@H]([C@@H](C4)OC)OC(=O)C(C)(CO)CO)C)/C)O)OC)C)C)/C)OC
+      smiles_rxrx: O=C1[C@@]2(O)[C@H](C)CC[C@@H](C[C@H](OC)/C(C)=C/C=C/C=C/[C@@H](C)C[C@@H](C)C(=O)[C@H](OC)[C@H](O)/C(C)=C/[C@@H](C)C(=O)C[C@@H]([C@@H](C[C@H]3C[C@@H](OC)[C@H](OC(C(C)(CO)CO)=O)CC3)C)OC(=O)[C@H]3N(C1=O)CCCC3)O2
+      target: MTOR
+      type: inhibitor
+  - Zotarolimus:
+      rec_id: .nan
+      smiles_pubchem: C[C@@H]1CC[C@H]2C[C@@H](/C(=C/C=C/C=C/[C@H](C[C@H](C(=O)[C@@H]([C@@H](/C(=C/[C@H](C(=O)C[C@H](OC(=O)[C@@H]3CCCCN3C(=O)C(=O)[C@@]1(O2)O)[C@H](C)C[C@@H]4CC[C@@H]([C@@H](C4)OC)N5C=NN=N5)C)/C)O)OC)C)C)/C)OC
+      smiles_rxrx: .nan
+      target: MTOR
+      type: inhibitor
+  - GDC-0941:
+      rec_id: null
+      smiles_rxrx: null
+      target: MTOR
+      type: inhibitor
+  - SAR 245409:
+      rec_id: REC-0064066
+      smiles_pubchem: CCN1C2=NC(=NC(=C2C=C(C1=O)C3=CC=NN3)C)N
+      smiles_rxrx: CCN1C(=O)C(C2=CC=NN2)=CC2=C(C)N=C(N)N=C12
+      target: MTOR
+      type: inhibitor
+  - OSI 027:
+      rec_id: REC-2101970
+      smiles_pubchem: COC1=CC=CC2=C1NC(=C2)C3=C4C(=NC=NN4C(=N3)C5CCC(CC5)C(=O)O)N
+      smiles_rxrx: COC1=CC=CC2=C1NC(C1=C3N(N=CN=C3N)C(C3CCC(C(O)=O)CC3)=N1)=C2
+      target: MTOR
+      type: inhibitor
+  - XL 388:
+      rec_id: REC-0001782
+      smiles_pubchem: CC1=C(C=CC(=C1F)S(=O)(=O)C)C(=O)N2CCOC3=C(C2)C=C(C=C3)C4=CN=C(C=C4)N
+      smiles_rxrx: CC1=C(C(=O)N2CCOC3=C(C2)C=C(C2=CN=C(N)C=C2)C=C3)C=CC(S(C)(=O)=O)=C1F
+      target: MTOR
+      type: inhibitor
+  - GSK 1059615:
+      rec_id: REC-0000784
+      smiles_pubchem: C1=CC2=NC=CC(=C2C=C1/C=C\3/C(=O)NC(=O)S3)C4=CC=NC=C4
+      smiles_rxrx: O=C1NC(=O)/C(=C/C2=CC=C3N=CC=C(C4=CC=NC=C4)C3=C2)S1
+      target: MTOR
+      type: inhibitor
+  - CC-223:
+      rec_id: null
+      smiles_rxrx: null
+      target: MTOR
+      type: inhibitor
+  - PF 04691502:
+      rec_id: .nan
+      smiles_pubchem: CC1=C2C=C(C(=O)N(C2=NC(=N1)N)C3CCC(CC3)OCCO)C4=CN=C(C=C4)OC
+      smiles_rxrx: .nan
+      target: MTOR
+      type: inhibitor
+  - LY-3023414:
+      rec_id: null
+      smiles_rxrx: null
+      target: MTOR
+      type: inhibitor
+  - CH-5132799:
+      rec_id: null
+      smiles_rxrx: null
+      target: MTOR
+      type: inhibitor
+  - PP242:
+      rec_id: REC-0002112
+      smiles_pubchem: CC(C)N1C2=NC=NC(=C2C(=N1)C3=CC4=C(N3)C=CC(=C4)O)N
+      smiles_rxrx: CC(C)N1N=C(C2=CC3=C(N2)C=CC(O)=C3)C2=C(N)N=CN=C12
+      target: MTOR
+      type: inhibitor
+  - AZD-8055:
+      rec_id: null
+      smiles_rxrx: null
+      target: MTOR
+      type: inhibitor
+  - AZD-2014:
+      rec_id: null
+      smiles_rxrx: null
+      target: MTOR
+      type: inhibitor
+  - GDC-0980:
+      rec_id: null
+      smiles_rxrx: null
+      target: MTOR
+      type: inhibitor
+  - WYE-125132:
+      rec_id: null
+      smiles_rxrx: null
+      target: MTOR
+      type: inhibitor
+  pathway:
+  - EGFR
+  - VEGFR
+  - PTEN
+  - PI-3K
+  - PDPK1
+  - AKT
+  - TSC2
+  - Rheb
+  - mTOR
+  perturbation:
+    gene: TSC2
+    name: CRISPR knockdown of the TSC2 gene
+    rec_id: REC-GRNA-0007445
+    type: loss-of-function
+Von Hippel Lindau syndrome:
+  HGNC gene names:
+  - ARNT
+  - EPAS1
+  - EGLN1
+  - EGLN2
+  - EGLN3
+  - VHL
+  - RBX1
+  - ELOC
+  - ELOB
+  - Cul2
+  - Nedd8
+  drug:
+  - PT2385:
+      rec_id: REC-0064744
+      smiles_pubchem: CS(=O)(=O)C1=C2[C@@H](C(CC2=C(C=C1)OC3=CC(=CC(=C3)C#N)F)(F)F)O
+      smiles_rxrx: CS(=O)(=O)C1=CC=C(OC2=CC(C#N)=CC(F)=C2)C2=C1[C@H](O)C(F)(F)C2
+      target: EPAS1
+      type: inhibitor
+  pathway:
+  - HIF-1beta
+  - HIF-2alpha
+  - PHD
+  - VHL
+  - Rbx
+  - EI C
+  - EI B
+  - Cul2
+  - Nedd8
+  perturbation:
+    gene: VHL
+    name: CRISPR knockdown of the VHL gene
+    type: loss-of-function
+autoimmune diseases:
+  HGNC gene names:
+  - TNF
+  - TNFRSF1A
+  - TNFRSF1B
+  - CHUK
+  - IKBKB
+  - IKBKG
+  - NFKBIA
+  - NFKBIB
+  - NFKBIE
+  - RELA
+  - NFKB1
+  - NFKB2
+  - RELB
+  - REL
+  drug:
+  - TPCA-1:
+      rec_id: null
+      smiles_rxrx: null
+      target: IKK
+      type: inhibitor
+  - BMS 345541:
+      rec_id: .nan
+      smiles_pubchem: CC1=CC2=C(C=C1)N=C(C3=NC=C(N23)C)NCCN.Cl
+      smiles_rxrx: .nan
+      target: IKK
+      type: inhibitor
+  - LY 2409881:
+      rec_id: REC-0001938
+      smiles_pubchem: CN1CCN(CC1)CCCNC2=NC=C(C(=N2)C3=CC4=C(C=CC=C4S3)C(=O)NC5CC5)Cl
+      smiles_rxrx: CN1CCN(CCCNC2=NC=C(Cl)C(C3=CC4=C(C(=O)NC5CC5)C=CC=C4S3)=N2)CC1
+      target: IKK
+      type: inhibitor
+  - Adalimumab:
+      target: TNF alpha
+      type: antibody
+  - Golimumab:
+      target: TNF alpha
+      type: antibody
+  - Infliximab:
+      target: TNF alpha
+      type: antibody
+  - AZD 3264:
+      target: IKK
+      type: inhibitor
+  - ACHP:
+      rec_id: REC-0003962
+      smiles_pubchem: C1CC1COC2=CC=CC(=C2C3=NC(=C(C(=C3)C4CCNCC4)C#N)N)O
+      smiles_rxrx: NC1=NC(C2=C(O)C=CC=C2OCC2CC2)=CC(C2CCNCC2)=C1C#N
+      target: IKK
+      type: inhibitor
+  pathway:
+  - TNF alpha
+  - TNFR
+  - IKK
+  - IkB
+  - NF-kB
+  perturbation:
+    gene: TNF alpha
+    name: Soluble factor addition of TNF alpha
+    rec_id: REC-SF-00406
+    type: soluble factor
+inflammatory diseases - IFNalpha - JAK/STAT:
+  HGNC gene names:
+  - JAK1
+  - JAK2
+  - JAK3
+  - STAT1
+  - STAT2
+  - STAT3
+  - STAT4
+  - STAT5A
+  - STAT5B
+  - STAT6
+  drug:
+  - Ruxolitinib:
+      rec_id: REC-0000267
+      smiles_pubchem: C1CCC(C1)[C@@H](CC#N)N2C=C(C=N2)C3=C4C=CNC4=NC=N3
+      smiles_rxrx: C1(C2=CN([C@@H](C3CCCC3)CC#N)N=C2)=NC=NC2=C1C=CN2
+      target: JAK
+      type: inhibitor
+  - AZD1480:
+      rec_id: REC-0000886
+      smiles_pubchem: CC1=CC(=NN1)NC2=NC(=NC=C2Cl)N[C@@H](C)C3=NC=C(C=N3)F
+      smiles_rxrx: C[C@H](NC1=NC=C(Cl)C(NC2=NNC(C)=C2)=N1)C1=NC=C(F)C=N1
+      target: JAK
+      type: inhibitor
+  - Baricitinib:
+      rec_id: REC-0001884
+      smiles_pubchem: CCS(=O)(=O)N1CC(C1)(CC#N)N2C=C(C=N2)C3=C4C=CNC4=NC=N3
+      smiles_rxrx: CCS(=O)(=O)N1CC(CC#N)(N2C=C(C3=C4C=CNC4=NC=N3)C=N2)C1
+      target: JAK
+      type: inhibitor
+  - Tofacitinib:
+      rec_id: REC-2121622
+      smiles_pubchem: C[C@@H]1CCN(C[C@@H]1N(C)C2=NC=NC3=C2C=CN3)C(=O)CC#N
+      smiles_rxrx: C[C@@H]1CCN(C(=O)CC#N)C[C@@H]1N(C)C1=C2C=CNC2=NC=N1
+      target: JAK
+      type: inhibitor
+  - AZ960:
+      rec_id: REC-0001076
+      smiles_pubchem: CC1=CC(=NN1)NC2=C(C=C(C(=N2)N[C@@H](C)C3=CC=C(C=C3)F)C#N)F
+      smiles_rxrx: C[C@H](NC1=NC(NC2=NNC(C)=C2)=C(F)C=C1C#N)C1=CC=C(F)C=C1
+      target:
+      - JAK2
+      - JAK3
+      type: inhibitor
+  pathway:
+  - JAK
+  - STAT
+  perturbation:
+    gene: IFNalpha
+    name: Soluble factor addition of IFNalpha
+    type: soluble factor
+inflammatory diseases - IFNalpha - PI-3K/AKT/IKK/NF-kB:
+  HGNC gene names:
+  - IFNA1
+  - IFNA2
+  - IFNA4
+  - IFNA5
+  - IFNAR1
+  - IFNAR2
+  - PIK3C3
+  - PIK3CD
+  - PIK3CA
+  - PIK3CB
+  - PIK3CG
+  - PIK3C2A
+  - PIK3C2B
+  - PIK3C2G
+  - AKT1
+  - AKT2
+  - AKT3
+  - CHUK
+  - IKBKB
+  - IKBKG
+  - NFKBIA
+  - NFKBIB
+  - NFKBIE
+  - RELA
+  - NFKB1
+  - NFKB2
+  - RELB
+  - REL
+  drug:
+  - VS-5584:
+      rec_id: null
+      smiles_rxrx: null
+      target: PI3K
+      type: inhibitor
+  - PF 4989216:
+      rec_id: REC-0001679
+      smiles_pubchem: C1COCCN1C2=C(C(=C(S2)C3=NC=NN3)C4=C(C=C(C=C4)C#N)F)C#N
+      smiles_rxrx: FC1=C(C2=C(C3=NC=NN3)SC(N3CCOCC3)=C2C#N)C=CC(C#N)=C1
+      target: PI3K
+      type: inhibitor
+  - Pilaralisib:
+      rec_id: REC-0002228
+      smiles_pubchem: CC(C)(C(=O)NC1=CC(=CC=C1)S(=O)(=O)NC2=NC3=CC=CC=C3N=C2NC4=C(C=CC(=C4)OC)Cl)N
+      smiles_rxrx: COC1=CC(NC2=NC3=CC=CC=C3N=C2NS(=O)(=O)C2=CC=CC(NC(=O)C(C)(C)N)=C2)=C(Cl)C=C1
+      target: PI3K
+      type: inhibitor
+  - GDC-0980:
+      rec_id: null
+      smiles_rxrx: null
+      target: PI3K
+      type: inhibitor
+  - TPCA-1:
+      rec_id: null
+      smiles_rxrx: null
+      target: IKK
+      type: inhibitor
+  pathway:
+  - IFNalpha
+  - IFNAR
+  - PI-3K
+  - AKT
+  - IKK
+  - IkB
+  - NF-kB
+  perturbation:
+    gene: IFNalpha
+    name: Soluble factor addition of IFNalpha
+    type: soluble factor
+inflammatory diseases - IL-1b:
+  HGNC gene names:
+  - IL1B
+  - IL1R1
+  - IL1R2
+  - CHUK
+  - IKBKB
+  - IKBKG
+  - NFKBIA
+  - NFKBIB
+  - NFKBIE
+  - RELA
+  - NFKB1
+  - NFKB2
+  - RELB
+  - REL
+  drug:
+  - Canakinumab:
+      target: IL1B
+      type: antibody
+  - AZD-3264:
+      rec_id: null
+      smiles_rxrx: null
+      target: IKK
+      type: inhibitor
+  - TPCA-1:
+      rec_id: null
+      smiles_rxrx: null
+      target: IKK
+      type: inhibitor
+  - LY2409881:
+      rec_id: REC-0001938
+      smiles_pubchem: CN1CCN(CC1)CCCNC2=NC=C(C(=N2)C3=CC4=C(C=CC=C4S3)C(=O)NC5CC5)Cl
+      smiles_rxrx: CN1CCN(CCCNC2=NC=C(Cl)C(C3=CC4=C(C(=O)NC5CC5)C=CC=C4S3)=N2)CC1
+      target: IKK
+      type: inhibitor
+  - IKK-16:
+      rec_id: null
+      smiles_rxrx: null
+      target: IKK
+      type: inhibitor
+  - ACHP:
+      rec_id: REC-0003962
+      smiles_pubchem: C1CC1COC2=CC=CC(=C2C3=NC(=C(C(=C3)C4CCNCC4)C#N)N)O
+      smiles_rxrx: NC1=NC(C2=C(O)C=CC=C2OCC2CC2)=CC(C2CCNCC2)=C1C#N
+      target: IKK
+      type: inhibitor
+  pathway:
+  - IL-1beta
+  - IL-1Ralpha/beta
+  - IKK
+  - IkB
+  - NF-kB
+  perturbation:
+    gene: IL-1b
+    name: Soluble factor addition of IL-1b
+    rec_id: REC-SF-00849
+    type: soluble factor
+inflammatory diseases - IL-6 & IL-6R:
+  HGNC gene names:
+  - IL6
+  - IL6R
+  - IL6ST
+  - JAK1
+  - JAK2
+  - JAK3
+  - STAT1
+  - STAT2
+  - STAT3
+  - STAT4
+  - STAT5A
+  - STAT5B
+  - STAT6
+  drug:
+  - Tofacitinib:
+      rec_id: REC-2121622
+      smiles_pubchem: C[C@@H]1CCN(C[C@@H]1N(C)C2=NC=NC3=C2C=CN3)C(=O)CC#N
+      smiles_rxrx: C[C@@H]1CCN(C(=O)CC#N)C[C@@H]1N(C)C1=C2C=CNC2=NC=N1
+      target: JAK
+      type: inhibitor
+  - Baricitinib:
+      rec_id: REC-0001884
+      smiles_pubchem: CCS(=O)(=O)N1CC(C1)(CC#N)N2C=C(C=N2)C3=C4C=CNC4=NC=N3
+      smiles_rxrx: CCS(=O)(=O)N1CC(CC#N)(N2C=C(C3=C4C=CNC4=NC=N3)C=N2)C1
+      target: JAK
+      type: inhibitor
+  - Ruxolitinib:
+      rec_id: REC-0000267
+      smiles_pubchem: C1CCC(C1)[C@@H](CC#N)N2C=C(C=N2)C3=C4C=CNC4=NC=N3
+      smiles_rxrx: C1(C2=CN([C@@H](C3CCCC3)CC#N)N=C2)=NC=NC2=C1C=CN2
+      target: JAK
+      type: inhibitor
+  - Oclacitinib:
+      rec_id: REC-0005428
+      smiles_pubchem: CNS(=O)(=O)CC1CCC(CC1)N(C)C2=NC=NC3=C2C=CN3
+      smiles_rxrx: CNS(=O)(=O)CC1CCC(CC1)N(C)C1=NC=NC2=C1C=CN2
+      target: JAK
+      type: inhibitor
+  pathway:
+  - IL-6
+  - IL-6R
+  - gp130
+  - JAK
+  - STAT
+  perturbation:
+    gene:
+    - IL-6
+    - IL-6-R
+    name: Soluble factor addition of IL-6 and IL-6-R
+    rec_id: REC-SF-01109
+    type: soluble factor
+inflammatory diseases - INFgamma - JAK/STAT:
+  HGNC gene names:
+  - IFNGR1
+  - IFNGR2
+  - JAK1
+  - JAK2
+  - JAK3
+  - STAT1
+  - STAT2
+  - STAT3
+  - STAT4
+  - STAT5A
+  - STAT5B
+  - STAT6
+  - IRF1
+  - IRF2
+  - IRF3
+  - IRF4
+  - IRF5
+  - IRF6
+  - IRF7
+  - IRF8
+  - IRF9
+  drug:
+  - Baricitinib:
+      rec_id: REC-0001884
+      smiles_pubchem: CCS(=O)(=O)N1CC(C1)(CC#N)N2C=C(C=N2)C3=C4C=CNC4=NC=N3
+      smiles_rxrx: CCS(=O)(=O)N1CC(CC#N)(N2C=C(C3=C4C=CNC4=NC=N3)C=N2)C1
+      target: JAK
+      type: inhibitor
+  - Ruxolitinib:
+      rec_id: REC-0000267
+      smiles_pubchem: C1CCC(C1)[C@@H](CC#N)N2C=C(C=N2)C3=C4C=CNC4=NC=N3
+      smiles_rxrx: C1(C2=CN([C@@H](C3CCCC3)CC#N)N=C2)=NC=NC2=C1C=CN2
+      target: JAK
+      type: inhibitor
+  - Tofacitinib:
+      rec_id: REC-2121622
+      smiles_pubchem: C[C@@H]1CCN(C[C@@H]1N(C)C2=NC=NC3=C2C=CN3)C(=O)CC#N
+      smiles_rxrx: C[C@@H]1CCN(C(=O)CC#N)C[C@@H]1N(C)C1=C2C=CNC2=NC=N1
+      target: JAK
+      type: inhibitor
+  - Oclacitinib:
+      rec_id: REC-0005428
+      smiles_pubchem: CNS(=O)(=O)CC1CCC(CC1)N(C)C2=NC=NC3=C2C=CN3
+      smiles_rxrx: CNS(=O)(=O)CC1CCC(CC1)N(C)C1=NC=NC2=C1C=CN2
+      target: JAK
+      type: inhibitor
+  - LY 2784544:
+      rec_id: REC-0001556
+      smiles_pubchem: CC1=CC(=NN1)NC2=NN3C(=C(N=C3C(=C2)CN4CCOCC4)C)CC5=C(C=C(C=C5)Cl)F
+      smiles_rxrx: CC1=NNC(NC2=NN3C(CC4=CC=C(Cl)C=C4F)=C(C)N=C3C(CN3CCOCC3)=C2)=C1
+      target: JAK
+      type: inhibitor
+  - Cerdulatinib:
+      rec_id: REC-0001886
+      smiles_pubchem: CCS(=O)(=O)N1CCN(CC1)C2=CC=C(C=C2)NC3=NC=C(C(=N3)NC4CC4)C(=O)N
+      smiles_rxrx: CCS(=O)(=O)N1CCN(C2=CC=C(NC3=NC=C(C(N)=O)C(NC4CC4)=N3)C=C2)CC1
+      target: JAK
+      type: inhibitor
+  - CYT 387:
+      rec_id: REC-0001152
+      smiles_pubchem: C1COCCN1C2=CC=C(C=C2)NC3=NC=CC(=N3)C4=CC=C(C=C4)C(=O)NCC#N
+      smiles_rxrx: O=C(NCC#N)C1=CC=C(C2=NC(NC3=CC=C(N4CCOCC4)C=C3)=NC=C2)C=C1
+      target: JAK
+      type: inhibitor
+  - Decernotinib:
+      rec_id: REC-0003935
+      smiles_pubchem: CC[C@](C)(C(=O)NCC(F)(F)F)NC1=NC(=NC=C1)C2=CNC3=C2C=CC=N3
+      smiles_rxrx: CC[C@@](C)(NC1=NC(C2=CNC3=NC=CC=C23)=NC=C1)C(=O)NCC(F)(F)F
+      target: JAK
+      type: inhibitor
+  - NVP-BSK805:
+      rec_id: null
+      smiles_rxrx: null
+      target: JAK
+      type: inhibitor
+  - Solcitinib:
+      rec_id: REC-0064467
+      smiles_pubchem: CC1(CN(C1)C(=O)C2=CC=C(C=C2)C3=CC=CC4=NC(=NN43)NC(=O)C5CC5)C
+      smiles_rxrx: CC1(C)CN(C(=O)C2=CC=C(C3=CC=CC4=NC(NC(=O)C5CC5)=NN34)C=C2)C1
+      target: JAK
+      type: inhibitor
+  - TG 101209:
+      rec_id: REC-0001084
+      smiles_pubchem: CC1=CN=C(N=C1NC2=CC(=CC=C2)S(=O)(=O)NC(C)(C)C)NC3=CC=C(C=C3)N4CCN(CC4)C
+      smiles_rxrx: CN1CCN(C2=CC=C(NC3=NC=C(C)C(NC4=CC(S(=O)(=O)NC(C)(C)C)=CC=C4)=N3)C=C2)CC1
+      target: JAK
+      type: inhibitor
+  - TG 101348:
+      rec_id: REC-0000750
+      smiles_pubchem: CC1=CN=C(N=C1NC2=CC(=CC=C2)S(=O)(=O)NC(C)(C)C)NC3=CC=C(C=C3)OCCN4CCCC4
+      smiles_rxrx: CC1=C(NC2=CC=CC(S(=O)(=O)NC(C)(C)C)=C2)N=C(NC2=CC=C(OCCN3CCCC3)C=C2)N=C1
+      target: JAK
+      type: inhibitor
+  - AZ 960:
+      rec_id: REC-0001076
+      smiles_pubchem: CC1=CC(=NN1)NC2=C(C=C(C(=N2)N[C@@H](C)C3=CC=C(C=C3)F)C#N)F
+      smiles_rxrx: C[C@H](NC1=NC(NC2=NNC(C)=C2)=C(F)C=C1C#N)C1=CC=C(F)C=C1
+      target: JAK
+      type: inhibitor
+  - CEP 33779:
+      target: JAK
+      type: inhibitor
+  pathway:
+  - INFgamma receptor1/2
+  - JAK
+  - STAT
+  - IRF
+  perturbation:
+    gene: INFgamma
+    name: Soluble factor addition of INFgamma
+    rec_id:
+    - REC-SF-01126
+    - REC-SF-00645
+    type: soluble factor

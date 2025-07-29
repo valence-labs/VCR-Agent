@@ -1,0 +1,635 @@
+Angiogenic factor/tumors:
+  HGNC gene names:
+  - VEGFA
+  - FLT1
+  - KDR
+  - FLT4
+  - PIK3C3
+  - PIK3CD
+  - PIK3CA
+  - PIK3CB
+  - PIK3CG
+  - PIK3C2A
+  - PIK3C2B
+  - PIK3C2G
+  - PTEN
+  - PDPK1
+  - AKT1
+  - AKT2
+  - AKT3
+  - TSC2
+  - Rheb
+  - mTOR
+  - EGF
+  - EGFR
+  drug: []
+  pathway:
+  - VEGF
+  - VEGFR
+  - PI-3K
+  - PTEN
+  - PDPK1
+  - AKT
+  - TSC2
+  - Rheb
+  - mTOR
+  - EGF
+  - EGFR
+  perturbation: Soluble factor addition of VEGF
+Asthma and allergy - IL-13:
+  HGNC gene names:
+  - IL4
+  - IL4R
+  - IL2RG
+  - JAK1
+  - JAK2
+  - JAK3
+  - STAT1
+  - STAT2
+  - STAT3
+  - STAT4
+  - STAT5A
+  - STAT5B
+  - STAT6
+  - IL13
+  - IL13RA1
+  - IL6
+  - IL6R
+  - IL6ST
+  pathway:
+  - IL-4
+  - IL-4 receptor alpha
+  - yC
+  - JAK
+  - STAT
+  - IL-13
+  - IL-13 receptor alpha1
+  - IL-6
+  - IL-6 receptor
+  perturbation: Soluble factor addition of IL-13
+Buschke-Ollendorff syndrome:
+  HGNC gene names:
+  - TGFBR1
+  - TGFBR2
+  - TGFBR3
+  - SMAD2
+  - SMAD3
+  - SMAD4
+  - LEMD3
+  KO: LEMD3
+  drug: galunasertib
+  pathway:
+  - TGF beta receptor
+  - SMAD2
+  - SMAD3
+  - SMAD4
+  - LEMD3
+Cowden syndrome:
+  HGNC gene names:
+  - EGFR
+  - FLT1
+  - KDR
+  - FLT4
+  - PTEN
+  - PIK3C3
+  - PIK3CD
+  - PIK3CA
+  - PIK3CB
+  - PIK3CG
+  - PIK3C2A
+  - PIK3C2B
+  - PIK3C2G
+  - PDPK1
+  - AKT1
+  - AKT2
+  - AKT3
+  - TSC2
+  - Rheb
+  - mTOR
+  KO: PTEN
+  drug: RITA
+  pathway:
+  - EGFR
+  - VEGFR
+  - PTEN
+  - PI-3K
+  - PDPK1
+  - AKT
+  - TSC2
+  - Rheb
+  - mTOR
+Fibrosis diseases & cancers:
+  HGNC gene names:
+  - TGFB2
+  - TGFBR1
+  - TGFBR2
+  - TGFBR3
+  - SRC
+  - MAP3K7
+  - TAB1
+  drug: []
+  pathway:
+  - TGF beta-2
+  - TGF beta receptor
+  - SRC
+  - TAK1
+  - TAB1
+  perturbation: Soluble factor addition of TGF beta-2
+Li-Fraumeni Syndrome:
+  HGNC gene names:
+  - MDM2
+  - TP53
+  KO: P53
+  drug: RITA
+  pathway:
+  - MDM2
+  - P53
+Multiple cancers - BRAF V600E:
+  HGNC gene names:
+  - EGFR
+  - HRAS
+  - KRAS
+  - NRAS
+  - RAF1
+  - MAP2K1
+  - MAP2K2
+  - MAPK3
+  - MAPK1
+  - BRAF
+  drug:
+  - Ulixterinib
+  - Dabrafenib
+  - MEK162
+  pathway:
+  - EGFR
+  - RAS
+  - CRAF
+  - MEK
+  - ERK
+  - BRAF V600E
+  perturbation: BacMam gain-of-function expression of BRAF V600E
+Multiple cancers - colon cancer - APC:
+  HGNC gene names:
+  - APC
+  - AXIN1
+  - AXIN2
+  - CSNK1A1
+  - GSK3B
+  - CTNNB1
+  - TCF7
+  - LEF1
+  - TCF7L1
+  - TCF7L2
+  - MAP2K1
+  - MAP2K2
+  - MAPK3
+  - MAPK1
+  - HRAS
+  - KRAS
+  - NRAS
+  drug:
+  - Crizotinib
+  - Trametinib
+  - PD 318088
+  - Refametinib
+  - AZD8330
+  - GDC-0623
+  - PD 184352
+  - BI 847325
+  - Pimasertib
+  - PD184352
+  - RO 5126766
+  - MEK 162
+  pathway:
+  - APC
+  - Axin
+  - CK1
+  - GSK3beta
+  - beta-catenin
+  - TCF
+  - MEK
+  - ERK
+  - RAS
+  perturbation: siRNA inhibition of APC expression
+Neurofibromatosis type 1:
+  HGNC gene names:
+  - EGFR
+  - KDR
+  - FLT1
+  - FLT4
+  - FGFR1
+  - FGFR2
+  - FGFR3
+  - FGFR4
+  - HRAS
+  - KRAS
+  - NRAS
+  - MAP2K1
+  - MAP2K2
+  - MAPK3
+  - MAPK1
+  - NF1
+  KO: NF1
+  drug: GDC-0623
+  pathway:
+  - TKR
+  - RAS
+  - MEK
+  - ERK
+  - NF1
+Neurofibromatosis type 2:
+  HGNC gene names:
+  - TGFBR1
+  - PEBP1
+  - MAPK1
+  - MAPK3
+  - MAPK8
+  - MAPK9
+  - MAPK10
+  - MAPK14
+  - MAPK11
+  - MAPK12
+  - MAPK13
+  - SNAI1
+  - SNAI2
+  - TP53
+  - TGFBR2
+  - NF2
+  KO: NF2
+  drug: LDK378
+  pathway:
+  - TGFBR1
+  - RKIP
+  - MAPK
+  - SNAIL
+  - P53
+  - TGFBR2
+  - NF2
+Pathway biology modulation:
+  HGNC gene names:
+  - JAK1
+  - JAK2
+  - JAK3
+  - STAT1
+  - STAT2
+  - STAT3
+  - STAT4
+  - STAT5A
+  - STAT5B
+  - STAT6
+  - IL4R
+  - IL2RG
+  - IL13RA1
+  - IL6ST
+  - IL6R
+  - SOCS3
+  KO: SOCS3
+  drug:
+  - Cerdulatinib
+  - Oclacitinib
+  - Ruxolitinib
+  - Tofacitinib
+  - CEP-33779
+  - CYT387
+  - Solcitinib
+  - AZ960
+  - Decernotinib
+  - TPCA-1
+  - NVP-BSK805
+  - AZ960
+  pathway:
+  - JAK
+  - STAT
+  - IL-4Ralpha
+  - gammaC
+  - IL-13Ralpha1
+  - gp130
+  - IL-6R
+  - SOCS3
+Pulmonary hypertension:
+  HGNC gene names:
+  - TGFBR1
+  - TGFBR2
+  - TGFBR3
+  - SRC
+  - MAP3K7
+  - TAB1
+  - ACVRL1
+  - BMPR2
+  KO: BMPR2
+  disease_model: Pulmonary hypertension
+  drug: Saracatinib
+  pathway:
+  - TGF beta receptor
+  - SRC
+  - TAK1
+  - TAB1
+  - ALK1
+  - BMPR2
+Systemic lupus erythematosus:
+  HGNC gene names:
+  - IFNA1
+  - IFNA2
+  - IFNA4
+  - IFNA5
+  - IFNAR1
+  - IFNAR2
+  - PIK3C3
+  - PIK3CD
+  - PIK3CA
+  - PIK3CB
+  - PIK3CG
+  - PIK3C2A
+  - PIK3C2B
+  - PIK3C2G
+  - AKT1
+  - AKT2
+  - AKT3
+  - CHUK
+  - IKBKB
+  - IKBKG
+  - NFKBIA
+  - NFKBIB
+  - NFKBIE
+  - RELA
+  - NFKB1
+  - NFKB2
+  - RELB
+  - REL
+  - JAK1
+  - JAK2
+  - JAK3
+  - STAT1
+  - STAT2
+  - STAT3
+  - STAT4
+  - STAT5A
+  - STAT5B
+  - STAT6
+  drug:
+  - Sifalimumab
+  - Anifrolumab
+  pathway:
+  - IFNalpha
+  - IFNAR
+  - PI-3K
+  - AKT
+  - IKK
+  - IkB
+  - NF-kB
+  - JAK
+  - STAT
+  perturbation: Soluble factor addition of IFNalpha
+Tuberous sclerosis:
+  HGNC gene names:
+  - EGFR
+  - FLT1
+  - KDR
+  - FLT4
+  - PTEN
+  - PIK3C3
+  - PIK3CD
+  - PIK3CA
+  - PIK3CB
+  - PIK3CG
+  - PIK3C2A
+  - PIK3C2B
+  - PIK3C2G
+  - PDPK1
+  - AKT1
+  - AKT2
+  - AKT3
+  - TSC2
+  - Rheb
+  - mTOR
+  KO: TSC2
+  drug: RITA
+  pathway:
+  - EGFR
+  - VEGFR
+  - PTEN
+  - PI-3K
+  - PDPK1
+  - AKT
+  - TSC2
+  - Rheb
+  - mTOR
+Von Hippel Lindau syndrome:
+  HGNC gene names:
+  - ARNT
+  - EPAS1
+  - EGLN1
+  - EGLN2
+  - EGLN3
+  - VHL
+  - RBX1
+  - ELOC
+  - ELOB
+  - Cul2
+  - Nedd8
+  KO: VHL
+  drug:
+  - PT2385
+  pathway:
+  - HIF-1beta
+  - HIF-2alpha
+  - PHD
+  - VHL
+  - Rbx
+  - EI C
+  - EI B
+  - Cul2
+  - Nedd8
+autoimmune diseases:
+  HGNC gene names:
+  - TNF
+  - TNFRSF1A
+  - TNFRSF1B
+  - CHUK
+  - IKBKB
+  - IKBKG
+  - NFKBIA
+  - NFKBIB
+  - NFKBIE
+  - RELA
+  - NFKB1
+  - NFKB2
+  - RELB
+  - REL
+  drug:
+  - LY 2409881
+  pathway:
+  - TNF alpha
+  - TNFR
+  - IKK
+  - IkB
+  - NF-kB
+  perturbation: Soluble factor addition of TNF alpha
+inflammatory diseases - IFNalpha - JAK/STAT:
+  HGNC gene names:
+  - JAK1
+  - JAK2
+  - JAK3
+  - STAT1
+  - STAT2
+  - STAT3
+  - STAT4
+  - STAT5A
+  - STAT5B
+  - STAT6
+  drug:
+  - Ruxolitinib
+  - AZD1480
+  - Baricitinib
+  - Tofacitinib
+  - AZ960
+  pathway:
+  - JAK
+  - STAT
+  perturbation: Soluble factor addition of IFNalpha
+inflammatory diseases - IFNalpha - PI-3K/AKT/IKK/NF-kB:
+  HGNC gene names:
+  - IFNA1
+  - IFNA2
+  - IFNA4
+  - IFNA5
+  - IFNAR1
+  - IFNAR2
+  - PIK3C3
+  - PIK3CD
+  - PIK3CA
+  - PIK3CB
+  - PIK3CG
+  - PIK3C2A
+  - PIK3C2B
+  - PIK3C2G
+  - AKT1
+  - AKT2
+  - AKT3
+  - CHUK
+  - IKBKB
+  - IKBKG
+  - NFKBIA
+  - NFKBIB
+  - NFKBIE
+  - RELA
+  - NFKB1
+  - NFKB2
+  - RELB
+  - REL
+  drug:
+  - VS-5584
+  - PF 4989216
+  - Pilaralisib
+  - GDC-0980
+  - TPCA-1
+  pathway:
+  - IFNalpha
+  - IFNAR
+  - PI-3K
+  - AKT
+  - IKK
+  - IkB
+  - NF-kB
+  perturbation: Soluble factor addition of IFNalpha
+inflammatory diseases - IL-1b:
+  HGNC gene names:
+  - IL1B
+  - IL1R1
+  - IL1R2
+  - CHUK
+  - IKBKB
+  - IKBKG
+  - NFKBIA
+  - NFKBIB
+  - NFKBIE
+  - RELA
+  - NFKB1
+  - NFKB2
+  - RELB
+  - REL
+  drug:
+  - Canakinumab
+  - AZD-3264
+  - TPCA-1
+  - LY2409881
+  - IKK-16
+  - ACHP
+  pathway:
+  - IL-1beta
+  - IL-1Ralpha/beta
+  - IKK
+  - IkB
+  - NF-kB
+  perturbation: Soluble factor addition of IL-1b
+inflammatory diseases - IL-6 & IL-6R:
+  HGNC gene names:
+  - IL6
+  - IL6R
+  - IL6ST
+  - JAK1
+  - JAK2
+  - JAK3
+  - STAT1
+  - STAT2
+  - STAT3
+  - STAT4
+  - STAT5A
+  - STAT5B
+  - STAT6
+  drug:
+  - Tofacitinib
+  - Baricitinib
+  - Ruxolitinib
+  - Oclacitinib
+  pathway:
+  - IL-6
+  - IL-6R
+  - gp130
+  - JAK
+  - STAT
+  perturbation: Soluble factor addition of IL-6 and IL-6-R
+inflammatory diseases - INFgamma - JAK/STAT:
+  HGNC gene names:
+  - IFNGR1
+  - IFNGR2
+  - JAK1
+  - JAK2
+  - JAK3
+  - STAT1
+  - STAT2
+  - STAT3
+  - STAT4
+  - STAT5A
+  - STAT5B
+  - STAT6
+  - IRF1
+  - IRF2
+  - IRF3
+  - IRF4
+  - IRF5
+  - IRF6
+  - IRF7
+  - IRF8
+  - IRF9
+  drug:
+  - Baricitinib
+  - Ruxolitinib
+  - Tofacitinib
+  - Oclacitinib
+  - LY 2784544
+  - Cerdulatinib
+  - CYT 387
+  - Decernotinib
+  - NVP-BSK805
+  - Solcitinib
+  - TG 101209
+  - TG 101348
+  - AZ 960
+  - CEP 33779
+  pathway:
+  - INFgamma receptor1/2
+  - JAK
+  - STAT
+  - IRF
+  perturbation: Soluble factor addition of INFgamma
