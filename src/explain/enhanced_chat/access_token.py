@@ -1,8 +1,9 @@
+import os
 import time
 import webbrowser
-import httpx
+
 import dotenv
-import os
+import httpx
 from loguru import logger
 
 dotenv.load_dotenv()
@@ -43,7 +44,7 @@ def get_access_token(auto_open=False):
     logger.debug("=" * 60)
     logger.debug("AUTHENTICATION REQUIRED")
     logger.debug("=" * 60)
-    logger.debug(f"Please open the following URL in your browser:")
+    logger.debug("Please open the following URL in your browser:")
     logger.debug(f"\n{device_code_response['verification_uri_complete']}\n")
     logger.debug(f"Or go to: {device_code_response['verification_uri']}")
     logger.debug(f"And enter code: {device_code_response['user_code']}")

@@ -1,32 +1,65 @@
 [![scorecard-score](https://github.com/recursionpharma/octo-guard-badges/blob/trunk/badges/repo/hooke-explain/maturity_score.svg?raw=true)](https://infosec-docs.prod.rxrx.io/octoguard/scorecards/hooke-explain)
 [![scorecard-status](https://github.com/recursionpharma/octo-guard-badges/blob/trunk/badges/repo/hooke-explain/scorecard_status.svg?raw=true)](https://infosec-docs.prod.rxrx.io/octoguard/scorecards/hooke-explain)
 
-# hooke-explain
+# Hooke Explain
+
 The codebase for the explain component of Hooke
 
+## Quick Start
 
+For detailed installation instructions, see [docs/installation.md](docs/installation.md).
 
-## Installation:
+### Prerequisites
+- Python 3.12
+- [uv](https://docs.astral.sh/uv/) package manager
 
+### Basic Setup
+
+**Automated Setup (Recommended)**
 ```bash
-#Install uv:
-make install-uv
+# Clone with submodules
+git clone --recurse-submodules git@github.com:recursionpharma/hooke-explain.git
+cd hooke-explain
 
-# Create a Py3.12 env:
-uv venv --python 3.12
-source .venv/bin/activate
-
-#Install dependencies:
-make install
+# Run automated setup
+make setup
+# Verify installation
+uv run python -c "import explain; print('OK')"
 ```
 
+## Project Structure
 
-## Development:
-To modify dependencies:
+- **src/explain/** - Main explanation package
+- **cb-reach/** - Git submodule for CB Reach functionality
+- **notebooks/** - Jupyter notebooks for experimentation
+- **docs/** - Documentation
+
+## Development
+
+### Code Quality
 ```bash
-# To add a new dependency:
-uv add torch
+# Using uv directly
+uv run ruff check .
+uv run ruff format .
 
-# To remove a dependency:
-uv remove torch
+# Using Makefile (recommended)
+make lint
+make format
+make precommit  # runs both lint and format
 ```
+
+### Makefile Commands
+```bash
+make help           # Show all available commands
+make setup          # Complete project setup
+make cbreach        # setup cb-reach submodule and dependencies
+make test           # Run tests
+```
+
+### Working with cb-reach
+Both the main project and cb-reach submodule use uv for dependency management. uv automatically handles virtual environments for each project.
+
+## Documentation
+
+- [Installation Guide](docs/installation.md) - Comprehensive setup instructions
+- [CB-Reach README](cb-reach/README.md) - Submodule documentation
