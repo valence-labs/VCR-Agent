@@ -16,6 +16,7 @@ dependencies = [
   "cb-reach",
   "enhanced-chat-client",
   "anthropic>=0.49.0",
+  "google-auth>=2.40.3",
 ]
 
 [project.optional-dependencies]
