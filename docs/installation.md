@@ -17,6 +17,15 @@ cd hooke-explain
 git submodule update --init --recursive
 ```
 
+### 2. Install Main Project (hooke-explain)
+```bash
+# Install dependencies
+uv sync
+
+# Install in development mode
+uv pip install -e .
+```
+
 ### 3. Install cb-reach Submodule
 ```bash
 cd cb-reach
@@ -28,15 +37,6 @@ uv sync
 # uv pip install -e .
 
 cd ..
-```
-
-### 3. Install Main Project (hooke-explain)
-```bash
-# Install dependencies
-uv sync
-
-# Install in development mode
-uv pip install -e .
 ```
 
 
@@ -77,10 +77,8 @@ make help                # Show all available commands
 make install-uv          # Install uv package manager
 make setup-submodules    # Initialize git submodules
 make install             # Install main project
-make install-cbreach     # Install cb-reach dependencies
-make install-all         # Install both main project and cb-reach
+make cb-reach            # Install cb-reach dependencies
 make setup               # Complete setup (submodules + dependencies)
-make update-cbreach      # Update cb-reach and install dependencies
 ```
 
 ### Development Commands
@@ -88,8 +86,7 @@ make update-cbreach      # Update cb-reach and install dependencies
 make lint               # Run ruff linting
 make format             # Format code with ruff
 make precommit          # Run both lint and format
-make test               # Run main project tests
-make test-cbreach       # Run cb-reach tests
+make test               # Run tests
 ```
 
 ## Troubleshooting
@@ -105,7 +102,7 @@ git submodule status
 git submodule update --init --recursive
 
 # Install cb-reach dependencies with uv
-cd cb-reach && uv sync && cd ..
+make cb-reach
 ```
 
 **Python version / dependencies conflicts:**
@@ -113,18 +110,6 @@ cd cb-reach && uv sync && cd ..
 - Ensure you have Python 3.12 installed
 - cb-reach originally uses Poetry but we convert to uv
 
-### Environment Management
-
-**uv automatically manages virtual environments:**
-```bash
-# Main project
-cd /path/to/hooke-explain
-uv run python  # automatically uses project's virtual environment
-
-# cb-reach
-cd cb-reach
-uv run python  # automatically uses cb-reach's virtual environment
-```
 
 **Manual environment activation (if needed):**
 ```bash

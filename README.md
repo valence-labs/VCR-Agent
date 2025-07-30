@@ -38,28 +38,23 @@ uv run python -c "import explain; print('OK')"
 
 ### Code Quality
 ```bash
-# Using uv directly
-uv run ruff check .
-uv run ruff format .
-
-# Using Makefile (recommended)
 make lint
 make format
 make precommit  # runs both lint and format
 ```
 
+You can also use ruff command directly if you prefer (e.g: `uv run ruff check --fix`)
+
 ### Makefile Commands
 ```bash
 make help           # Show all available commands
 make setup          # Complete project setup
-make cbreach        # setup cb-reach submodule and dependencies
+make cb-reach        # setup cb-reach submodule and dependencies
 make test           # Run tests
 ```
 
 ### Working with cb-reach
-Both the main project and cb-reach submodule use uv for dependency management. uv automatically handles virtual environments for each project.
-
+You might need to install the cb-reach repo to get access to the programmatic API of enhanced-chat. In our setup we do not want to alter the original code, so you are stuck with using `poetry` for installation. <>
 ## Documentation
 
 - [Installation Guide](docs/installation.md) - Comprehensive setup instructions
-- [CB-Reach README](cb-reach/README.md) - Submodule documentation
