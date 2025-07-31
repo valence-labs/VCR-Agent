@@ -1,39 +1,60 @@
 [![scorecard-score](https://github.com/recursionpharma/octo-guard-badges/blob/trunk/badges/repo/hooke-explain/maturity_score.svg?raw=true)](https://infosec-docs.prod.rxrx.io/octoguard/scorecards/hooke-explain)
 [![scorecard-status](https://github.com/recursionpharma/octo-guard-badges/blob/trunk/badges/repo/hooke-explain/scorecard_status.svg?raw=true)](https://infosec-docs.prod.rxrx.io/octoguard/scorecards/hooke-explain)
 
-# hooke-explain
-We are building hooke-explain!
+# Hooke Explain
 
+The codebase for the explain component of Hooke
 
-## Repository Structure
+## Quick Start
 
-This repository is organized into several key directories:
+For detailed installation instructions, see [docs/installation.md](docs/installation.md).
 
-*   `src/`: Contains the installable source code for the `hooke-explain` package.
-*   `tests/`: Contains unit tests for the project.
+### Prerequisites
+- Python 3.12
+- [uv](https://docs.astral.sh/uv/) package manager
 
+### Basic Setup
 
-## Installation:
-
+**Automated Setup (Recommended)**
 ```bash
-#Install uv:
-make install-uv
+# Clone with submodules
+git clone --recurse-submodules git@github.com:recursionpharma/hooke-explain.git
+cd hooke-explain
 
-# Create a Py3.12 env:
-uv venv --python 3.12
-source .venv/bin/activate
-
-#Install dependencies:
-make install
+# Run automated setup
+make setup
+# Verify installation
+uv run python -c "import explain; print('OK')"
 ```
 
+## Project Structure
 
-## Development:
-To modify dependencies:
+- **src/explain/** - Main explanation package
+- **cb-reach/** - Git submodule for CB Reach functionality
+- **notebooks/** - Jupyter notebooks for experimentation
+- **docs/** - Documentation
+
+## Development
+
+### Code Quality
 ```bash
-# To add a new dependency:
-uv add torch
-
-# To remove a dependency:
-uv remove torch
+make lint
+make format
+make precommit  # runs both lint and format
 ```
+
+You can also use ruff command directly if you prefer (e.g: `uv run ruff check --fix`)
+
+### Makefile Commands
+```bash
+make help           # Show all available commands
+make setup          # Complete project setup
+make cb-reach        # setup cb-reach submodule and dependencies
+make test           # Run tests
+```
+
+### Working with cb-reach
+You might need to install the cb-reach repo to get access to the programmatic API of enhanced-chat. In our setup we do not want to alter the original code, so you are stuck with using `poetry` for installation. <>
+## Documentation
+
+- [Installation Guide](docs/installation.md) - Comprehensive setup instructions
