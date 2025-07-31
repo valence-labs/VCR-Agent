@@ -10,13 +10,64 @@ GEMINI_MODEL_NAME = "gemini-1.5-flash"
 genai.configure()
 
 
-def CheckSubcellularLocation(entity: str) -> Dict:
+def CheckSubcellularLocation(entity: str, from_loc: str, to_loc: str) -> Dict:
+    """
+    Checks whether a given entity (e.g., protein or gene) is reported to localize in both specified subcellular locations,
+    and whether a translocation event between these locations is documented.
+    Args:
+        entity (str): The name or identifier of the entity (e.g., protein or gene) to check.
+        from_loc (str): The source subcellular location.
+        to_loc (str): The target subcellular location.
+    Returns:
+        Dict: A tuple containing two boolean values:
+            - scl_bool (bool): True if both from_loc and to_loc are reported subcellular locations for the entity.
+            - trans_scl_bool (bool): True if a translocation event between from_loc and to_loc is documented.
+    Notes:
+        - The function does not account for cellular context.
+        - Handles alias resolution for the entity.
+        - Future improvements may include plausibility scoring and SCL term standardization.
+    """
     # when translocalisation availble, check whether the predicted translocalisation matches,
     # some translocalisation data are availbale from Uniprot
     # if not, check whether both scls have been reported.
     # Caustion: the celluar context is not taken into account for this version.
 
-    return
+    # todo: dealing with complex, e.g. SMAD2/3 complex, NF-κB (p65/p50), phosphorylated STAT1,
+    #       and ambigous terms e.g. STAT proteins
+
+    # get the alias identifier for the given entity
+    entity_alias = get_gene_ids(entity)
+
+    # get SCLs and translocation events
+    if entity_alias:
+        scl_info = GetSubcellularLocation(entity_alias)
+
+        scl_bool = from_loc in scl_info["locations"] & to_loc in scl_info["locations"]
+        trans_scl_bool = False
+        if scl_info["translocations"]:
+            trans_scl_bool = tanslocation_match(from_loc, to_loc, scl_info["translocations"])
+
+    # todo: maybe add plausibility score
+    # todo: SCL term standardization
+    return scl_bool, trans_scl_bool
+
+
+def tanslocation_match(from_loc, to_loc, reference) -> bool:
+    """
+    Checks if a translocation from a given location to another location exists in the reference data.
+
+    Args:
+        from_loc: The source location to check for translocation.
+        to_loc: The destination location to check for translocation.
+        reference: An iterable of dictionaries, each representing a translocation with 'from' and 'to_loc' keys.
+
+    Returns:
+        bool: True if a matching translocation is found in the reference, False otherwise.
+    """
+    for ref in reference:
+        if (reference["from"] == from_loc) and (reference["to_loc"] == to_loc):
+            return True
+    return False
 
 
 def GetSubcellularLocation(entity: str) -> Dict:
@@ -52,12 +103,26 @@ def scl_from_KG():
 
 
 def get_translocalization():
+    # other data sources
     NotImplemented
 
 
 def scl_from_uniprot(uniprot_accession: str) -> List[str]:
     """
-    Retrieves the subcellular localization for a given UniProt accession ID.
+    Retrieves subcellular localization (SCL) information for a given UniProt accession ID using the UniProt REST API.
+
+    Args:
+        uniprot_accession (str): The UniProt accession ID of the protein.
+
+    Returns:
+        Tuple[List[str], List[Any]]:
+            - available_scls: A list of subcellular localization names extracted from the UniProt entry.
+            - all_trans_scls: A list of translocation details extracted and processed from the UniProt entry.
+
+    Notes:
+        - This function queries the UniProt API for subcellular location comments.
+        - Translocation details are further processed using the `extract_translocation_details_with_gemini` function.
+        - In case of a request error, an error message is printed and empty lists are returned.
     """
     # Todo: return GO terms for SCLs
 
@@ -76,14 +141,10 @@ def scl_from_uniprot(uniprot_accession: str) -> List[str]:
         data = response.json()
 
         # Extract the subcellular location information
-        subcellular_location = data.get("comments", [{}])[0].get(
-            "subcellularLocations", []
-        )
+        subcellular_location = data.get("comments", [{}])[0].get("subcellularLocations", [])
 
         if subcellular_location:
-            available_scls = [
-                loc.get("location", {}).get("value") for loc in subcellular_location
-            ]
+            available_scls = [loc.get("location", {}).get("value") for loc in subcellular_location]
 
         # Extract the translocation information
         translocation = data.get("comments", [{}])[0].get("note", [])
@@ -101,8 +162,17 @@ def scl_from_uniprot(uniprot_accession: str) -> List[str]:
 
 def scl_from_HPA(ensembl_id):
     """
-    Retrieves subcellular localization and GO terms for a given
-    Ensembl gene ID from the Human Protein Atlas.
+    Retrieves subcellular localization information for a given Ensembl gene ID from the Human Protein Atlas (HPA).
+
+    Args:
+        ensembl_id (str): The Ensembl gene ID for which to retrieve subcellular localization data.
+
+    Returns:
+        list: A list of subcellular localizations associated with the gene, or an empty list if none are found or an error occurs.
+
+    Notes:
+        - This function queries the HPA API and expects the response to contain a "Subcellular location" field.
+        - If the request fails or the field is missing, an empty list is returned.
     """
     # The HPA API endpoint for retrieving data for a specific gene
     url = f"https://www.proteinatlas.org/{ensembl_id}.json"
