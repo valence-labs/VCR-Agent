@@ -39,10 +39,16 @@ class TestCelluarLocalization(unittest.TestCase):
     def test_translocation_with_gemini(self):
         scl_text = "In response to EGF, translocated from the cell membrane to the nucleus via Golgi and ER (PubMed:17909029, PubMed:20674546). Endocytosed upon activation by ligand (PubMed:17182860, PubMed:17909029, PubMed:27153536, PubMed:2790960)."
         extracted = extract_translocation_details_with_gemini(scl_text)
-        expected = [{"type": "translocation", "from": "cell membrane", "to": "nucleus"}]
+        expected = [{ "from": "cell membrane", "to": "nucleus", "is_phosphorylated": None}]
         self.assertListEqual(extracted, expected)
 
         scl_text = "Colocalized with GPER1 in the nucleus of estrogen agonist-induced cancer-associated fibroblasts (CAF) (PubMed:20551055)"
         extracted = extract_translocation_details_with_gemini(scl_text)
         expected = []
+        self.assertListEqual(extracted, expected)
+
+
+        scl_text = "Translocated into the nucleus upon tyrosine phosphorylation and dimerization, in response to IFN-gamma and signaling by activated FGFR1, FGFR2, FGFR3 or FGFR4 (PubMed:15322115)."
+        extracted = extract_translocation_details_with_gemini(scl_text)
+        expected = [{"from": None, "to": "nucleus", "is_phosphorylated": True}]
         self.assertListEqual(extracted, expected)

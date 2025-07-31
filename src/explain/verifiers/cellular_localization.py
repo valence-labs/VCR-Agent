@@ -7,6 +7,7 @@ import google.generativeai as genai
 from explain.verifiers.verifier_utils import get_gene_ids
 
 GEMINI_MODEL_NAME = "gemini-1.5-flash"
+genai.configure()
 
 
 def CheckSubcellularLocation(entity: str) -> Dict:
@@ -134,16 +135,13 @@ def extract_translocation_details_with_gemini(text_to_analyze: str) -> list[dict
                     {"type": "translocation", "from": "start_location", "to": "end_location"}.
                     Returns an empty list if extraction fails or no data.
     """
-    
-    genai.configure()
-    
+
     model = genai.GenerativeModel(GEMINI_MODEL_NAME)
 
     # --- Crafting the Improved Prompt ---
     # We're making the prompt much more specific about the "from" and "to" fields,
     # and providing a direct example matching the desired output format.
 
-    # 
     prompt_instruction = (
         "From the following text, identify all instances where a substance or entity "
         "is described as 'translocating to' or 'translocating into' a specific location. "
@@ -151,17 +149,18 @@ def extract_translocation_details_with_gemini(text_to_analyze: str) -> list[dict
         "('translocate to' or 'translocating into') and the precise location it moves to. "
         "For each identified event, provide the following details "
         "in a JSON object: "
-        "`type` (always 'translocation'), `from` (the origin location), and `to` (the destination location)."
-        "If an 'from' location is not explicitly mentioned but implied as an initial state, infer it if logical (e.g., default 'cellular context')."
-        "If only a 'to' location is mentioned, the 'from' field can be null or 'unknown'."
+        "`from` (the origin location), `to` (the destination location), and `is_phosphorylated` (the phosphorylation boolean)."
+        "If a 'from' location is not explicitly mentioned but implied as an initial state, infer it if logical (e.g., default 'cellular context')."
+        "If only a 'to' location is mentioned, the 'from' field can be null."
         "If a 'from' location is not directly related to a 'to' in a translocation, only provide the 'to' location."
+        "If a 'is_phosphorylated' is not mentioned, the 'is_phosphorylated' field can be null. "
         "Ignore thes event describes 'colocalization in' a location."
         "Return the results as a JSON array of these objects."
         "\n\nExample Output Format:"
         "`[`"
-        '`  {"type": "translocation", "from": "cell membrane", "to": "nucleus"},`'
-        '`  {"type": "translocation", "from": "unknown", "to": "cytoplasm"},`'
-        '`  {"type": "translocation", "from": null, "to": "nucleus"}`'
+        '`  { "from": "cell membrane", "to": "nucleus", "is_phosphorylated": null},`'
+        '`  { "from": null, "to": "cytoplasm", "is_phosphorylated": True},`'
+        '`  { "from": null, "to": "nucleus", "is_phosphorylated": null}`'
         "`]`"
         "\n\nOnly return the JSON array. Do not include any other text, explanations, or conversational filler."
     )
@@ -181,7 +180,7 @@ def extract_translocation_details_with_gemini(text_to_analyze: str) -> list[dict
 
         # Parse the JSON string into a Python list of dictionaries
         parsed_data = json.loads(json_output_str)
-
+        print(parsed_data)
         return parsed_data
 
     except Exception as e:
