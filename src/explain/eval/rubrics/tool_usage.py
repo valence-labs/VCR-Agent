@@ -1,7 +1,8 @@
 import json
-from typing import Dict, Any, List, Optional
+from typing import Any
 
 from verifiers.rubrics.rubric import Rubric
+
 from explain.eval.tools import ToolVerifier
 
 
@@ -15,7 +16,7 @@ class ToolUsageRubric(Rubric):
     - The number of tool calls that match a provided ground truth.
     """
 
-    def __init__(self, ground_truth: Optional[List[Dict[str, Any]]] = None):
+    def __init__(self, ground_truth: list[dict[str, Any]] | None = None):
         """
         Initializes the tool usage rubric.
 
@@ -39,7 +40,7 @@ class ToolUsageRubric(Rubric):
         # Weights can be set by the user after initialization.
         super().__init__(funcs=reward_funcs)
 
-    def _get_assistant_tool_calls(self, completion: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _get_assistant_tool_calls(self, completion: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Extracts all tool calls from assistant messages in a conversation history."""
         all_tool_calls = []
         for msg in completion:
@@ -49,11 +50,11 @@ class ToolUsageRubric(Rubric):
                     all_tool_calls.extend(tool_calls)
         return all_tool_calls
 
-    def total_tool_calls(self, completion: List[Dict[str, Any]], **kwargs) -> float:
+    def total_tool_calls(self, completion: list[dict[str, Any]], **kwargs) -> float:
         """Counts the total number of tool calls in the conversation history."""
         return float(len(self._get_assistant_tool_calls(completion)))
 
-    def successful_tool_calls(self, completion: List[Dict[str, Any]], **kwargs) -> float:
+    def successful_tool_calls(self, completion: list[dict[str, Any]], **kwargs) -> float:
         """Counts the number of tool calls that execute without returning an error."""
         tool_calls = self._get_assistant_tool_calls(completion)
         if not tool_calls:
@@ -70,17 +71,17 @@ class ToolUsageRubric(Rubric):
             except (json.JSONDecodeError, TypeError):
                 # If the result isn't valid JSON, it's considered an error.
                 continue
-                
+
         return float(successful_calls)
 
-    def correct_tool_calls(self, completion: List[Dict[str, Any]], **kwargs) -> float:
+    def correct_tool_calls(self, completion: list[dict[str, Any]], **kwargs) -> float:
         """
         Counts the number of tool calls that match the provided ground truth.
         This reward is only calculated if ground_truth is provided.
         """
         if self.ground_truth is None:
             return 0.0
-            
+
         tool_calls = self._get_assistant_tool_calls(completion)
         if not tool_calls:
             return 0.0
@@ -89,17 +90,14 @@ class ToolUsageRubric(Rubric):
         for tool_call in tool_calls:
             try:
                 # Extract details from the agent's tool call
-                called_name = tool_call['function']['name']
-                called_args_str = tool_call['function']['arguments']
+                called_name = tool_call["function"]["name"]
+                called_args_str = tool_call["function"]["arguments"]
                 called_args = json.loads(called_args_str)
 
                 # Check if this call matches any of the ground truth calls
-                if any(
-                    gt["tool_name"] == called_name and gt["tool_args"] == called_args
-                    for gt in self.ground_truth
-                ):
+                if any(gt["tool_name"] == called_name and gt["tool_args"] == called_args for gt in self.ground_truth):
                     correct_calls += 1
             except (KeyError, json.JSONDecodeError, TypeError):
                 continue
 
-        return float(correct_calls) 
+        return float(correct_calls)

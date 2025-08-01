@@ -1,7 +1,6 @@
 import os
-import dotenv
-from typing import Union, Optional
 
+import dotenv
 from google.cloud import secretmanager
 
 dotenv.load_dotenv()
@@ -13,7 +12,7 @@ google_cloud_project = os.getenv("GOOGLE_CLOUD_PROJECT", "rxrx-medchem-auto-dev"
 def access_secret_version(
     secret_name: str,
     project_id: str = google_cloud_project,
-    secret_ver: Union[int, str] = "latest",
+    secret_ver: int | str = "latest",
 ) -> str:
     """
     Accesses a secret version from Google Cloud Secret Manager.
@@ -44,7 +43,7 @@ def access_secret_version(
     return data
 
 
-def set_env_secrets(secret_list: Optional[list[str]] = None):
+def set_env_secrets(secret_list: list[str] | None = None):
     """
     Set environment variables from Google Cloud Secret Manager.
 

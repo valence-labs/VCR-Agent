@@ -1,11 +1,12 @@
 import re
-from typing import List, Dict, Any, Optional
+from typing import Any
 
-from verifiers.rubrics.judge_rubric import JudgeRubric
 from verifiers.parsers.parser import Parser
-from explain.llm._client import create_llm_client, LLMClient
-from explain.eval.tools import ToolVerifier, REGISTERED_TOOLS
+from verifiers.rubrics.judge_rubric import JudgeRubric
+
+from explain.eval.tools import REGISTERED_TOOLS, ToolVerifier
 from explain.eval.utils import guess_max_turns
+from explain.llm._client import LLMClient, create_llm_client
 
 
 class FalsificationEvaluator:
@@ -45,7 +46,13 @@ Your detailed reasoning for the verdict, citing the evidence you gathered.
 <answer>A|B|C</answer>
 """
 
-    def __init__(self, llm_provider: str = "anthropic", max_turns: Optional[int] = 5, allowed_primitives: Optional[List[str]] = None, **kwargs):
+    def __init__(
+        self,
+        llm_provider: str = "anthropic",
+        max_turns: int | None = 5,
+        allowed_primitives: list[str] | None = None,
+        **kwargs,
+    ):
         """
         Initializes the falsification evaluator.
 
@@ -59,11 +66,11 @@ Your detailed reasoning for the verdict, citing the evidence you gathered.
         self.allowed_primitives = allowed_primitives or []
         self.parser = Parser()
 
-    def _get_llm_tools_schema(self) -> List[Dict[str, Any]]:
+    def _get_llm_tools_schema(self) -> list[dict[str, Any]]:
         """Formats tools into a schema compatible with the LLM."""
         return [tool.get_schema() for tool in REGISTERED_TOOLS]
 
-    def _execute_tool_call(self, tool_call: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_tool_call(self, tool_call: dict[str, Any]) -> dict[str, Any]:
         """Executes a single tool call using the central tool registry."""
         tool_id = tool_call.get("id")
         content = ToolVerifier.call_tool(tool_call)
@@ -79,12 +86,12 @@ Your detailed reasoning for the verdict, citing the evidence you gathered.
         verdict = verdict_map.get(verdict_code, "inconclusive")
         return verdict, reasoning
 
-    def _evaluate_falsification(self, prompt: Any, completion: str, answer: str, state: Dict[str, Any], **kwargs):
+    def _evaluate_falsification(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs):
         """
         Runs the LLM agent to evaluate the claim and stores results in the state.
         `prompt` is the question, `completion` is the claim to be verified.
         """
-        
+
         if "falsification_score" in state:
             return state
 
@@ -92,18 +99,14 @@ Your detailed reasoning for the verdict, citing the evidence you gathered.
             question = prompt[-1]["content"]
         else:
             question = prompt
-        
+
         claim = self.parser.parse_answer(completion)
 
-        tool_descriptions = "\n".join(
-            [f"- `{tool.name}`: {tool.description}" for tool in REGISTERED_TOOLS]
-        )
-        
-        system_prompt = self.SYSTEM_PROMPT.format(
-            question=question, claim=claim, tool_descriptions=tool_descriptions
-        )
+        tool_descriptions = "\n".join([f"- `{tool.name}`: {tool.description}" for tool in REGISTERED_TOOLS])
 
-        messages: List[Dict[str, Any]] = [
+        system_prompt = self.SYSTEM_PROMPT.format(question=question, claim=claim, tool_descriptions=tool_descriptions)
+
+        messages: list[dict[str, Any]] = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": "Please proceed with the verification."},
         ]
@@ -119,7 +122,7 @@ Your detailed reasoning for the verdict, citing the evidence you gathered.
             assistant_message = {"role": "assistant", "content": response.content or ""}
             if response.tool_calls:
                 assistant_message["tool_calls"] = response.tool_calls
-            
+
             messages.append(assistant_message)
             conversation_history.append(assistant_message)
 
@@ -140,10 +143,10 @@ Your detailed reasoning for the verdict, citing the evidence you gathered.
         state["falsification_verdict"] = verdict
         state["falsification_reasoning"] = reasoning
         state["falsification_conversation_history"] = conversation_history
-        
+
         return state
 
-    def falsification_score(self, prompt: Any, completion: str, answer: str, state: Dict[str, Any], **kwargs) -> float:
+    def falsification_score(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs) -> float:
         """Reward function for falsification."""
         state = self._evaluate_falsification(prompt, completion, answer, state, **kwargs)
         return float(state.get("falsification_score", 0.0))
@@ -152,23 +155,23 @@ Your detailed reasoning for the verdict, citing the evidence you gathered.
 class FalsificationRubric(JudgeRubric):
     """
     A rubric that uses a FalsificationEvaluator to assess a claim's validity.
-    
+
     The final reward is based on whether the claim is consistent (1.0),
     falsified (0.0), or inconclusive (0.5) after an agentic investigation.
     """
-    
+
     def __init__(self, llm_provider: str = "anthropic", **kwargs):
         """
         Initializes the plausibility rubric.
-        
+
         Args:
             llm_provider: The LLM provider to use ('anthropic', 'gemini', or 'openai').
             **kwargs: Additional arguments for the JudgeRubric.
         """
         super().__init__(judge_prompt="", parallelize_scoring=False, **kwargs)
-        
+
         evaluator = FalsificationEvaluator(llm_provider=llm_provider, **kwargs)
         self.judge_client = evaluator.llm_client
         self.judge_model = evaluator.llm_client.config.model
 
-        self.add_reward_func(evaluator.falsification_score, weight=1.0) 
+        self.add_reward_func(evaluator.falsification_score, weight=1.0)

@@ -3,7 +3,4 @@
 from .binding import DTIVerifier
 from .expression import GeneExpressionVerifier
 
-BIOLOGICAL_TOOLS = [
-    GeneExpressionVerifier(),
-    DTIVerifier()
-]
+BIOLOGICAL_TOOLS = [GeneExpressionVerifier(), DTIVerifier()]
