@@ -20,7 +20,7 @@ class DTIVerificationArgs(BaseModel):
 class DTIVerifier(ToolVerifier):
     """Tool for checking drug-target interactions including binding affinity prediction"""
 
-    name = "check_drug_target_interactoin"
+    name = "check_drug_target_interaction"
     description = "Check if a drug interacts with a specific target under given conditions"
     args_schema = DTIVerificationArgs
 

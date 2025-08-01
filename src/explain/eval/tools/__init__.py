@@ -1,5 +1,7 @@
+# Import tool packages to trigger registration via __init_subclass__
+from . import bio
 from ._base import ToolVerifier
 
-REGISTERED_TOOLS = list(ToolVerifier._registry.values())
-
-__all__ = ["REGISTERED_TOOLS", "ToolVerifier"]
+# Expose the populated registry and the list of biological tools
+REGISTERED_TOOLS = ToolVerifier._registry
+BIOLOGICAL_TOOLS = bio.BIOLOGICAL_TOOLS

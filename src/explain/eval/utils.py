@@ -1,14 +1,12 @@
-from typing import Dict, Optional, List
-
 import re
+
 import pandas as pd
 from datasets import Dataset
-
 
 _EXPECTED_SECTIONS = ["think", "answer", "explain", "dag"]
 
 
-def check_answer_format(response: str) -> Dict[str, Optional[str]]:
+def check_answer_format(response: str) -> dict[str, str | None]:
     """
     Checks if the response string contains all the required sections.
 
@@ -30,14 +28,14 @@ def check_answer_format(response: str) -> Dict[str, Optional[str]]:
     return parsed_sections
 
 
-def is_format_correct(parsed_sections: Dict[str, Optional[str]]) -> bool:
+def is_format_correct(parsed_sections: dict[str, str | None]) -> bool:
     """
     Checks if all required sections are present.
     """
     return all(content is not None for content in parsed_sections.values())
 
 
-def guess_max_turns(claim: str, allowed_primitives: List[str], default_max_turns: int = 5) -> int:
+def guess_max_turns(claim: str, allowed_primitives: list[str], default_max_turns: int = 5) -> int:
     """
     Guesses the maximum number of turns based on the claim's predicates (primitives).
     It parses the <explain> section of the claim and counts the occurrences

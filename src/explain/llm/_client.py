@@ -57,6 +57,11 @@ class BaseLLMClient(ABC):
         """Generate response asynchronously."""
         pass
 
+    @abstractmethod
+    def format_tool_response(self, tool_outputs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Format tool responses for the next turn."""
+        pass
+
     def _format_tools(self, tools: list[Any]):
         """Format tools to the provider's format."""
         formatted_tools = []
@@ -177,6 +182,27 @@ class AnthropicVertexClient(BaseLLMClient):
         except Exception as e:
             logger.error(f"Anthropic Vertex async generation failed: {e}")
             raise
+
+    def format_tool_response(self, tool_outputs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """
+        Formats tool responses for Anthropic.
+
+        The response should be a list containing a single user message.
+        This message, in turn, contains a list of tool_result content blocks.
+        """
+        return [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": output["tool_call_id"],
+                        "content": output["content"],
+                    }
+                    for output in tool_outputs
+                ],
+            }
+        ]
 
 
 class GeminiClient(BaseLLMClient):
@@ -343,6 +369,22 @@ class GeminiClient(BaseLLMClient):
             logger.error(f"Gemini async generation failed: {e}")
             raise
 
+    def format_tool_response(self, tool_outputs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """
+        Formats tool responses for Gemini.
+
+        The response should be a list of tool messages, one for each tool output.
+        """
+        return [
+            {
+                "role": "tool",
+                "tool_call_id": output["tool_call_id"],
+                "name": output["name"],
+                "content": output["content"],
+            }
+            for output in tool_outputs
+        ]
+
 
 class OpenAIClient(BaseLLMClient):
     """Client for OpenAI's models."""
@@ -439,6 +481,22 @@ class OpenAIClient(BaseLLMClient):
             logger.error(f"OpenAI async generation failed: {e}")
             raise
 
+    def format_tool_response(self, tool_outputs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """
+        Formats tool responses for OpenAI.
+
+        The response should be a list of tool messages, one for each tool output.
+        """
+        return [
+            {
+                "role": "tool",
+                "tool_call_id": output["tool_call_id"],
+                "name": output["name"],
+                "content": output["content"],
+            }
+            for output in tool_outputs
+        ]
+
 
 class LLMClient:
     """Unified LLM client supporting multiple providers."""
@@ -465,6 +523,10 @@ class LLMClient:
     async def agenerate(self, messages: list[dict[str, str]], **kwargs) -> LLMResponse:
         """Generate response asynchronously."""
         return await self.client.agenerate(messages, **kwargs)
+
+    def format_tool_response(self, tool_outputs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Format tool responses for the next turn."""
+        return self.client.format_tool_response(tool_outputs)
 
     async def generate_async(self, messages: list[dict[str, str]], **kwargs) -> LLMResponse:
         """Generate response asynchronously."""

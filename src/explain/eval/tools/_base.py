@@ -61,20 +61,25 @@ class ToolVerifier(ABC):
         cls._registry[tool.name] = tool
 
     @classmethod
-    def call_tool(cls, tool_call: dict[str, Any]) -> str:
+    def call_tool(cls, tool_args: dict[str, Any]) -> str:
         """
         Calls a registered tool by name using the tool call request from an LLM.
 
         Args:
-            tool_call: A dictionary representing the tool call from an LLM.
+            tool_args: A dictionary representing the tool call from an LLM.
                        It should have a 'function' key with 'name' and 'arguments'.
 
         Returns:
             A JSON string with the result of the tool execution.
         """
         try:
-            tool_name = tool_call["function"]["name"]
-            arguments_str = tool_call["function"]["arguments"]
+            if "function" in tool_args:
+                tool_name = tool_args["function"]["name"]
+                arguments_str = tool_args["function"]["arguments"]
+            else:
+                # try hard
+                tool_name = tool_args["name"]
+                arguments_str = tool_args.get("arguments", tool_args.get("args"))
 
             if isinstance(arguments_str, str):
                 arguments = json.loads(arguments_str)
