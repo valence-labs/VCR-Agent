@@ -1,9 +1,12 @@
 [![scorecard-score](https://github.com/recursionpharma/octo-guard-badges/blob/trunk/badges/repo/hooke-explain/maturity_score.svg?raw=true)](https://infosec-docs.prod.rxrx.io/octoguard/scorecards/hooke-explain)
 [![scorecard-status](https://github.com/recursionpharma/octo-guard-badges/blob/trunk/badges/repo/hooke-explain/scorecard_status.svg?raw=true)](https://infosec-docs.prod.rxrx.io/octoguard/scorecards/hooke-explain)
 
-# Hooke Explain
+The codebase for the explain component of Hooke, a framework for generating, verifying, and evaluating scientific explanations using LLMs.
 
-The codebase for the explain component of Hooke
+## Quick Links
+
+- **[Documentation](./docs/)**: Detailed information on installation, architecture, and usage.
+- **[Notebooks](./notebooks/)**: Examples and experiments.
 
 ## Quick Start
 
