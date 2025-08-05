@@ -6,7 +6,7 @@ from verifiers.rubrics.judge_rubric import JudgeRubric
 
 from explain.eval.tools import REGISTERED_TOOLS, ToolVerifier
 from explain.eval.utils import guess_max_turns
-from explain.llm._client import LLMClient, create_llm_client
+from explain.llm import LLMClient, create_client
 
 
 class FalsificationEvaluator:
@@ -61,7 +61,7 @@ Your detailed reasoning for the verdict, citing the evidence you gathered.
             max_turns: The maximum number of conversational turns before stopping. If None, it will be set based on the claims predicates (primitives)
             **kwargs: Additional arguments for the LLM client.
         """
-        self.llm_client: LLMClient = create_llm_client(provider=llm_provider, **kwargs)
+        self.llm_client: LLMClient = create_client(provider=llm_provider, **kwargs)
         self.max_turns = max_turns
         self.allowed_primitives = allowed_primitives or []
         self.parser = Parser()

@@ -4,7 +4,7 @@ from typing import Any
 from verifiers.parsers.parser import Parser
 from verifiers.rubrics.judge_rubric import JudgeRubric
 
-from explain.llm._client import create_llm_client
+from explain.llm import create_client
 
 
 class BinaryCorrectnessEvaluator:
@@ -20,7 +20,7 @@ class BinaryCorrectnessEvaluator:
             llm_provider: The LLM provider to use ('anthropic', 'gemini', or 'openai').
             **kwargs: Additional arguments for the LLM client.
         """
-        self.llm_client = create_llm_client(provider=llm_provider, **kwargs)
+        self.llm_client = create_client(provider=llm_provider, **kwargs)
         self.parser = Parser()
         self.judge_prompt_template = """
         You are an expert biologist comparing a model's response to a ground truth answer.

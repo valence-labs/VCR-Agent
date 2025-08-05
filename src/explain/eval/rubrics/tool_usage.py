@@ -4,6 +4,7 @@ from typing import Any
 from verifiers.rubrics.rubric import Rubric
 
 from explain.eval.tools import ToolVerifier
+from explain.llm._client import LLMResponse
 
 
 class ToolUsageRubric(Rubric):
@@ -40,6 +41,17 @@ class ToolUsageRubric(Rubric):
         # Weights can be set by the user after initialization.
         super().__init__(funcs=reward_funcs)
 
+    def _resolve_completion_to_messages(self, completion: Any) -> list[dict[str, Any]]:
+        """
+        Ensures the completion is a list of messages. If it's an LLMResponse,
+        it extracts the message history. Returns an empty list for invalid types.
+        """
+        if isinstance(completion, LLMResponse):
+            return completion.messages or []
+        if isinstance(completion, list):
+            return completion
+        return []
+
     def _get_assistant_tool_calls(self, completion: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Extracts all tool calls from assistant messages in a conversation history."""
         all_tool_calls = []
@@ -50,13 +62,15 @@ class ToolUsageRubric(Rubric):
                     all_tool_calls.extend(tool_calls)
         return all_tool_calls
 
-    def total_tool_calls(self, completion: list[dict[str, Any]], **kwargs) -> float:
+    def total_tool_calls(self, completion: Any, **kwargs) -> float:
         """Counts the total number of tool calls in the conversation history."""
-        return float(len(self._get_assistant_tool_calls(completion)))
+        message_history = self._resolve_completion_to_messages(completion)
+        return float(len(self._get_assistant_tool_calls(message_history)))
 
-    def successful_tool_calls(self, completion: list[dict[str, Any]], **kwargs) -> float:
+    def successful_tool_calls(self, completion: Any, **kwargs) -> float:
         """Counts the number of tool calls that execute without returning an error."""
-        tool_calls = self._get_assistant_tool_calls(completion)
+        message_history = self._resolve_completion_to_messages(completion)
+        tool_calls = self._get_assistant_tool_calls(message_history)
         if not tool_calls:
             return 0.0
 
@@ -74,7 +88,7 @@ class ToolUsageRubric(Rubric):
 
         return float(successful_calls)
 
-    def correct_tool_calls(self, completion: list[dict[str, Any]], **kwargs) -> float:
+    def correct_tool_calls(self, completion: Any, **kwargs) -> float:
         """
         Counts the number of tool calls that match the provided ground truth.
         This reward is only calculated if ground_truth is provided.
@@ -82,7 +96,8 @@ class ToolUsageRubric(Rubric):
         if self.ground_truth is None:
             return 0.0
 
-        tool_calls = self._get_assistant_tool_calls(completion)
+        message_history = self._resolve_completion_to_messages(completion)
+        tool_calls = self._get_assistant_tool_calls(message_history)
         if not tool_calls:
             return 0.0
 
