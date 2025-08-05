@@ -5,7 +5,7 @@ Multi-provider LLM Client supporting Anthropic Vertex, Google Gemini, and OpenAI
 import json
 import os
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Any
 
 from dotenv import load_dotenv
@@ -22,6 +22,11 @@ class LLMResponse:
 
     content: str | None = None
     tool_calls: list[dict[str, Any]] | None = None
+    messages: list[dict[str, Any]] | None = None  # NEW: Full message history
+
+    def to_dict(self):
+        """Convert response to a dictionary."""
+        return asdict(self)
 
 
 @dataclass
@@ -37,8 +42,8 @@ class LLMConfig:
 
     def __post_init__(self):
         """Load from environment variables if available"""
-        self.location = self.location or os.getenv("VERTEX_AI_LOCATION", "us-east5")
-        self.project_id = self.project_id or os.getenv("VERTEX_AI_PROJECT_ID", "vertexai-sandbox-e8a925d0")
+        self.location = self.location or os.getenv("VERTEXAI_LOCATION", "global")
+        self.project_id = self.project_id or os.getenv("VERTEXAI_PROJECT")
 
 
 class BaseLLMClient(ABC):
@@ -73,6 +78,18 @@ class BaseLLMClient(ABC):
             formatted_tools.append(tool_schema)
         return formatted_tools
 
+    def _get_message_historic(
+        self, messages: list[dict[str, Any]], content: str | None, tool_calls: list[dict[str, Any]] | None
+    ) -> list[dict[str, Any]]:
+        """
+        Construct updated message history from input messages and LLM outputs.
+        Each subclass can override this if needed.
+        """
+        assistant_msg = {"role": "assistant", "content": content or ""}
+        if tool_calls:
+            assistant_msg["tool_calls"] = tool_calls
+        return messages + [assistant_msg]
+
 
 class AnthropicVertexClient(BaseLLMClient):
     """Client for Anthropic's models on Vertex AI."""
@@ -103,86 +120,6 @@ class AnthropicVertexClient(BaseLLMClient):
             )
         return anthropic_tools
 
-    def generate(self, messages: list[dict[str, str]], **kwargs) -> LLMResponse:
-        """Generate response synchronously using Anthropic Vertex."""
-        if "tools" in kwargs and kwargs["tools"]:
-            kwargs["tools"] = self._format_tools(kwargs["tools"])
-
-        request_params = {
-            "model": self.config.model,
-            "max_tokens": self.config.max_tokens,
-            "temperature": self.config.temperature,
-            "messages": messages,
-            **kwargs,
-        }
-
-        try:
-            response = self.sync_client.messages.create(**request_params)
-
-            content_text = ""
-            tool_calls = []
-
-            for block in response.content:
-                if block.type == "text":
-                    content_text += block.text
-                elif block.type == "tool_use":
-                    tool_calls.append(
-                        {
-                            "id": block.id,
-                            "type": "function",
-                            "function": {
-                                "name": block.name,
-                                "arguments": block.input,
-                            },
-                        }
-                    )
-
-            return LLMResponse(content=content_text or None, tool_calls=tool_calls or None)
-
-        except Exception as e:
-            logger.error(f"Anthropic Vertex generation failed: {e}")
-            raise
-
-    async def agenerate(self, messages: list[dict[str, str]], **kwargs) -> LLMResponse:
-        """Generate response asynchronously using Anthropic Vertex."""
-        if "tools" in kwargs and kwargs["tools"]:
-            kwargs["tools"] = self._format_tools(kwargs["tools"])
-
-        request_params = {
-            "model": self.config.model,
-            "max_tokens": self.config.max_tokens,
-            "temperature": self.config.temperature,
-            "messages": messages,
-            **kwargs,
-        }
-
-        try:
-            response = await self.async_client.messages.create(**request_params)
-
-            content_text = ""
-            tool_calls = []
-
-            for block in response.content:
-                if block.type == "text":
-                    content_text += block.text
-                elif block.type == "tool_use":
-                    tool_calls.append(
-                        {
-                            "id": block.id,
-                            "type": "function",
-                            "function": {
-                                "name": block.name,
-                                "arguments": block.input,
-                            },
-                        }
-                    )
-
-            return LLMResponse(content=content_text or None, tool_calls=tool_calls or None)
-
-        except Exception as e:
-            logger.error(f"Anthropic Vertex async generation failed: {e}")
-            raise
-
     def format_tool_response(self, tool_outputs: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """
         Formats tool responses for Anthropic.
@@ -203,6 +140,127 @@ class AnthropicVertexClient(BaseLLMClient):
                 ],
             }
         ]
+
+    def generate(self, messages: list[dict[str, str]], **kwargs) -> LLMResponse:
+        if "tools" in kwargs and kwargs["tools"]:
+            kwargs["tools"] = self._format_tools(kwargs["tools"])
+
+        request_params = {
+            "model": self.config.model,
+            "max_tokens": self.config.max_tokens,
+            "temperature": self.config.temperature,
+            "messages": messages,
+            **kwargs,
+        }
+
+        try:
+            response = self.sync_client.messages.create(**request_params)
+            content_text = ""
+            tool_calls = []
+            assistant_content = []
+
+            for block in response.content:
+                if block.type == "text":
+                    content_text += block.text
+                elif block.type == "tool_use":
+                    tool_calls.append(
+                        {
+                            "id": block.id,
+                            "type": "function",
+                            "function": {
+                                "name": block.name,
+                                "arguments": block.input,
+                            },
+                        }
+                    )
+                    assistant_content.append(
+                        {
+                            "type": "tool_use",
+                            "id": block.id,
+                            "name": block.name,
+                            "input": block.input,
+                        }
+                    )
+
+            if content_text:
+                assistant_content.insert(0, {"type": "text", "text": content_text})
+
+            full_messages = self._get_message_historic(messages, content_text, tool_calls)
+            return LLMResponse(content=content_text or None, tool_calls=tool_calls or None, messages=full_messages)
+
+        except Exception as e:
+            logger.error(f"Anthropic Vertex generation failed: {e}")
+            raise
+
+    async def agenerate(self, messages: list[dict[str, str]], **kwargs) -> LLMResponse:
+        if "tools" in kwargs and kwargs["tools"]:
+            kwargs["tools"] = self._format_tools(kwargs["tools"])
+
+        request_params = {
+            "model": self.config.model,
+            "max_tokens": self.config.max_tokens,
+            "temperature": self.config.temperature,
+            "messages": messages,
+            **kwargs,
+        }
+
+        try:
+            response = await self.async_client.messages.create(**request_params)
+            content_text = ""
+            tool_calls = []
+            assistant_content = []
+
+            for block in response.content:
+                if block.type == "text":
+                    content_text += block.text
+                elif block.type == "tool_use":
+                    tool_calls.append(
+                        {
+                            "id": block.id,
+                            "type": "function",
+                            "function": {
+                                "name": block.name,
+                                "arguments": block.input,
+                            },
+                        }
+                    )
+                    assistant_content.append(
+                        {
+                            "type": "tool_use",
+                            "id": block.id,
+                            "name": block.name,
+                            "input": block.input,
+                        }
+                    )
+
+            if content_text:
+                assistant_content.insert(0, {"type": "text", "text": content_text})
+
+            full_messages = self._get_message_historic(messages, content_text, tool_calls)
+            return LLMResponse(content=content_text or None, tool_calls=tool_calls or None, messages=full_messages)
+
+        except Exception as e:
+            logger.error(f"Anthropic Vertex async generation failed: {e}")
+            raise
+
+    def _get_message_historic(self, messages, content, tool_calls):
+        blocks = []
+        if content:
+            blocks.append({"type": "text", "text": content})
+        if tool_calls:
+            for tool_call in tool_calls:
+                args = tool_call["function"]["arguments"]
+                if isinstance(args, str):
+                    args = json.loads(args)
+                blocks.append(
+                    {
+                        "type": "tool_use",
+                        "id": tool_call["id"],
+                        "name": tool_call["function"]["name"],
+                        "input": args,
+                    }
+                )
+        return messages + [{"role": "assistant", "content": blocks}]
 
 
 class GeminiClient(BaseLLMClient):
@@ -272,7 +330,6 @@ class GeminiClient(BaseLLMClient):
         return gemini_tools
 
     def generate(self, messages: list[dict[str, str]], **kwargs) -> LLMResponse:
-        """Generate response synchronously using Gemini."""
         from google.genai import types
 
         if "tools" in kwargs and kwargs["tools"]:
@@ -285,7 +342,11 @@ class GeminiClient(BaseLLMClient):
 
         contents = self._messages_to_content(messages)
 
-        config_params = {"temperature": self.config.temperature, "max_output_tokens": self.config.max_tokens, **kwargs}
+        config_params = {
+            "temperature": self.config.temperature,
+            "max_output_tokens": self.config.max_tokens,
+            **kwargs,
+        }
         if system_instruction:
             config_params["system_instruction"] = system_instruction
 
@@ -297,10 +358,8 @@ class GeminiClient(BaseLLMClient):
                 contents=contents,
                 config=generation_config,
             )
-
             content_text = response.text
             tool_calls = []
-
             if response.function_calls:
                 for func_call in response.function_calls:
                     tool_calls.append(
@@ -314,14 +373,14 @@ class GeminiClient(BaseLLMClient):
                         }
                     )
 
-            return LLMResponse(content=content_text or None, tool_calls=tool_calls or None)
+            full_messages = self._get_message_historic(messages, content_text, tool_calls)
+            return LLMResponse(content=content_text or None, tool_calls=tool_calls or None, messages=full_messages)
 
         except Exception as e:
             logger.error(f"Gemini generation failed: {e}")
             raise
 
     async def agenerate(self, messages: list[dict[str, str]], **kwargs) -> LLMResponse:
-        """Generate response asynchronously using Gemini."""
         from google.genai import types
 
         if "tools" in kwargs and kwargs["tools"]:
@@ -334,7 +393,11 @@ class GeminiClient(BaseLLMClient):
 
         contents = self._messages_to_content(messages)
 
-        config_params = {"temperature": self.config.temperature, "max_output_tokens": self.config.max_tokens, **kwargs}
+        config_params = {
+            "temperature": self.config.temperature,
+            "max_output_tokens": self.config.max_tokens,
+            **kwargs,
+        }
         if system_instruction:
             config_params["system_instruction"] = system_instruction
 
@@ -346,10 +409,8 @@ class GeminiClient(BaseLLMClient):
                 contents=contents,
                 config=generation_config,
             )
-
             content_text = response.text
             tool_calls = []
-
             if response.function_calls:
                 for func_call in response.function_calls:
                     tool_calls.append(
@@ -363,7 +424,8 @@ class GeminiClient(BaseLLMClient):
                         }
                     )
 
-            return LLMResponse(content=content_text or None, tool_calls=tool_calls or None)
+            full_messages = self._get_message_historic(messages, content_text, tool_calls)
+            return LLMResponse(content=content_text or None, tool_calls=tool_calls or None, messages=full_messages)
 
         except Exception as e:
             logger.error(f"Gemini async generation failed: {e}")
@@ -418,9 +480,9 @@ class OpenAIClient(BaseLLMClient):
         return [{"type": "function", "function": tool} for tool in tools]
 
     def generate(self, messages: list[dict[str, str]], **kwargs) -> LLMResponse:
-        """Generate response synchronously using OpenAI."""
         if "tools" in kwargs and kwargs["tools"]:
             kwargs["tools"] = self._format_tools(kwargs["tools"])
+
         try:
             response = self.sync_client.chat.completions.create(
                 model=self.config.model,
@@ -444,16 +506,17 @@ class OpenAIClient(BaseLLMClient):
                         }
                     )
 
-            return LLMResponse(content=message.content, tool_calls=tool_calls or None)
+            full_messages = self._get_message_historic(messages, message.content, tool_calls)
+            return LLMResponse(content=message.content, tool_calls=tool_calls or None, messages=full_messages)
 
         except Exception as e:
             logger.error(f"OpenAI generation failed: {e}")
             raise
 
     async def agenerate(self, messages: list[dict[str, str]], **kwargs) -> LLMResponse:
-        """Generate response asynchronously using OpenAI."""
         if "tools" in kwargs and kwargs["tools"]:
             kwargs["tools"] = self._format_tools(kwargs["tools"])
+
         try:
             response = await self.async_client.chat.completions.create(
                 model=self.config.model,
@@ -476,7 +539,10 @@ class OpenAIClient(BaseLLMClient):
                             },
                         }
                     )
-            return LLMResponse(content=message.content, tool_calls=tool_calls or None)
+
+            full_messages = self._get_message_historic(messages, message.content, tool_calls)
+            return LLMResponse(content=message.content, tool_calls=tool_calls or None, messages=full_messages)
+
         except Exception as e:
             logger.error(f"OpenAI async generation failed: {e}")
             raise
@@ -486,6 +552,115 @@ class OpenAIClient(BaseLLMClient):
         Formats tool responses for OpenAI.
 
         The response should be a list of tool messages, one for each tool output.
+        """
+        return [
+            {
+                "role": "tool",
+                "tool_call_id": output["tool_call_id"],
+                "name": output["name"],
+                "content": output["content"],
+            }
+            for output in tool_outputs
+        ]
+
+
+class LiteLLMClient(BaseLLMClient):
+    """Client for LiteLLM."""
+
+    def __init__(self, config: LLMConfig):
+        super().__init__(config)
+        try:
+            import litellm  # noqa: F401
+        except ImportError as e:
+            raise ImportError("litellm package required for LiteLLM client. Please run `pip install litellm`") from e
+
+        logger.info(f"Initialized LiteLLM client with model {self.config.model}")
+
+    def _format_tools(self, tools: list[Any]):
+        """Wraps generic tool schemas in the format required by LiteLLM (same as OpenAI)."""
+        tools = super()._format_tools(tools)
+        return [{"type": "function", "function": tool} for tool in tools]
+
+    def __get_model_name(self) -> str:
+        """Get the model name."""
+        if self.config.model.startswith("claude") or self.config.model.startswith("gemini"):
+            return f"vertex_ai/{self.config.model}"
+        return self.config.model
+
+    def generate(self, messages: list[dict[str, Any]], **kwargs) -> LLMResponse:
+        """Generate response synchronously using litellm."""
+        import litellm
+
+        if "tools" in kwargs and kwargs["tools"]:
+            kwargs["tools"] = self._format_tools(kwargs["tools"])
+
+        try:
+            response = litellm.completion(
+                model=self.__get_model_name(),
+                messages=messages,
+                max_tokens=self.config.max_tokens,
+                temperature=self.config.temperature,
+                **kwargs,
+            )
+            message = response.choices[0].message
+            tool_calls = []
+            if message.tool_calls:
+                for tool_call in message.tool_calls:
+                    tool_calls.append(
+                        {
+                            "id": tool_call.id,
+                            "type": "function",
+                            "function": {
+                                "name": tool_call.function.name,
+                                "arguments": tool_call.function.arguments,
+                            },
+                        }
+                    )
+
+            full_messages = self._get_message_historic(messages, message.content, tool_calls)
+            return LLMResponse(content=message.content, tool_calls=tool_calls or None, messages=full_messages)
+
+        except Exception as e:
+            logger.error(f"LiteLLM generation failed: {e}")
+            raise
+
+    async def agenerate(self, messages: list[dict[str, Any]], **kwargs) -> LLMResponse:
+        """Generate response asynchronously using litellm."""
+        import litellm
+
+        if "tools" in kwargs and kwargs["tools"]:
+            kwargs["tools"] = self._format_tools(kwargs["tools"])
+        try:
+            response = await litellm.acompletion(
+                model=self.__get_model_name(),
+                messages=messages,
+                max_tokens=self.config.max_tokens,
+                temperature=self.config.temperature,
+                **kwargs,
+            )
+            message = response.choices[0].message
+            tool_calls = []
+            if message.tool_calls:
+                for tool_call in message.tool_calls:
+                    tool_calls.append(
+                        {
+                            "id": tool_call.id,
+                            "type": "function",
+                            "function": {
+                                "name": tool_call.function.name,
+                                "arguments": tool_call.function.arguments,
+                            },
+                        }
+                    )
+            full_messages = self._get_message_historic(messages, message.content, tool_calls)
+            return LLMResponse(content=message.content, tool_calls=tool_calls or None, messages=full_messages)
+        except Exception as e:
+            logger.error(f"LiteLLM async generation failed: {e}")
+            raise
+
+    def format_tool_response(self, tool_outputs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """
+        Formats tool responses for LiteLLM (same as OpenAI).
         """
         return [
             {
@@ -511,6 +686,8 @@ class LLMClient:
             self.client = GeminiClient(config)
         elif config.provider == "openai":
             self.client = OpenAIClient(config)
+        elif config.provider == "litellm":
+            self.client = LiteLLMClient(config)
         else:
             raise ValueError(f"Unsupported provider: {config.provider}")
 
@@ -531,25 +708,3 @@ class LLMClient:
     async def generate_async(self, messages: list[dict[str, str]], **kwargs) -> LLMResponse:
         """Generate response asynchronously."""
         return await self.client.agenerate(messages, **kwargs)
-
-
-def create_llm_client(provider: str = "anthropic", model: str | None = None, **kwargs) -> LLMClient:
-    """Create an LLM client with the specified provider.
-
-    Args:
-        provider: LLM provider - 'anthropic', 'gemini', or 'openai'
-        model: Model name (uses provider defaults if not specified)
-        **kwargs: Additional configuration options
-
-    Returns:
-        LLMClient: Configured LLM client
-    """
-    # Set default models for each provider
-    default_models = {"anthropic": "claude-sonnet-4@20250514", "gemini": "gemini-2.5-flash", "openai": "gpt-4.1"}
-
-    if model is None:
-        model = default_models.get(provider, "claude-sonnet-4@20250514")
-
-    config = LLMConfig(provider=provider, model=model, **kwargs)
-
-    return LLMClient(config)

@@ -24,6 +24,8 @@ dependencies = [
   "google-cloud>=0.34.0",
   "google-genai>=1.28.0",
   "google-cloud-secret-manager>=2.24.0",
+  "litellm>=1.74.15.post1",
+  "google-cloud-aiplatform>=1.38",
 ]
 
 [project.optional-dependencies]
