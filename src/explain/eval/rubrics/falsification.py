@@ -18,10 +18,11 @@ class FalsificationEvaluator:
 You are an expert scientist tasked with verifying a scientific claim in response to a research question.
 
 Each claim consists of:
-- A **narrative explanation** (free-text paragraph), and
-- A **structured explanation block** enclosed in <explain> ... </explain>, containing one or more mechanistic or associative actions (e.g., `binds_to`, `modulates_activity`, `regulates_expression`, etc.).
+- A **narrative explanation** (free-text paragraph) in the <answer> block, and
+- A **structured explanation block** enclosed in <explain> ... </explain>, containing one or more mechanistic or associative actions (e.g., `binds_to`, `modulates_activity`, `regulates_expression`, etc.),
+- A **DAG** enclosed in <dag> ... </dag>, representing the relationship between the primitives statements in the <explain> block.
 
-You have access to the following tools to assist your analysis:
+You have access to the following tools to assist your analysis. But not all tools are relevant to the claim.
 {tool_descriptions}
 
 ---
@@ -76,27 +77,27 @@ Your detailed reasoning here:
 
     def __init__(
         self,
-        llm_provider: str = "anthropic",
+        llm_provider: str = "litellm",
         max_turns: int | None = 5,
         allowed_primitives: list[str] | None = None,
+        tools: list[ToolVerifier] | None = None,
         **kwargs,
     ):
         """
         Initializes the falsification evaluator.
 
         Args:
-            llm_provider: The LLM provider to use ('anthropic', 'gemini', or 'openai').
+            llm_provider: The LLM provider to use ('litellm', 'anthropic', 'gemini', or 'openai').
             max_turns: The maximum number of conversational turns before stopping. If None, it will be set based on the claims predicates (primitives)
+            allowed_primitives: The primitives to use for the falsification. If None, all primitives will be used.
+            tools: The tools to use for the falsification. If None, all tools will be used.
             **kwargs: Additional arguments for the LLM client.
         """
         self.llm_client: LLMClient = create_client(provider=llm_provider, **kwargs)
         self.max_turns = max_turns
         self.allowed_primitives = allowed_primitives or []
         self.parser = Parser()
-
-    def _get_llm_tools_schema(self) -> list[dict[str, Any]]:
-        """Formats tools into a schema compatible with the LLM."""
-        return [tool.get_schema() for tool in REGISTERED_TOOLS.values()]
+        self.tools = tools or list(REGISTERED_TOOLS.values())
 
     def _parse_final_verdict(self, text: str) -> tuple[str, str]:
         """Parses the final verdict and reasoning from the agent's response."""
@@ -141,7 +142,7 @@ Your detailed reasoning here:
 
         for turn in range(max_turns):
             # Generate response with tools
-            response = self.llm_client.generate(messages, tools=self._get_llm_tools_schema())
+            response = self.llm_client.generate(messages, tools=self.tools)
 
             # Update messages with the response (client handles provider-specific formatting)
             messages = response.messages
@@ -223,16 +224,17 @@ class FalsificationRubric(JudgeRubric):
     falsified (0.0), or inconclusive (0.5) after an agentic investigation.
     """
 
-    def __init__(self, llm_provider: str = "anthropic", **kwargs):
+    def __init__(self, llm_provider: str = "litellm", tools: list[ToolVerifier] | None = None, **kwargs):
         """
         Initializes the falsification rubric.
 
         Args:
-            llm_provider: The LLM provider to use ('anthropic', 'gemini', or 'openai').
+            llm_provider: The LLM provider to use ('litellm', 'anthropic', 'gemini', or 'openai').
+            tools: The tools to use for the falsification. If None, all tools will be used.
             **kwargs: Additional arguments for the JudgeRubric.
         """
         # Create the decoupled evaluator which contains the core logic
-        self.evaluator = FalsificationEvaluator(llm_provider=llm_provider, **kwargs)
+        self.evaluator = FalsificationEvaluator(llm_provider=llm_provider, tools=tools, **kwargs)
 
         # Initialize the base rubric with evaluator's client
         super().__init__(judge_prompt="", judge_client=self.evaluator.llm_client, parallelize_scoring=False, **kwargs)

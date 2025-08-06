@@ -33,7 +33,7 @@ class LLMResponse:
 class LLMConfig:
     """Configuration for LLM clients"""
 
-    provider: str = "anthropic"  # anthropic, gemini, openai
+    provider: str = "litellm"  # litellm, anthropic, gemini, openai
     model: str = "claude-sonnet-4@20250514"
     max_tokens: int = 10000
     temperature: float = 0.1
