@@ -214,3 +214,5 @@ data/
 *.toml
 *.ipynb
 uv.lock
+*.json
+sbatch_log/
