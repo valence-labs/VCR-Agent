@@ -209,4 +209,8 @@ __marimo__/
 
 digest.txt
 data/
-notebooks/_dev/
+
+# mine
+*.toml
+*.ipynb
+uv.lock
