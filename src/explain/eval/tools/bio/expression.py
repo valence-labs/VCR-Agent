@@ -1,8 +1,12 @@
-import random
 from typing import Any
 
 import numpy as np
+import pandas as pd
+from anndata import AnnData
+from google.cloud import bigquery
 from pydantic import BaseModel, Field
+from pydeseq2.dds import DeseqDataSet, DeseqStats
+from pydeseq2.default_inference import DefaultInference
 
 from explain.eval.tools._base import ToolVerifier
 
@@ -19,6 +23,12 @@ class GeneExpressionArgs(BaseModel):
     gkos: list[str] = Field(default=[], description="List of gene knockouts applied as perturbations")
     compounds: list[str] = Field(default=[], description="List of compound perturbations applied prior to measurement")
     dose: float | None = Field(default=None, description="Dose/concentration used in uM")
+    # todo:
+    # - check if there is perturbations with multiple compounds in different dosees
+    # - unify the gene identifiers
+    # - unify the compound identifiers
+    # - unify the cell type identifiers
+    # - unigy and map reference , e.g. DMSO, centering-introns
 
 
 class GeneExpressionVerifier(ToolVerifier):
@@ -40,8 +50,11 @@ class GeneExpressionVerifier(ToolVerifier):
         if not args.upregulated_genes and not args.downregulated_genes:
             return 0.0, {"error": "At least one gene list (upregulated or downregulated) must be provided"}
 
-        up_regulation_results = [random.uniform(0, 1) < self.effect_pval for _ in args.upregulated_genes]
-        down_regulation_results = [random.uniform(0, 1) < self.effect_pval for _ in args.downregulated_genes]
+        # get gene expression regulation
+        upregulated_genes, downregulated_genes = self._expression_regulation_results(args)
+
+        up_regulation_results = [gene in upregulated_genes for gene in args.upregulated_genes]
+        down_regulation_results = [gene in downregulated_genes for gene in args.downregulated_genes]
 
         all_results = up_regulation_results + down_regulation_results
         reward = float(np.mean(all_results)) if all_results else 0.0
@@ -58,3 +71,223 @@ class GeneExpressionVerifier(ToolVerifier):
             },
         }
         return reward, feedback
+
+    def _process_perturbation(self, args):
+        perturbation = ""
+        if args.gkos:
+            perturbation += "-".join(args.gkos)
+            # reference/control for gene perturbation
+            reference = "centering-introns"
+
+        if args.compounds and args.dose:
+            perturbation += "_" + "-".join(args.compounds) + "@" + args.dose
+            # reference/control for compound perturbation
+            reference = "DMSO"
+
+        return perturbation, reference
+
+    def _expression_regulation_results(self, args):
+        # get gene_KO and reference
+        perturbation, reference = self._process_perturbation(args)
+        upregulated = []
+        downregulated = []
+
+        # rxrx precomputed
+        up_reg, down_reg = self._expression_regulation(perturbation, reference, "rxrx_deseq2", args.cell_type)
+        upregulated.extend(up_reg)
+        downregulated.extend(down_reg)
+
+        # deseq2 precomputed
+        upreg, downreg = self._expression_regulation(perturbation, reference, "deseq2_precomputed", args.cell_type)
+        upregulated.extend(up_reg)
+        downregulated.extend(down_reg)
+
+        # compyte deseq2
+        if len(upregulated) == 0 & len(downregulated) == 0:
+            # the computing takes significant amount of time.
+            # This part requires optimization.
+            upreg, downreg = self._expression_regulation(perturbation, reference, "compute", args.cell_type)
+            upregulated.extend(up_reg)
+            downregulated.extend(down_reg)
+
+        return upregulated, downregulated
+
+    def _expression_regulation(self, perturbation: str, reference: str, source: str, cell_type: str):
+        """
+        Exame whether a perturbation of the source gene would regulate the expression of target gene(s).
+        """
+        upregulated_genes, downregulated_genes = [], []
+        des_res = pd.DataFrame()
+
+        if source == "rxrx_deseq2":
+            # get precomputed DE from rxrx precomputed
+            de_res = get_precomputed_DE_RXRX(perturbation, reference, cell_type)
+
+        if source == "deseq2_precomputed":
+            de_res = get_precomputed_DE_table(perturbation, reference, cell_type)
+
+        if source == "compute":
+            de_res = compute_DeSeq2(perturbation, reference, cell_type)
+
+        if des_res.shape[0] > 0:
+            # get fc threshold based on fc distribution
+            # we can use threshold
+            # - default log2FC > 1 or log2FC< -1
+            # - top K %
+            # - dynamic threshold based on distribution.
+            log2fc_threshold = get_log2fc_threshold(de_res, log2FC_col="log2_foldchange")
+
+            # get list of upregulated gene
+            upregulated_genes = de_res.query(f"padj < {self.effect_pval} & log2_foldchange > {log2fc_threshold}")[
+                "gene_id"
+            ].unique()
+
+            # get list of downregulated gene
+            downregulated_genes = de_res.query(
+                f"padj < {self.effect_pval} & log2_foldchange < {-1 * log2fc_threshold}"
+            )["gene_id"].unique()
+
+        return upregulated_genes, downregulated_genes
+
+
+def get_experiment_labels(cell_type: str = "HUVEC") -> list:
+    EXPT_LABEL_DICT = {"HUVEC": ["250207-trek-1045-huvec-ipg-HSP90AB1-mimic_p1-a"]}
+
+    return EXPT_LABEL_DICT.get(cell_type)
+
+
+def get_precomputed_DE_RXRX(perturbation: str, reference: str, cell_type: str) -> pd.DataFrame:
+    """
+    Retrieve DE data from RXRX DeSeq2 via SQL query
+    """
+
+    client = bigquery.Client(project="datalake-prod-ef49c0c9")
+
+    # todo: get_experiment_labels for the specified cell_type
+    expt_labels = get_experiment_labels(cell_type)
+    # check whether gene of interest exist precomputed database
+    sql = f"""
+        SELECT gene_id, log2_foldchange, padj FROM `trekseq_diffexp.trek_differentialexpression`
+        WHERE reference_description = '{reference}'
+        AND test_description LIKE '{perturbation}%'
+        AND experiment_label IN '{"', '".join(expt_labels)}'
+    """
+
+    query_job = client.query(sql)  # Make an API request.
+
+    de_res = query_job.to_dataframe()
+
+    return de_res
+
+
+def get_precomputed_DE_table(perturbation: str, reference: str, cell_type: str = None) -> pd.DataFrame:
+    r"""
+    Retrieve DE data from precomputed DeSeq2 FC from paquet file
+    """
+    # update the data path dictionary after pre-computation
+    PRECOMPUTED_FC = {
+        "trekseq_deseq2": "/rxrx/data/user/lu.zhu/outgoing/hooke-explain/Data/Expression/precomputed_deseq2_test.parquet",
+        # "Tahor":
+    }
+
+    de_df = pd.read_parquet(PRECOMPUTED_FC["trekseq_deseq2"])
+    # todo: update the file loading after deseq2 precomputation
+
+    if cell_type:
+        de_df = de_df.query("cell_type == @cell_type")
+
+    de_res = de_df[de_df["reference_description"] == reference & de_df["test_description"].str.startswith(perturbation)]
+    return de_res
+
+
+def get_log2fc_threshold(result, bin_index: int = 0, log2FC_col="log2_foldchange"):
+    r"""
+    Calculate the fold-change threshold for classifying differentially expressed genes.
+
+    This function computes a threshold value for log2 fold-change based on the histogram of the provided data.
+    The threshold is determined by selecting a bin index (`bin_index`) from the histogram of the specified column.
+
+    Args:
+        result (pd.DataFrame): DataFrame containing gene expression results, including a log2 fold-change column.
+        fold_threshold (int, optional): Index of the histogram bin to use for threshold calculation. Defaults to 0.
+        log2FC_col (str, optional): Name of the column containing log2 fold-change values. Defaults to "log2_foldchange".
+
+    Returns:
+        float: Calculated fold-change threshold value
+    """
+
+    foldp = np.histogram(result[log2FC_col].dropna())
+    fc_threshold = (
+        foldp[1][np.where(foldp[1] > 0)[0][bin_index]] + foldp[1][np.where(foldp[1] > 0)[0][bin_index + 1]]
+    ) / 2
+    return fc_threshold
+
+
+def get_expression_data(cell_type: str) -> AnnData:
+    # todo: update the path dictionary
+    H5AD_PATH_DICT = {
+        "HUVEC": "/rxrx/data/user/lu.zhu/outgoing/benchmarking/trekseq_datasets/tsc2_KO/adata_disease_healthy_sub_filtered.h5ad"
+    }
+
+    adata_list = []
+    for h5ad_path in H5AD_PATH_DICT[cell_type]:
+        adata = AnnData.read_h5ad(h5ad_path)
+        adata_list.append(adata)
+    return AnnData.concatenate(adata_list)
+
+
+def compute_DeSeq2(perturbation: str, reference: str, cell_type: str, n_cpus: int = 16) -> pd.DataFrame:
+    """
+    Performs differential expression analysis between a perturbation condition and a reference condition.
+
+    This function retrieves gene expression data, verifies that the specified conditions exist in the dataset,
+    sets up the appropriate experimental design, and runs DESeq2 analysis to identify differentially expressed genes.
+
+    Args:
+        perturbation (str): The name of the perturbation condition to compare.
+        reference (str): The name of the reference (control) condition.
+        n_cpus (int, optional): Number of CPUs to use for parallel computation. Defaults to 16.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the results of the differential expression analysis,
+                    including statistics such as log fold change, p-values, and adjusted p-values.
+
+    Raises:
+        ValueError: If the specified conditions do not match those present in the dataset.
+    """
+    # AnnData
+    adata = get_expression_data(cell_type)
+
+    # double check the gene_ko and referecne in the dataset
+    if set([perturbation, reference]) != set(adata.obs["condition"].unique()):
+        raise ValueError(f"The dataset doesn't match the condition: {perturbation, reference}.")
+
+    # assuming condition (perturnbation, reference) is already set in the dataset.
+    if "experiment_label" in adata.obs:
+        # assuming significant varience across experiments
+        design = "~experiment_label * condition"
+    else:
+        design = "~condition"
+
+    inference = DefaultInference(n_cpus=n_cpus)
+    dds = DeseqDataSet(
+        adata=adata,
+        design=design,
+        quiet=False,
+        refit_cooks=True,
+        inference=inference,
+    )
+    # run deseq2
+    dds.deseq2()
+
+    # return the regulation direction
+    stat_res = DeseqStats(
+        dds,
+        contrast=["condition", perturbation, reference],
+        n_cpus=n_cpus,
+    )
+
+    # get summary
+    stat_res.summary()
+
+    return stat_res.results_df
