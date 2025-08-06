@@ -1092,7 +1092,6 @@ dependencies = [
     { name = "google-cloud-aiplatform" },
     { name = "google-cloud-secret-manager" },
     { name = "google-genai" },
-    { name = "langchain" },
     { name = "litellm" },
     { name = "loguru" },
     { name = "numpy" },
@@ -1113,6 +1112,9 @@ dev = [
 [package.dev-dependencies]
 dev = [
     { name = "ipykernel" },
+    { name = "langchain" },
+    { name = "langchain-core" },
+    { name = "langsmith" },
 ]
 
 [package.metadata]
@@ -1128,7 +1130,6 @@ requires-dist = [
     { name = "google-cloud-secret-manager", specifier = ">=2.24.0" },
     { name = "google-genai", specifier = ">=1.28.0" },
     { name = "hooke-explain", extras = ["dev"], marker = "extra == 'all'" },
-    { name = "langchain", specifier = ">=0.3.27" },
     { name = "litellm", specifier = ">=1.74.15.post1" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "numpy" },
@@ -1141,7 +1142,12 @@ requires-dist = [
 provides-extras = ["dev", "all"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "ipykernel", specifier = ">=6.30.0" }]
+dev = [
+    { name = "ipykernel", specifier = ">=6.30.0" },
+    { name = "langchain", specifier = ">=0.3.27" },
+    { name = "langchain-core", specifier = ">=0.3.72" },
+    { name = "langsmith", specifier = ">=0.4.9" },
+]
 
 [[package]]
 name = "httpcore"

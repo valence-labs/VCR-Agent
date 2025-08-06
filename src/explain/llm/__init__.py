@@ -1,4 +1,4 @@
-from ._client import LLMClient, LLMConfig
+from ._client import LLMClient, LLMConfig, LLMResponse
 
 
 def create_client(model: str | None = None, provider: str = "litellm", **kwargs) -> LLMClient:
@@ -12,6 +12,7 @@ def create_client(model: str | None = None, provider: str = "litellm", **kwargs)
     Returns:
         An LLM client instance conforming to the BaseLLMClient interface.
     """
+    provider = provider or "litellm"
     # Set default models for each provider
     default_models = {
         "anthropic": "claude-sonnet-4@20250514",
@@ -25,3 +26,6 @@ def create_client(model: str | None = None, provider: str = "litellm", **kwargs)
 
     config = LLMConfig(provider=provider, model=model, **kwargs)
     return LLMClient(config)
+
+
+__all__ = ["LLMClient", "LLMConfig", "LLMResponse", "create_client"]
