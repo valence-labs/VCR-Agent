@@ -66,7 +66,9 @@ def guess_max_turns(claim: str, allowed_primitives: list[str], default_max_turns
     return turn_count if turn_count > 0 else default_max_turns
 
 
-def as_verifier_dataset(df: pd.DataFrame, question_column: str = "question", answer_column: str = "answer") -> Dataset:
+def as_verifier_dataset(
+    df: pd.DataFrame, question_column: str = "question", answer_columns: list[str] = ["raw_response"]
+) -> Dataset:
     """
     Converts a DataFrame with specific experiment columns into a Hugging Face Dataset
     formatted for the 'verifiers' library.
@@ -81,18 +83,21 @@ def as_verifier_dataset(df: pd.DataFrame, question_column: str = "question", ans
     # First, convert the pandas DataFrame to a Hugging Face Dataset.
     dataset = Dataset.from_pandas(df)
 
+    columns_of_interest = [question_column, *answer_columns]
+
     def format_for_verifier(example: dict) -> dict:
         """
         Takes a single example from the raw dataset and formats it
         with 'question', 'answer', and 'info' fields.
         """
+
         # All columns that are not 'question' or 'answer' will be moved into the 'info' dict.
-        info_keys = [key for key in example.keys() if key not in [question_column, answer_column]]
+        info_keys = [key for key in example.keys() if key not in columns_of_interest]
         info_dict = {key: example[key] for key in info_keys}
 
         return {
             "question": example.get(question_column, ""),
-            "answer": example.get(answer_column, ""),
+            "answer": "\n".join([example.get(col, "") for col in answer_columns]),
             "info": info_dict,
             "task": "hooke-explain-verification",
         }

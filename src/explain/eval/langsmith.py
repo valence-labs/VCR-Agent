@@ -1,131 +1,121 @@
-from verifiers.rubrics.rubric import Rubric
+from typing import Any
 
 try:
     from langchain_core.tracers.schemas import Run
-    from langsmith.schemas import EvaluationResult, Example
 except ImportError as e:
     raise ImportError(
         "langchain_core and langsmith packages are required for this module. "
         "Please run `pip install langchain_core langsmith`"
     ) from e
 
+from explain.llm import LLMResponse
+
 
 class LangSmithRubricWrapper:
     """
-    A wrapper to adapt a 'verifiers' Rubric for use with LangSmith evaluation.
+    Wrapper to adapt a custom rubric for use with LangSmith evaluation.
 
-    This class provides a bridge between the 'verifiers' evaluation framework and
-    the LangSmith platform, allowing custom rubrics to be used as evaluators
-    in LangSmith.
+    This enables using your internal evaluators (e.g., Correctness, Plausibility)
+    as LangSmith-compatible evaluators via the `evaluate_run` interface.
 
     Example:
-        from langsmith import Client
-        from explain.eval.rubrics.plausibility import PlausibilityRubric
+        from explain.eval.rubrics.correctness import CorrectnessRubric
         from explain.eval.langsmith import LangSmithRubricWrapper
-
-        # 1. Initialize your rubric
-        plausibility_rubric = PlausibilityRubric(llm_provider="openai")
-
-        # 2. Wrap it for LangSmith
-        evaluator = LangSmithRubricWrapper(rubric=plausibility_rubric)
-
-        # 3. Run evaluation on a LangSmith dataset
-        client = Client()
-        client.run_on_dataset(
-            dataset_name="my-evaluation-dataset",
-            llm_or_chain_factory=my_llm_chain,
-            evaluation=evaluator.evaluate_run,
-        )
+        evaluator = LangSmithRubricWrapper(CorrectnessRubric(), "scientific_correctness")
     """
 
-    def __init__(self, rubric: Rubric):
+    def __init__(self, rubric, rubric_name: str):
         """
-        Initializes the wrapper with a rubric instance.
-
         Args:
-            rubric: An instance of a Rubric class from the 'verifiers' library.
+            rubric: A custom rubric object with an `evaluate(...)` method.
+            rubric_name: The name of the rubric used for LangSmith evaluation output.
         """
         self.rubric = rubric
+        self.rubric_name = rubric_name
 
-    def evaluate_run(self, run: Run, example: Example | None = None) -> list[EvaluationResult]:
+    def evaluate_run(self, run: Run, example: dict[str, Any] | None = None) -> dict[str, Any]:
         """
-        Evaluates a run using the wrapped rubric.
-
-        This method is designed to be passed to the `evaluation` parameter of
-        a LangSmith client's `run_on_dataset` method.
+        Evaluate a LangSmith run using the wrapped rubric.
 
         Args:
-            run: The LangSmith run object to evaluate.
-            example: The corresponding LangSmith example object with ground truth data.
+            run: LangSmith Run object.
+            example: Corresponding LangSmith example with inputs and expected outputs.
 
         Returns:
-            A list of EvaluationResult objects, one for each metric in the rubric.
+            A LangSmith-compatible evaluation dictionary.
         """
-        if not example or not example.inputs or not example.outputs:
-            return [
-                EvaluationResult(
-                    key="error",
-                    score=0,
-                    comment="Example with populated inputs and outputs is required for rubric evaluation.",
-                )
-            ]
+        # Fail early if no example
+        if not example:
+            return {"key": self.rubric_name, "score": 0.0, "comment": "Example is required for rubric evaluation."}
 
         try:
-            prompt = example.inputs["question"]
-            answer = example.outputs["answer"]
+            # Extract inputs and ground truth
+            inputs = example.get("inputs", {})
+            outputs = example.get("outputs", {})
 
-            if run.outputs is None:
-                raise ValueError("Run outputs are missing.")
+            question = inputs.get("question", "")
+            ground_truth = outputs.get("ground_truth") or outputs.get("answer", "")
+
+            # Get model output
+            if not run.outputs:
+                return {"key": self.rubric_name, "score": 0.0, "comment": "Run outputs are missing."}
 
             if isinstance(run.outputs, dict):
-                output_keys = ["output", "answer", "completion", "result", "response"]
-                completion_key = next((k for k in output_keys if k in run.outputs), None)
-                if completion_key:
-                    completion = run.outputs[completion_key]
-                else:
-                    completion = next(iter(run.outputs.values()))
+                # Check common output keys
+                output_keys = ["answer", "output", "completion", "result", "response", "content"]
+                model_answer = next((run.outputs.get(k) for k in output_keys if k in run.outputs), None)
+                if model_answer is None:
+                    model_answer = next(iter(run.outputs.values()), "")
             else:
-                completion = str(run.outputs)
+                model_answer = str(run.outputs)
 
-        except (KeyError, TypeError, StopIteration, ValueError) as e:
-            return [
-                EvaluationResult(
-                    key="error",
-                    score=0,
-                    comment=f"Failed to extract required data from run/example: {e}",
-                )
-            ]
+            # Handle LLMResponse
+            if isinstance(model_answer, LLMResponse):
+                actual_answer = model_answer.content
+                conversation_history = model_answer.messages
+            else:
+                actual_answer = str(model_answer)
+                conversation_history = None
 
-        try:
-            state = {}
-            scores = self.rubric.score_completion(prompt=prompt, completion=completion, answer=answer, state=state)
+            # Default conversation history if needed
+            if conversation_history is None:
+                conversation_history = [
+                    {"role": "user", "content": question},
+                    {"role": "assistant", "content": actual_answer},
+                ]
+
         except Exception as e:
-            return [
-                EvaluationResult(
-                    key="error",
-                    score=0,
-                    comment=f"Rubric evaluation failed: {e}",
-                )
-            ]
+            return {"key": self.rubric_name, "score": 0.0, "comment": f"Error extracting data from run/example: {e}"}
 
-        if not isinstance(scores, dict):
-            return [
-                EvaluationResult(
-                    key="error",
-                    score=0,
-                    comment=f"Rubric did not return a dictionary of scores. Got: {type(scores)}",
-                )
-            ]
+        # Try to evaluate using the rubric
+        try:
+            score, feedback = self.rubric.evaluate(
+                answer=actual_answer,
+                question=question,
+                ground_truth=ground_truth,
+                conversation_history=conversation_history,
+            )
+        except TypeError:
+            # Fallback if some rubrics do not support all arguments
+            try:
+                score, feedback = self.rubric.evaluate(answer=actual_answer, question=question)
+            except TypeError:
+                score, feedback = self.rubric.evaluate(actual_answer)
 
-        results = []
-        for metric_name, score_value in scores.items():
-            if isinstance(score_value, int | float):
-                results.append(
-                    EvaluationResult(
-                        key=metric_name,
-                        score=float(score_value),
-                        comment=f"Evaluated by: {self.rubric.__class__.__name__}",
-                    )
-                )
+        except Exception as e:
+            return {"key": self.rubric_name, "score": 0.0, "comment": f"Rubric evaluation failed: {e}"}
 
-        return results
+        # Prepare comment and optional tags
+        comment = feedback.get("reasoning", "") if isinstance(feedback, dict) else str(feedback)
+        tags = feedback.get("tags", []) if isinstance(feedback, dict) else []
+
+        return {
+            "key": self.rubric_name,
+            "score": float(score),
+            "comment": comment[:500] + "..." if len(comment) > 500 else comment,
+            "tags": tags,
+        }
+
+    def __call__(self, run: Run, example: dict[str, Any] | None = None) -> dict[str, Any]:
+        """For compatibility with LangSmith versions that expect a callable evaluator."""
+        return self.evaluate_run(run, example)
