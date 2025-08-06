@@ -180,21 +180,22 @@ def get_precomputed_DE_RXRX(perturbation: str, reference: str, cell_type: str) -
     return de_res
 
 
-def get_precomputed_DE_table(perturbation: str, reference: str, cell_type: str = None) -> pd.DataFrame:
+def get_precomputed_DE_table(perturbation: str, reference: str, cell_type: str) -> pd.DataFrame:
     r"""
     Retrieve DE data from precomputed DeSeq2 FC from paquet file
     """
-    # update the data path dictionary after pre-computation
+    # todo:
+    #  - precomputing expression regulations for all the Tx data we have, rxrx and Tahor.)
+    #  - update the data path dictionary after pre-computation
+
     PRECOMPUTED_FC = {
-        "trekseq_deseq2": "/rxrx/data/user/lu.zhu/outgoing/hooke-explain/Data/Expression/precomputed_deseq2_test.parquet",
-        # "Tahor":
+        "HUVEC": #  merged data from Tahor_deseq2, trekseq, pertubseq_deseq2 etc.
+            "/rxrx/data/user/lu.zhu/outgoing/hooke-explain/Data/Expression/precomputed_deseq2_test.parquet",
+        # "cell type 2": [...]
     }
-
-    de_df = pd.read_parquet(PRECOMPUTED_FC["trekseq_deseq2"])
+     
+    de_df = pd.read_parquet(PRECOMPUTED_FC.get(cell_type))
     # todo: update the file loading after deseq2 precomputation
-
-    if cell_type:
-        de_df = de_df.query("cell_type == @cell_type")
 
     de_res = de_df[de_df["reference_description"] == reference & de_df["test_description"].str.startswith(perturbation)]
     return de_res
