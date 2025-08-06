@@ -20,7 +20,6 @@ def get_access_token(auto_open=False):
     Args:
         auto_open (bool): If True, attempt to automatically open browser.
                          If False (default), only print the URL. Safer for remote servers.
-
     Returns:
         str: Access token if successful, None if failed
     """
@@ -41,14 +40,10 @@ def get_access_token(auto_open=False):
     device_code = device_code_response["device_code"]
 
     # Always print the authentication URL for manual access
-    logger.debug("=" * 60)
-    logger.debug("AUTHENTICATION REQUIRED")
-    logger.debug("=" * 60)
-    logger.debug("Please open the following URL in your browser:")
-    logger.debug(f"\n{device_code_response['verification_uri_complete']}\n")
-    logger.debug(f"Or go to: {device_code_response['verification_uri']}")
-    logger.debug(f"And enter code: {device_code_response['user_code']}")
-    logger.debug("=" * 60)
+    logger.info("Please open the following URL in your browser:")
+    logger.info(f"\n{device_code_response['verification_uri_complete']}\n")
+    logger.info(f"Or go to: {device_code_response['verification_uri']}")
+    logger.info(f"And enter code: {device_code_response['user_code']}")
 
     # Optionally try to open browser automatically
     if auto_open:
@@ -69,7 +64,7 @@ def get_access_token(auto_open=False):
     # Poll until the browser authentication session has completed
     while access_token is None:
         poll_count += 1
-        logger.debug(f"Polling attempt {poll_count}")
+        logger.info(f"Polling attempt {poll_count}")
 
         token_r = httpx.post(
             OKTA_TOKEN_ENDPOINT,
@@ -86,23 +81,19 @@ def get_access_token(auto_open=False):
         token_r_response = token_r.json()
 
         if token_r_response.get("error") == "authorization_pending":
-            print(".", end="", flush=True)  # Show progress dots
             time.sleep(5)
             continue
         elif token_r_response.get("access_token"):
             access_token = token_r_response.get("access_token")
-            print()  # New line after dots
             logger.success("Authentication successful!")
             break
         elif token_r_response.get("error"):
-            print()  # New line after dots
             error = token_r_response.get("error")
             error_desc = token_r_response.get("error_description", "Unknown error")
             logger.error(f"Authentication failed: {error}")
             logger.error(f"Description: {error_desc}")
             break
         else:
-            print()  # New line after dots
             logger.error(f"Unexpected response: {token_r_response}")
             break
 
