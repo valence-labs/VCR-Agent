@@ -1,45 +1,63 @@
-import os
-from typing import Any
 import re
+import networkx as nx
 
-
-from explain.eval.score._base import Evaluator
 from explain.util import load_data
+from explain.eval.utils import check_answer_format, is_format_correct
+from explain.eval.score.score_util import dag_to_networkx_graph, get_primitives_from_structure_hypothesis
 
-
-class SyntaxEvaluator(Evaluator):
+class SyntaxEvaluator:
     """
     Checks the syntax and schema gates of the generated explanations.
     """
     
     def __init__(self,  **kwargs):
-        super().__init__(**kwargs)
         self.allowed_primitives = self.get_allowed_primitives()
 
-    def get_primitives_from_structure_hypothesis(self, structure_hypothesis: str) -> list[str]:
-        """
-        Return list of function names appearing in top-level call style:
-        name( ... )  (not preceded by '.' or part of attribute chain).
-        """
-        pattern = r'(?m)^[ \t]*([A-Za-z_][A-Za-z0-9_]*)\s*\('
-        primitives = re.findall(pattern, structure_hypothesis)
-        return primitives
+
 
     def get_allowed_primitives(self) -> list[str]:
         """
         Get the allowed primitives.
         """
-        DATA_DIR = os.getenv("DATA_DIR")
-        DATA_DIR = '../../../emmanuel.noutahi/project/outgoing/hooke/hooke-explain/'
+        DATA_DIR = 'data/curation_v1'
         action_primitives, _, _, _ = load_data(DATA_DIR)
         action_primitives = [primitive['action'] for primitive in action_primitives]
         return action_primitives
 
-    def primitive_validity(self, structure_hypothesis: str) -> tuple[float, dict[str, Any]]:
+    def primitive_validity(self, structure_hypothesis: str) -> float:
         """
         Check whether the generated primitives are in the allowed set.
         """
-        primitives = self.get_primitives_from_structure_hypothesis(structure_hypothesis)
+        primitives = get_primitives_from_structure_hypothesis(structure_hypothesis)
         score = sum([primitive in self.allowed_primitives for primitive in primitives])/len(primitives)
         return score
 
+
+    def schema_validity(self, raw_response: str) -> float:
+        """
+        All mandatory tags present & closed; JSON-parsable primitives.
+        """
+        # TODO
+        parsed_sections = check_answer_format(raw_response)
+        format_accuracy = is_format_correct(parsed_sections)
+        return 1 if format_accuracy else 0
+
+    def id_coherence(self, structure_hypothesis: str, dag: str) -> float:
+        """
+        Check whether the DAG is coherent.
+        """
+        # TODO
+        ids = re.findall(r'\bid\s*=\s*[\'"](n\d+)[\'"]', structure_hypothesis)
+        # Check every primitive carries a unique id
+        id_existence_in_primitive = len(ids) == len(structure_hypothesis.split('\n'))
+        # Check whether all IDs referenced in <dag> exist in <explain>
+        ids_in_dag = re.findall(r'\bn\d+\b', dag)
+        return 1 if all(dag_id in ids for dag_id in set(ids_in_dag)) and id_existence_in_primitive else 0
+
+    def dag_well_formed(self, dag: str) -> float:
+        """
+        Check whether the DAG is well-formed.
+        """
+        # TODO
+        graph = dag_to_networkx_graph(dag)
+        return 1 if nx.is_directed_acyclic_graph(graph) else 0

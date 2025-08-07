@@ -3,7 +3,7 @@ from typing import Any
 
 class StructureExplain():
     """
-    Base class for score evaluators.
+    Base class for structre explain objects.
     """
 
     def __init__(self, instances: list[dict[str, Any]], **kwargs):
@@ -13,6 +13,13 @@ class StructureExplain():
         self.paragraph = self.get_paragraph()
         self.question = self.get_question()
         self.perturbation = self.get_perturbation()
+        self.raw_response = self.get_raw_response()
+
+    def __len__(self) -> int:
+        return len(self.instances)
+
+    def __getitem__(self, index: int) -> dict[str, Any]:
+        return self.instances[index]
 
     def get_dag(self) -> dict[str, Any]:
         """
@@ -39,3 +46,7 @@ class StructureExplain():
     def get_perturbation(self) -> list[str]:
         perturbations = [instance['input_perturbation'] for instance in self.instances]
         return perturbations
+
+    def get_raw_response(self) -> list[str]:
+        raw_responses = [instance['raw_response'] for instance in self.instances]
+        return raw_responses
