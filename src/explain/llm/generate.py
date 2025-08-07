@@ -16,7 +16,7 @@ def parse_args():
                         default='vanilla')
     parser.add_argument('--experiment_name', type=str, help='Experiment name',
                         default='')
-    parser.add_argument('--tool_list', type=json.loads, default=['kg_neighbor'], help='Comma-separated list of tools (e.g., wikipedia)')
+    parser.add_argument('--tool_list', type=json.loads, default=[], help='Comma-separated list of tools (e.g., wikipedia)')
     parser.add_argument('--wandb_mode', type=str, default='disabled')
     parser.add_argument('--metrics', type=json.loads, default=['llm_gen', 'format', 'compare_token'], help='Metrics to evaluate')
     return parser.parse_args()
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     structure_explain_list = []
     report_file_name = f'output/report/{args.folder_name}/{args.experiment_name}_{args.tool_list}.json'
     structure_explain_file_name = f'output/structure_explain/{args.folder_name}/{args.experiment_name}_{args.tool_list}.json'
-    perturbations = data_generator.perturbation_cell_context
+    perturbations = data_generator.perturbation_cell_context[:2]
 
     if os.path.exists(report_file_name):
         report_list = json.load(open(report_file_name, 'r'))
@@ -53,7 +53,7 @@ if __name__ == '__main__':
         'answer': answer, 'explain': explain, 'dag': dag, 'raw_response': structure_explain,
         'question': question, 'input_report_text': report}
 
-        print(structure_explain)
+
         structure_explain_list.append(structure_explain_dict)
 
         if i % 5 == 0 or i == len(perturbations) - 1:

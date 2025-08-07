@@ -19,30 +19,11 @@ class DataGenerator:
         self.location = "us-east5"
         self.project = "vertexai-sandbox-e8a925d0"
 
-        self.llm_client = create_client(model=model_name, provider="anthropic", **kwargs)
-
-
+        self.llm_client = create_client(model=model_name, provider="litellm", project_id=self.project, location=self.location)
         self.tools = self.get_tools(tool_list)
-        self.base_llm = self.get_base_llm(model_name)
-        self.llm = self.base_llm.bind_tools(self.tools)
-        DATA_DIR = '../../../emmanuel.noutahi/project/outgoing/hooke/hooke-explain/'
+        DATA_DIR = 'data/curation_v1/'
         self.action_primitives, self.perturbation_cell_context, self.report_template, self.structre_explain_template = load_data(DATA_DIR)
 
-
-    def get_base_llm(self, model_name: str):
-        """
-        Get the LLM model for Langchain
-        """
-        max_tokens = 10000
-        if 'gpt'in model_name:
-            llm = ChatOpenAI(model=model_name, streaming=False, max_tokens=max_tokens)
-        elif 'claude' in model_name:
-            llm = ChatAnthropicVertex(model_name=model_name, project=self.project,
-                    location=self.location, streaming=False, max_tokens=max_tokens)
-        elif 'gemini' in model_name:
-            llm =  ChatVertexAI(model_name=model_name, project=self.project,
-                    location=self.location, streaming=False, max_tokens=max_tokens)
-        return llm
 
     def get_tools(self, tool_list: list[str]):
         """
@@ -61,22 +42,11 @@ class DataGenerator:
 
 
     def generate_response(self, input_prompt):
-        messages = [("system", "You are a biomedical reasoning assistant."), ("placeholder", "{chat_history}"),
-                ("human", "{input_prompt}"), ("placeholder", "{agent_scratchpad}")]
-
-        final_prompt = ChatPromptTemplate.from_messages(messages)
-        agent = create_tool_calling_agent(self.llm, self.tools, final_prompt)
-        executor = AgentExecutor(agent=agent, tools=self.tools, verbose=True, return_intermediate_steps=True)
-
-        while True:
-            try:
-                result = executor.invoke({'input_prompt': input_prompt})
-                break
-            except Exception as e:
-                print(f"Error during executor.invoke: {e}")
-                continue
-
-        response = result['output'][0]['text']
+        messages = [
+            {"role": "user", "content": input_prompt},
+        ]
+        result = self.llm_client.generate(messages)
+        response = result.messages[-1]['content'][0]['text']
 
         return response
 
@@ -106,8 +76,5 @@ class DataGenerator:
         answer = self.extract_tag(structure_explain, "answer")
         explain = self.extract_tag(structure_explain, "explain")
         dag = self.extract_tag(structure_explain, "dag")
-
-
-
 
         return thinking, answer, explain, dag
