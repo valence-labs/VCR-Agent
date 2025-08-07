@@ -1,11 +1,13 @@
 from typing import Any
-
+from loguru import logger
 import numpy as np
 import pandas as pd
+import anndata
 from anndata import AnnData
 from google.cloud import bigquery
 from pydantic import BaseModel, Field
-from pydeseq2.dds import DeseqDataSet, DeseqStats
+from pydeseq2.dds import DeseqDataSet
+from pydeseq2.ds import DeseqStats
 from pydeseq2.default_inference import DefaultInference
 
 from explain.eval.tools._base import ToolVerifier
@@ -28,7 +30,7 @@ class GeneExpressionArgs(BaseModel):
     # - unify the gene identifiers
     # - unify the compound identifiers
     # - unify the cell type identifiers
-    # - unigy and map reference , e.g. DMSO, centering-introns
+    # - unify and map reference , e.g. DMSO, centering-introns
 
 
 class GeneExpressionVerifier(ToolVerifier):
@@ -92,50 +94,71 @@ class GeneExpressionVerifier(ToolVerifier):
         upregulated = []
         downregulated = []
 
+        query_genes = args.upregulated_genes + args.downregulated_genes
+
         # rxrx precomputed
-        up_reg, down_reg = self._expression_regulation(perturbation, reference, "rxrx_deseq2", args.cell_type)
+        up_reg, down_reg, presence_1 = self._expression_regulation(
+            perturbation, reference, "rxrx_deseq2", args.cell_type, query_genes
+        )
         upregulated.extend(up_reg)
         downregulated.extend(down_reg)
 
         # deseq2 precomputed
-        upreg, downreg = self._expression_regulation(perturbation, reference, "deseq2_precomputed", args.cell_type)
+        upreg, downreg, presence_2 = self._expression_regulation(
+            perturbation, reference, "deseq2_precomputed", args.cell_type, query_genes
+        )
         upregulated.extend(up_reg)
         downregulated.extend(down_reg)
 
         # compyte deseq2
-        if len(upregulated) == 0 & len(downregulated) == 0:
+        presence = {g: presence_1[g] or presence_2[g] for g in query_genes}
+        missing_genes = [g for g in query_genes if presence[g] == False]
+        # if there are genes does exist in any source
+        if len(missing_genes) > 0:
             # the computing takes significant amount of time.
             # This part requires optimization.
-            upreg, downreg = self._expression_regulation(perturbation, reference, "compute", args.cell_type)
+            upreg, downreg, presence_3 = self._expression_regulation(
+                perturbation, reference, "compute", args.cell_type, missing_genes
+            )
             upregulated.extend(up_reg)
             downregulated.extend(down_reg)
 
+            presence = {g: presence[g] or presence_3[g] for g in query_genes}
+            missing_genes = [g for g in query_genes if presence[g] == False]
+        logger.info(f"Genes can not be found in the datasets: {missing_genes}.")
+
         return upregulated, downregulated
 
-    def _expression_regulation(self, perturbation: str, reference: str, source: str, cell_type: str):
+    def _expression_regulation(self, perturbation: str, reference: str, source: str, cell_type: str, query_genes: list):
         """
         Exame whether a perturbation of the source gene would regulate the expression of target gene(s).
         """
         upregulated_genes, downregulated_genes = [], []
-        des_res = pd.DataFrame()
+        de_res = pd.DataFrame()
+        presence = {g: False for g in query_genes}
 
         if source == "rxrx_deseq2":
             # get precomputed DE from rxrx precomputed
-            de_res = get_precomputed_DE_RXRX(perturbation, reference, cell_type)
+            de_res = get_precomputed_DE_datalake(perturbation, reference, cell_type)
 
         if source == "deseq2_precomputed":
             de_res = get_precomputed_DE_table(perturbation, reference, cell_type)
 
         if source == "compute":
-            de_res = compute_DeSeq2(perturbation, reference, cell_type)
+            de_res = compute_DeSeq2(perturbation, reference, cell_type, query_genes)
 
-        if des_res.shape[0] > 0:
+        if de_res.shape[0] > 0:
+            presence.update({g: g in de_res["gene_id"].unique() for g in query_genes})
+
             # get fc threshold based on fc distribution
             # we can use threshold
             # - default log2FC > 1 or log2FC< -1
+            # log2fc_threshold = 1
+
             # - top K %
             # - dynamic threshold based on distribution.
             log2fc_threshold = get_log2fc_threshold(de_res, log2FC_col="log2_foldchange")
+            logger.info(f"Apply log2FC threshold: {log2fc_threshold}")
 
             # get list of upregulated gene
             upregulated_genes = de_res.query(f"padj < {self.effect_pval} & log2_foldchange > {log2fc_threshold}")[
@@ -147,31 +170,35 @@ class GeneExpressionVerifier(ToolVerifier):
                 f"padj < {self.effect_pval} & log2_foldchange < {-1 * log2fc_threshold}"
             )["gene_id"].unique()
 
-        return upregulated_genes, downregulated_genes
+        return upregulated_genes, downregulated_genes, presence
 
 
 def get_experiment_labels(cell_type: str = "HUVEC") -> list:
+    # todo: update the cell line information
     EXPT_LABEL_DICT = {"HUVEC": ["250207-trek-1045-huvec-ipg-HSP90AB1-mimic_p1-a"]}
 
     return EXPT_LABEL_DICT.get(cell_type)
 
 
-def get_precomputed_DE_RXRX(perturbation: str, reference: str, cell_type: str) -> pd.DataFrame:
+def get_precomputed_DE_datalake(perturbation: str, reference: str, cell_type: str = None) -> pd.DataFrame:
     """
     Retrieve DE data from RXRX DeSeq2 via SQL query
     """
 
+    logger.info("Retrive DE data from DataLake")
     client = bigquery.Client(project="datalake-prod-ef49c0c9")
 
     # todo: get_experiment_labels for the specified cell_type
-    expt_labels = get_experiment_labels(cell_type)
+    # expt_labels = get_experiment_labels(cell_type)
+    # specify the experiment with """AND experiment_label IN ('{"', '".join(expt_labels)}') """
     # check whether gene of interest exist precomputed database
     sql = f"""
         SELECT gene_id, log2_foldchange, padj FROM `trekseq_diffexp.trek_differentialexpression`
-        WHERE reference_description = '{reference}'
+        WHERE reference_description LIKE '%{reference}%'
         AND test_description LIKE '{perturbation}%'
-        AND experiment_label IN '{"', '".join(expt_labels)}'
     """
+    if cell_type:
+        sql += f"   AND UPPER(experiment_label) LIKE UPPER('%{cell_type}%')"
 
     query_job = client.query(sql)  # Make an API request.
 
@@ -187,17 +214,20 @@ def get_precomputed_DE_table(perturbation: str, reference: str, cell_type: str) 
     # todo:
     #  - precomputing expression regulations for all the Tx data we have, rxrx and Tahor.)
     #  - update the data path dictionary after pre-computation
+    logger.info("Retrive DE data from precomputed data sheets.")
 
     PRECOMPUTED_FC = {
-        "HUVEC": #  merged data from Tahor_deseq2, trekseq, pertubseq_deseq2 etc.
-            "/rxrx/data/user/lu.zhu/outgoing/hooke-explain/Data/Expression/precomputed_deseq2_test.parquet",
+        "HUVEC":  #  merged data from Tahor_deseq2, trekseq, pertubseq_deseq2 etc.
+        "/rxrx/data/user/lu.zhu/outgoing/hooke-explain/Data/Expression/precomputed_deseq2_test.parquet",
         # "cell type 2": [...]
     }
-     
+
     de_df = pd.read_parquet(PRECOMPUTED_FC.get(cell_type))
     # todo: update the file loading after deseq2 precomputation
 
-    de_res = de_df[de_df["reference_description"] == reference & de_df["test_description"].str.startswith(perturbation)]
+    de_res = de_df[
+        (de_df["reference_description"] == reference) & (de_df["test_description"].str.startswith(perturbation))
+    ]
     return de_res
 
 
@@ -226,18 +256,17 @@ def get_log2fc_threshold(result, bin_index: int = 0, log2FC_col="log2_foldchange
 
 def get_expression_data(cell_type: str) -> AnnData:
     # todo: update the path dictionary
-    H5AD_PATH_DICT = {
-        "HUVEC": "/rxrx/data/user/lu.zhu/outgoing/benchmarking/trekseq_datasets/tsc2_KO/adata_disease_healthy_sub_filtered.h5ad"
-    }
+    H5AD_PATH_DICT = {"HUVEC": "/rxrx/data/user/lu.zhu/outgoing/hooke-explain/Data/Expression/adata_test.h5ad"}
 
-    adata_list = []
-    for h5ad_path in H5AD_PATH_DICT[cell_type]:
-        adata = AnnData.read_h5ad(h5ad_path)
-        adata_list.append(adata)
-    return AnnData.concatenate(adata_list)
+    h5ad_path = H5AD_PATH_DICT[cell_type]
+    if h5ad_path:
+        return anndata.read_h5ad(h5ad_path)
+    return None
 
 
-def compute_DeSeq2(perturbation: str, reference: str, cell_type: str, n_cpus: int = 16) -> pd.DataFrame:
+def compute_DeSeq2(
+    perturbation: str, reference: str, cell_type: str, query_genes: list, n_cpus: int = 16
+) -> pd.DataFrame:
     """
     Performs differential expression analysis between a perturbation condition and a reference condition.
 
@@ -256,39 +285,51 @@ def compute_DeSeq2(perturbation: str, reference: str, cell_type: str, n_cpus: in
     Raises:
         ValueError: If the specified conditions do not match those present in the dataset.
     """
+    de_res = pd.DataFrame()
+
     # AnnData
     adata = get_expression_data(cell_type)
 
-    # double check the gene_ko and referecne in the dataset
-    if set([perturbation, reference]) != set(adata.obs["condition"].unique()):
-        raise ValueError(f"The dataset doesn't match the condition: {perturbation, reference}.")
+    if len(set(adata.var.index.tolist()).intersection(query_genes)) > 0:
+        # double check the gene_ko and referecne in the dataset
+        if set([perturbation, reference]) != set(adata.obs["condition"].unique()):
+            raise ValueError(f"The dataset doesn't match the condition: {perturbation, reference}.")
 
-    # assuming condition (perturnbation, reference) is already set in the dataset.
-    if "experiment_label" in adata.obs:
-        # assuming significant varience across experiments
-        design = "~experiment_label * condition"
+        # assuming condition (perturnbation, reference) is already set in the dataset.
+        if "experiment_label" in adata.obs:
+            # assuming significant varience across experiments
+            design = "~experiment_label * condition"
+        else:
+            design = "~condition"
+
+        inference = DefaultInference(n_cpus=n_cpus)
+
+        if not isinstance(adata.X, np.ndarray):
+            X_array = adata.X.toarray()
+            adata.X = None
+            adata.X = X_array
+
+        dds = DeseqDataSet(
+            adata=adata,
+            design=design,
+            quiet=False,
+            refit_cooks=True,
+            inference=inference,
+        )
+        # run deseq2
+        dds.deseq2()
+
+        # return the regulation direction
+        stat_res = DeseqStats(
+            dds,
+            contrast=["condition", perturbation, reference],
+            n_cpus=n_cpus,
+        )
+
+        # get summary
+        stat_res.summary()
+
+        de_res = stat_res.results_df
     else:
-        design = "~condition"
-
-    inference = DefaultInference(n_cpus=n_cpus)
-    dds = DeseqDataSet(
-        adata=adata,
-        design=design,
-        quiet=False,
-        refit_cooks=True,
-        inference=inference,
-    )
-    # run deseq2
-    dds.deseq2()
-
-    # return the regulation direction
-    stat_res = DeseqStats(
-        dds,
-        contrast=["condition", perturbation, reference],
-        n_cpus=n_cpus,
-    )
-
-    # get summary
-    stat_res.summary()
-
-    return stat_res.results_df
+        logger.info(f"Query genes ({query_genes}) are not in the GE datasets")
+    return de_res
