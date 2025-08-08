@@ -15,7 +15,17 @@ class FalsificationEvaluator:
     """
 
     SYSTEM_PROMPT = """
-You are an expert scientist and your task is to verify a scientific claim based on an original question. You have access to a set of tools to help you gather evidence.
+You are an expert scientist tasked with verifying a scientific claim in response to a research question.
+
+Each claim consists of:
+- A **narrative explanation** (free-text paragraph) in the <answer> block, and
+- A **structured explanation block** enclosed in <explain> ... </explain>, containing one or more mechanistic or associative actions (e.g., `binds_to`, `modulates_activity`, `regulates_expression`, etc.),
+- A **DAG** enclosed in <dag> ... </dag>, representing the relationship between the primitives statements in the <explain> block.
+
+You have access to the following tools to assist your analysis. But not all tools are relevant to the claim.
+{tool_descriptions}
+
+---
 
 **Original Question:**
 {question}
@@ -23,58 +33,71 @@ You are an expert scientist and your task is to verify a scientific claim based 
 **Claim to Verify:**
 {claim}
 
-You have access to the following tools:
-{tool_descriptions}
+---
 
-Your task is to determine if the claim can be falsified by the available information.
+### Your task
 
-1.  **Analyze the Claim**: Break down the claim into verifiable sub-claims.
-2.  **Use Tools**: Call the necessary tools to gather evidence for each sub-claim. You may need to chain tool calls, using the output of one as the input for another.
-3.  **Evaluate Evidence**: Analyze the evidence from all tool outputs collectively.
-4.  **Conclude**: Based on all the evidence, provide a final verdict.
+1. **Decompose the Claim**
+   Identify each individual sub-claim contained in the <explain> block. Treat each line (e.g., `binds_to(A, B, ...)`) as a separate hypothesis to verify.
 
-Provide your final verdict by choosing one of the following options:
-(A) Consistent: Your reasoning and the tool outputs support the claim.
-(B) Falsified: Your reasoning and the tool outputs contradict the claim.
-(C) Inconclusive: There is insufficient evidence to either support or falsify the claim.
+2. **Use the Tools**
+   Query the tools as needed to collect supporting or contradicting evidence for each sub-claim.
+   You may chain tool outputs when necessary (e.g., retrieve structure → query binding).
+   If tools yield no result, apply expert reasoning using your scientific knowledge and plausible biological inference.
 
-Your final response MUST be in the following format, with no other text.
+3. **Evaluate the Evidence**
+   For each sub-claim, determine whether the evidence:
+   - **Supports** the sub-claim
+   - **Contradicts** the sub-claim
+   - Is **inconclusive or unavailable**
+
+Only consider a sub-claim **contradicted** if there is **strong, direct, and specific** evidence **clearly contradicting** it.
+If no contradiction is found, but evidence is sparse, or the sub-claim relies on plausible inference, consider it **inconclusive**.
+
+4. **Conclude with a Final Verdict**
+   Choose one of the following outcomes:
+
+   - (A) **Consistent** – All sub-claims are supported or reasonably plausible. No contradiction found.
+   - (B) **Falsified** – One or more **important** sub-claims are **clearly contradicted** by the evidence.
+   - (C) **Inconclusive** – One or more important sub-claims lack sufficient evidence, or rely on assumptions that cannot be verified or rejected.
+
+---
+
+### Output Format
+
+You must follow this format exactly — no additional text outside the tags.
 
 <reason>
-Your detailed reasoning for the verdict, citing the evidence you gathered.
+Your detailed reasoning here:
+- List which sub-claims were supported, falsified, or lacked data
+- Cite specific tool outputs (e.g., ToolName#CallID) when relevant
 </reason>
 <answer>A|B|C</answer>
 """
 
     def __init__(
         self,
-        llm_provider: str = "anthropic",
+        llm_provider: str = "litellm",
         max_turns: int | None = 5,
         allowed_primitives: list[str] | None = None,
+        tools: list[ToolVerifier] | None = None,
         **kwargs,
     ):
         """
         Initializes the falsification evaluator.
 
         Args:
-            llm_provider: The LLM provider to use ('anthropic', 'gemini', or 'openai').
+            llm_provider: The LLM provider to use ('litellm', 'anthropic', 'gemini', or 'openai').
             max_turns: The maximum number of conversational turns before stopping. If None, it will be set based on the claims predicates (primitives)
+            allowed_primitives: The primitives to use for the falsification. If None, all primitives will be used.
+            tools: The tools to use for the falsification. If None, all tools will be used.
             **kwargs: Additional arguments for the LLM client.
         """
         self.llm_client: LLMClient = create_client(provider=llm_provider, **kwargs)
         self.max_turns = max_turns
         self.allowed_primitives = allowed_primitives or []
         self.parser = Parser()
-
-    def _get_llm_tools_schema(self) -> list[dict[str, Any]]:
-        """Formats tools into a schema compatible with the LLM."""
-        return [tool.get_schema() for tool in REGISTERED_TOOLS]
-
-    def _execute_tool_call(self, tool_call: dict[str, Any]) -> dict[str, Any]:
-        """Executes a single tool call using the central tool registry."""
-        tool_id = tool_call.get("id")
-        content = ToolVerifier.call_tool(tool_call)
-        return {"role": "tool", "tool_call_id": tool_id, "content": content}
+        self.tools = tools or list(REGISTERED_TOOLS.values())
 
     def _parse_final_verdict(self, text: str) -> tuple[str, str]:
         """Parses the final verdict and reasoning from the agent's response."""
@@ -86,13 +109,14 @@ Your detailed reasoning for the verdict, citing the evidence you gathered.
         verdict = verdict_map.get(verdict_code, "inconclusive")
         return verdict, reasoning
 
-    def _evaluate_falsification(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs):
+    def _evaluate(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs):
         """
         Runs the LLM agent to evaluate the claim and stores results in the state.
         `prompt` is the question, `completion` is the claim to be verified.
         """
 
-        if "falsification_score" in state:
+        # Avoid re-computing if already evaluated (following plausibility.py pattern)
+        if "judge_response" in state:
             return state
 
         if isinstance(prompt, list):
@@ -102,7 +126,7 @@ Your detailed reasoning for the verdict, citing the evidence you gathered.
 
         claim = self.parser.parse_answer(completion)
 
-        tool_descriptions = "\n".join([f"- `{tool.name}`: {tool.description}" for tool in REGISTERED_TOOLS])
+        tool_descriptions = "\n".join([f"- `{tool.name}`: {tool.description}" for tool in REGISTERED_TOOLS.values()])
 
         system_prompt = self.SYSTEM_PROMPT.format(question=question, claim=claim, tool_descriptions=tool_descriptions)
 
@@ -110,45 +134,85 @@ Your detailed reasoning for the verdict, citing the evidence you gathered.
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": "Please proceed with the verification."},
         ]
-        conversation_history = list(messages)
         final_response_text = ""
         max_turns = self.max_turns
 
         if max_turns is None:
             max_turns = guess_max_turns(claim, self.allowed_primitives)
 
-        for _ in range(max_turns):
-            response = self.llm_client.generate(messages, tools=self._get_llm_tools_schema())
-            assistant_message = {"role": "assistant", "content": response.content or ""}
+        for turn in range(max_turns):
+            # Generate response with tools
+            response = self.llm_client.generate(messages, tools=self.tools)
+
+            # Update messages with the response (client handles provider-specific formatting)
+            messages = response.messages
+
+            # Check if we have tool calls
             if response.tool_calls:
-                assistant_message["tool_calls"] = response.tool_calls
+                # Execute tools and format responses
+                tool_outputs = []
+                for tool_call in response.tool_calls:
+                    try:
+                        # Extract tool information
+                        tool_name = "unknown"  # Default value
+                        if isinstance(tool_call, dict):
+                            if "function" in tool_call:
+                                # OpenAI format
+                                tool_name = tool_call["function"]["name"]
+                                content = ToolVerifier.call_tool(tool_call["function"])
+                            else:
+                                # Direct format
+                                tool_name = tool_call.get("name", tool_name)
+                                content = ToolVerifier.call_tool(tool_call)
+                        else:
+                            content = ToolVerifier.call_tool(tool_call)
 
-            messages.append(assistant_message)
-            conversation_history.append(assistant_message)
+                        tool_outputs.append(
+                            {
+                                "tool_call_id": tool_call.get("id", f"call_{turn}_{len(tool_outputs)}"),
+                                "name": tool_name,
+                                "content": content,
+                            }
+                        )
+                    except Exception as e:
+                        # Handle tool execution errors gracefully
+                        tool_outputs.append(
+                            {
+                                "tool_call_id": tool_call.get("id", f"call_{turn}_{len(tool_outputs)}"),
+                                "name": tool_call.get("function", {}).get("name", "unknown")
+                                if isinstance(tool_call, dict)
+                                else "unknown",
+                                "content": f"Error executing tool: {str(e)}",
+                            }
+                        )
 
-            if not response.tool_calls:
+                # Format tool responses using client-specific formatting
+                tool_response_messages = self.llm_client.format_tool_response(tool_outputs)
+                messages.extend(tool_response_messages)
+            else:
+                # No more tool calls, we have the final response
                 final_response_text = response.content or ""
                 break
-
-            tool_outputs = [self._execute_tool_call(tc) for tc in response.tool_calls]
-            messages.extend(tool_outputs)
-            conversation_history.extend(tool_outputs)
         else:
+            # Reached max turns without conclusion
             final_response_text = "Agent reached maximum turns without reaching a conclusion."
 
         verdict, reasoning = self._parse_final_verdict(final_response_text)
+
         score = {"consistent": 1.0, "falsified": 0.0, "inconclusive": 0.5}.get(verdict, 0.5)
 
+        # Store results in state following plausibility.py pattern
+        state["judge_response"] = response  # Store the final LLM response
         state["falsification_score"] = score
         state["falsification_verdict"] = verdict
         state["falsification_reasoning"] = reasoning
-        state["falsification_conversation_history"] = conversation_history
+        state["falsification_conversation_history"] = messages  # Use messages directly from final response
 
         return state
 
     def falsification_score(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs) -> float:
         """Reward function for falsification."""
-        state = self._evaluate_falsification(prompt, completion, answer, state, **kwargs)
+        state = self._evaluate(prompt, completion, answer, state, **kwargs)
         return float(state.get("falsification_score", 0.0))
 
 
@@ -160,18 +224,25 @@ class FalsificationRubric(JudgeRubric):
     falsified (0.0), or inconclusive (0.5) after an agentic investigation.
     """
 
-    def __init__(self, llm_provider: str = "anthropic", **kwargs):
+    def __init__(self, llm_provider: str = "litellm", tools: list[ToolVerifier] | None = None, **kwargs):
         """
-        Initializes the plausibility rubric.
+        Initializes the falsification rubric.
 
         Args:
-            llm_provider: The LLM provider to use ('anthropic', 'gemini', or 'openai').
+            llm_provider: The LLM provider to use ('litellm', 'anthropic', 'gemini', or 'openai').
+            tools: The tools to use for the falsification. If None, all tools will be used.
             **kwargs: Additional arguments for the JudgeRubric.
         """
-        super().__init__(judge_prompt="", parallelize_scoring=False, **kwargs)
+        # Create the decoupled evaluator which contains the core logic
+        self.evaluator = FalsificationEvaluator(llm_provider=llm_provider, tools=tools, **kwargs)
 
-        evaluator = FalsificationEvaluator(llm_provider=llm_provider, **kwargs)
-        self.judge_client = evaluator.llm_client
-        self.judge_model = evaluator.llm_client.config.model
+        # Initialize the base rubric with evaluator's client
+        super().__init__(judge_prompt="", judge_client=self.evaluator.llm_client, parallelize_scoring=False, **kwargs)
 
-        self.add_reward_func(evaluator.falsification_score, weight=1.0)
+        self.judge_model = self.evaluator.llm_client.config.model
+
+    def judge(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs) -> dict[str, float]:
+        """
+        Judge method that returns a dictionary of scores, compatible with other rubrics.
+        """
+        return {"falsification_score": self.evaluator.falsification_score(prompt, completion, answer, state, **kwargs)}

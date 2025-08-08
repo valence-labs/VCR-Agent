@@ -13,12 +13,12 @@ class PlausibilityEvaluator:
     Evaluator of the biological plausibility of an explanation.
     """
 
-    def __init__(self, llm_provider: str = "anthropic", **kwargs):
+    def __init__(self, llm_provider: str = "litellm", **kwargs):
         """
         Initializes the plausibility evaluator.
 
         Args:
-            llm_provider: The LLM provider to use ('anthropic', 'gemini', or 'openai').
+            llm_provider: The LLM provider to use ('litellm', 'anthropic', 'gemini', or 'openai').
             **kwargs: Additional arguments for the LLM client.
         """
         self.llm_client = create_client(provider=llm_provider, **kwargs)
@@ -44,16 +44,16 @@ class PlausibilityEvaluator:
         Your response MUST be a single JSON object containing the numeric scores (0-10) for each criterion. Do not include any other text or explanations.
         You should only use the following keys: `scientific_accuracy`, `logical_consistency`, `mechanistic_clarity`.
         Example of a valid response:
-        {"scientific_accuracy": 8, "logical_consistency": 9, "mechanistic_clarity": 7}
+        {{"scientific_accuracy": 8, "logical_consistency": 9, "mechanistic_clarity": 7}}
         """
 
-    def _evaluate_plausibility(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs):
+    def _evaluate(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs):
         """
         Runs the LLM judge to evaluate plausibility and stores results in the state dictionary.
         This avoids re-computing for different reward functions.
         """
 
-        if all(key in state for key in ["scientific_accuracy", "logical_consistency", "mechanistic_clarity"]):
+        if "judge_response" in state:
             return state
 
         if isinstance(prompt, list):
@@ -66,25 +66,13 @@ class PlausibilityEvaluator:
         judge_prompt = self.judge_prompt_template.format(question=question, response=response_text)
 
         llm_response = self.llm_client.generate(messages=[{"role": "user", "content": judge_prompt}])
-
-        try:
-            # Find and parse the JSON object from the LLM's response
-            json_match = re.search(r"\{.*\}", llm_response, re.DOTALL)
-            if json_match:
-                parsed_scores = json.loads(json_match.group(0))
-            else:
-                # Handle cases where no JSON is found
-                parsed_scores = {}
-
-            state["scientific_accuracy"] = parsed_scores.get("scientific_accuracy", 0)
-            state["logical_consistency"] = parsed_scores.get("logical_consistency", 0)
-            state["mechanistic_clarity"] = parsed_scores.get("mechanistic_clarity", 0)
-
-        except (json.JSONDecodeError, TypeError):
-            # If parsing fails, assign default scores and log the error
-            state["scientific_accuracy"] = 0
-            state["logical_consistency"] = 0
-            state["mechanistic_clarity"] = 0
+        json_match = re.search(r"\{.*\}", llm_response.content, re.DOTALL)
+        if json_match:
+            parsed_scores = json.loads(json_match.group(0))
+        else:
+            parsed_scores = {}
+        state["parsed_scores"] = parsed_scores
+        state["judge_response"] = llm_response
         return state
 
     def scientific_accuracy(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs) -> float:
@@ -98,8 +86,9 @@ class PlausibilityEvaluator:
             state: The state of the evaluator.
             **kwargs: Additional arguments for the evaluator.
         """
-        state = self._evaluate_plausibility(prompt, completion, answer, state, **kwargs)
-        score = state.get("scientific_accuracy", 0.0)
+        state = self._evaluate(prompt, completion, answer, state, **kwargs)
+        parsed_scores = state["parsed_scores"]
+        score = parsed_scores.get("scientific_accuracy", 0)
         return float(score) / 10.0
 
     def logical_consistency(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs) -> float:
@@ -113,8 +102,9 @@ class PlausibilityEvaluator:
             state: The state of the evaluator.
             **kwargs: Additional arguments for the evaluator.
         """
-        state = self._evaluate_plausibility(prompt, completion, answer, state, **kwargs)
-        score = state.get("logical_consistency", 0.0)
+        state = self._evaluate(prompt, completion, answer, state, **kwargs)
+        parsed_scores = state["parsed_scores"]
+        score = parsed_scores.get("logical_consistency", 0)
         return float(score) / 10.0
 
     def mechanistic_clarity(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs) -> float:
@@ -128,8 +118,9 @@ class PlausibilityEvaluator:
             state: The state of the evaluator.
             **kwargs: Additional arguments for the evaluator.
         """
-        state = self._evaluate_plausibility(prompt, completion, answer, state, **kwargs)
-        score = state.get("mechanistic_clarity", 0.0)
+        state = self._evaluate(prompt, completion, answer, state, **kwargs)
+        parsed_scores = state["parsed_scores"]
+        score = parsed_scores.get("mechanistic_clarity", 0)
         return float(score) / 10.0
 
 
@@ -145,24 +136,25 @@ class PlausibilityRubric(JudgeRubric):
     The final reward is the sum of the scores for these three criteria.
     """
 
-    def __init__(self, llm_provider: str = "anthropic", **kwargs):
+    def __init__(self, llm_provider: str = "litellm", **kwargs):
         """
         Initializes the plausibility rubric.
 
         Args:
-            llm_provider: The LLM provider to use ('anthropic', 'gemini', or 'openai').
+            llm_provider: The LLM provider to use ('litellm', 'anthropic', 'gemini', or 'openai').
             **kwargs: Additional arguments for the JudgeRubric.
         """
         # Initialize the base rubric. The prompt and client are managed by the evaluator.
         # Set parallelize_scoring=False to ensure the state is shared correctly.
-        super().__init__(judge_prompt="", parallelize_scoring=False, **kwargs)
 
         # Create the decoupled evaluator which contains the core logic
-        evaluator = PlausibilityEvaluator(llm_provider=llm_provider)
-        self.judge_client = evaluator.llm_client
-        self.judge_model = evaluator.llm_client.config.model
-        # Add the individual reward functions from the evaluator to the rubric.
-        # The total reward will be the weighted sum of these functions.
-        self.add_reward_func(evaluator.scientific_accuracy, weight=1.0)
-        self.add_reward_func(evaluator.logical_consistency, weight=1.0)
-        self.add_reward_func(evaluator.mechanistic_clarity, weight=1.0)
+        self.evaluator = PlausibilityEvaluator(llm_provider=llm_provider)
+        self.judge_model = self.evaluator.llm_client.config.model
+        super().__init__(judge_prompt="", judge_client=self.evaluator.llm_client, parallelize_scoring=False, **kwargs)
+
+    def judge(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs) -> float:
+        return {
+            "scientific_accuracy": self.evaluator.scientific_accuracy(prompt, completion, answer, state, **kwargs),
+            "logical_consistency": self.evaluator.logical_consistency(prompt, completion, answer, state, **kwargs),
+            "mechanistic_clarity": self.evaluator.mechanistic_clarity(prompt, completion, answer, state, **kwargs),
+        }

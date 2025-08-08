@@ -1,10 +1,9 @@
-import json
 from typing import Any
 
 from verifiers.parsers.parser import Parser
 from verifiers.rubrics.judge_rubric import JudgeRubric
 
-from explain.llm import create_client
+from explain.llm import LLMResponse, create_client
 
 
 class BinaryCorrectnessEvaluator:
@@ -12,7 +11,7 @@ class BinaryCorrectnessEvaluator:
     A decoupled evaluator for assessing the correctness of a response against a ground truth answer.
     """
 
-    def __init__(self, llm_provider: str = "anthropic", **kwargs):
+    def __init__(self, llm_provider: str | None = None, **kwargs):
         """
         Initializes the correctness evaluator.
 
@@ -46,12 +45,12 @@ class BinaryCorrectnessEvaluator:
         Respond either "yes" or "no" only. If the response is correct, respond "yes". If the response is incorrect, respond "no".
         """
 
-    def _evaluate_correctness(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs):
+    def _evaluate(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs):
         """
         Runs the LLM judge to evaluate correctness and stores results in the state dictionary.
         """
-        if "correctness" in state:
-            return
+        if "judge_response" in state:
+            return state
 
         if isinstance(prompt, list):
             question = prompt[-1]["content"]
@@ -63,20 +62,18 @@ class BinaryCorrectnessEvaluator:
         judge_prompt = self.judge_prompt_template.format(question=question, answer=answer, response=response_text)
 
         llm_response = self.llm_client.generate(messages=[{"role": "user", "content": judge_prompt}])
-
-        try:
-            state["correctness"] = llm_response.lower() == "yes"
-
-        except (json.JSONDecodeError, TypeError):
-            state["correctness"] = 0
+        state["judge_response"] = llm_response
         return state
 
     def correctness(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs) -> float:
         """
         Reward function for correctness.
         """
-        state = self._evaluate_correctness(prompt, completion, answer, state, **kwargs)
-        return state.get("correctness", 0.0)
+        state = self._evaluate(prompt, completion, answer, state, **kwargs)
+        judge_response: LLMResponse = state["judge_response"]
+        if "yes" == judge_response.content.lower():
+            return 1.0
+        return 0.0
 
 
 class CorrectnessRubric(JudgeRubric):
@@ -84,7 +81,7 @@ class CorrectnessRubric(JudgeRubric):
     A rubric that evaluates the correctness of a response against a ground truth answer.
     """
 
-    def __init__(self, llm_provider: str = "anthropic", **kwargs):
+    def __init__(self, llm_provider: str = "litellm", **kwargs):
         """
         Initializes the correctness rubric.
 
@@ -92,10 +89,10 @@ class CorrectnessRubric(JudgeRubric):
             llm_provider: The LLM provider to use ('anthropic', 'gemini', or 'openai').
             **kwargs: Additional arguments for the JudgeRubric.
         """
-        super().__init__(judge_prompt="", parallelize_scoring=False, **kwargs)
 
-        evaluator = BinaryCorrectnessEvaluator(llm_provider=llm_provider)
+        self.evaluator = BinaryCorrectnessEvaluator(llm_provider=llm_provider)
+        super().__init__(judge_prompt="", judge_client=self.evaluator.llm_client, parallelize_scoring=False, **kwargs)
+        self.judge_model = self.evaluator.llm_client.config.model
 
-        self.judge_client = evaluator.llm_client
-        self.judge_model = evaluator.llm_client.config.model
-        self.add_reward_func(evaluator.correctness, weight=1.0)
+    def judge(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs) -> float:
+        return {"correctness": self.evaluator.correctness(prompt, completion, answer, state, **kwargs)}
