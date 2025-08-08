@@ -1,25 +1,24 @@
 import json
-import os
 from typing import Any
 
 import requests
-from google import genai
 from pydantic import BaseModel, Field
 
 from explain.eval.tools._base import ToolVerifier
+from explain.llm import create_client
 from explain.verifiers.verifier_utils import get_gene_ids
-
-GEMINI_MODEL_NAME = "gemini-1.5-flash"
 
 
 class SCLArgs(BaseModel):
     """Arguments for checking drug-target interactions."""
 
     protein_entity: str = Field(description="Protein/gene name")
-    from_loc: str = Field(description="Orignial location")
+    from_loc: str | None = Field(default=None, description="Orignial location")
     to_loc: str = Field(description="Translocated location")
-    mechanism: str = Field(default=None, description="Effect on the translocation, such as 'induce', 'block', etc.")
-    modification: str = Field(
+    mechanism: str | None = Field(
+        default=None, description="Effect on the translocation, such as 'induce', 'block', etc."
+    )
+    modification: str | None = Field(
         default=None,
         description="Presence of any post translation modification such as 'phosphorylation', 'dimerization' etc.",
     )
@@ -31,6 +30,7 @@ class SCLVerifier(ToolVerifier):
     name = "check_subcellular_translocation"
     description = "Check if a protein translocate from one SCL to another under given conditions"
     args_schema = SCLArgs
+    client = create_client(provider="openai", model="gpt-4.1")
 
     def _tool_logic(self, args: SCLArgs) -> tuple[float, dict[str, Any]]:
         """
@@ -38,7 +38,7 @@ class SCLVerifier(ToolVerifier):
         """
         scl_bool, trans_scl_bool = self._get_scl_annotations(args)
         is_verified = trans_scl_bool
-        print(scl_bool, trans_scl_bool)
+
         reward = int(scl_bool) * 0.3 + int(trans_scl_bool) * 0.7
 
         feedback = {
@@ -52,10 +52,10 @@ class SCLVerifier(ToolVerifier):
         return reward, feedback
 
     def _get_scl_annotations(self, args):
+        scl_bool, trans_scl_bool = False, False
         entity_alias = get_gene_ids(args.protein_entity)
         if entity_alias:
             scl_info = self._getSCL(entity_alias)
-            print(scl_info)
 
             scl_bool = (args.from_loc in scl_info["locations"]) & (args.to_loc in scl_info["locations"])
             trans_scl_bool = False
@@ -78,14 +78,29 @@ class SCLVerifier(ToolVerifier):
         Returns:
             bool: True if a matching translocation is found in the reference, False otherwise.
         """
-        print(reference)
+        from_loc_lower = args.from_loc.lower()
+        to_loc_lower = args.to_loc.lower()
+        has_modification = args.modification is not None
+        is_phosphorylation_mod = has_modification and "phosphorylation" in args.modification
+
         for ref in reference:
-            if (ref["from"].lower() == args.from_loc.lower()) and (ref["to_loc"].lower() == args.to_loc.lower()):
-                if args.modification:
-                    if ("phosphorylation" in args.modification) and ref["is_phosphorylated"]:
+            # Use .get() for safer dictionary access
+            ref_from = ref.get("from")
+            ref_to_loc = ref.get("to_loc")
+
+            # Skip if required keys are missing or values are empty
+            if not ref_from or not ref_to_loc:
+                continue
+
+            if ref_from.lower() == from_loc_lower and ref_to_loc.lower() == to_loc_lower:
+                # Check for modification only if it's specified in args
+                if has_modification:
+                    if is_phosphorylation_mod and ref.get("is_phosphorylated"):
                         return True
                 else:
+                    # No modification specified, so location match is sufficient
                     return True
+
         return False
 
     def _getSCL(self, entity_alias: dict) -> dict:
@@ -161,7 +176,7 @@ class SCLVerifier(ToolVerifier):
                 trans_scls = [loc.get("value") for loc in translocation["texts"]]
             # retrieve trans scls
             for tscl in trans_scls:
-                all_trans_scls.extend(self._extract_translocation_details_with_gemini(tscl))
+                all_trans_scls.extend(self._extract_translocation_details_with_llm(tscl))
 
         except requests.exceptions.RequestException as e:
             print(f"An error occurred: {e}")
@@ -200,9 +215,9 @@ class SCLVerifier(ToolVerifier):
 
         return available_scls
 
-    def _extract_translocation_details_with_gemini(self, text_to_analyze: str) -> list[dict]:
+    def _extract_translocation_details_with_llm(self, text_to_analyze: str) -> list[dict]:
         """
-        Uses a Google Gemini LLM to extract translocation events with 'from' and 'to' locations.
+        Uses a LLM to extract translocation events with 'from' and 'to' locations.
 
         Args:
             text_to_analyze (str): The input text from which to extract information.
@@ -212,12 +227,6 @@ class SCLVerifier(ToolVerifier):
                         {"type": "translocation", "from": "start_location", "to": "end_location"}.
                         Returns an empty list if extraction fails or no data.
         """
-        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-
-        # Get a reference to the specific generative model
-        # model = client.models.get(GEMINI_MODEL_NAME)
-
-        # model = genai.GenerativeModel(GEMINI_MODEL_NAME)
 
         # --- Crafting the Improved Prompt ---
         # We're making the prompt much more specific about the "from" and "to" fields,
@@ -249,16 +258,9 @@ class SCLVerifier(ToolVerifier):
         try:
             full_content_for_model = f"{prompt_instruction}\n\nText: {text_to_analyze}"
 
-            response = client.models.generate_content(
-                model=GEMINI_MODEL_NAME,
-                contents=full_content_for_model,
-                config=dict(
-                    temperature=0.0,  # Keep very low for precise extraction
-                    response_mime_type="application/json",  # Ensures JSON output
-                ),
-            )
+            response = self.client.generate([{"role": "user", "content": full_content_for_model}])
 
-            json_output_str = response.text
+            json_output_str = response.to_dict()["messages"][-1]["content"]
 
             # Parse the JSON string into a Python list of dictionaries
             parsed_data = json.loads(json_output_str)
