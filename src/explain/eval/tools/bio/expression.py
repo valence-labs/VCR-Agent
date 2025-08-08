@@ -1,14 +1,15 @@
 from typing import Any
-from loguru import logger
+
+import anndata
 import numpy as np
 import pandas as pd
-import anndata
 from anndata import AnnData
 from google.cloud import bigquery
+from loguru import logger
 from pydantic import BaseModel, Field
 from pydeseq2.dds import DeseqDataSet
-from pydeseq2.ds import DeseqStats
 from pydeseq2.default_inference import DefaultInference
+from pydeseq2.ds import DeseqStats
 
 from explain.eval.tools._base import ToolVerifier
 
@@ -112,7 +113,7 @@ class GeneExpressionVerifier(ToolVerifier):
 
         # compyte deseq2
         presence = {g: presence_1[g] or presence_2[g] for g in query_genes}
-        missing_genes = [g for g in query_genes if presence[g] == False]
+        missing_genes = [g for g in query_genes if not presence[g]]
         # if there are genes does exist in any source
         if len(missing_genes) > 0:
             # the computing takes significant amount of time.
@@ -124,7 +125,7 @@ class GeneExpressionVerifier(ToolVerifier):
             downregulated.extend(down_reg)
 
             presence = {g: presence[g] or presence_3[g] for g in query_genes}
-            missing_genes = [g for g in query_genes if presence[g] == False]
+            missing_genes = [g for g in query_genes if not presence[g]]
         logger.info(f"Genes can not be found in the datasets: {missing_genes}.")
 
         return upregulated, downregulated
@@ -323,6 +324,7 @@ def compute_DeSeq2(
         stat_res = DeseqStats(
             dds,
             contrast=["condition", perturbation, reference],
+            independent_filter=False,
             n_cpus=n_cpus,
         )
 
@@ -330,6 +332,12 @@ def compute_DeSeq2(
         stat_res.summary()
 
         de_res = stat_res.results_df
+        de_res.rename(columns={"log2FoldChange": "log2_foldchange"}, inplace=True)
+        de_res.reset_index(names="gene_id", inplace=True)
     else:
         logger.info(f"Query genes ({query_genes}) are not in the GE datasets")
     return de_res
+
+
+# Todo: add Harmonizome
+# todo: add
