@@ -3,22 +3,30 @@ import json
 import argparse
 import sys
 from tqdm import tqdm
-
+import pandas as pd
 
 from explain.llm.data_generator import DataGenerator
-
+from explain.eval.score.syntax_score import SyntaxEvaluator
+from explain.eval.score.accuracy_score import AccuracyEvaluator
+from explain.eval.score.structure_explain import StructureExplain
+from explain.eval.score.structural_score import StructuralEvaluator
+from explain.eval.score.test import evaluate
+from explain.kg.kg_utils import get_kg_entity_doc
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run LLM generation for perturbation analysis")
     parser.add_argument('--model_type', type=str, help='Model type (e.g., gpt-4o, claude-opus-4@20250514, gemini-2.5-flash)',
                         default='claude-opus-4@20250514')
     parser.add_argument('--folder_name', type=str, help='Output folder name',
-                        default='vanilla')
+                        default='test')
     parser.add_argument('--experiment_name', type=str, help='Experiment name',
-                        default='')
-    parser.add_argument('--tool_list', type=json.loads, default=[], help='Comma-separated list of tools (e.g., wikipedia)')
+                        default='test')
+    parser.add_argument('--tool_list', type=json.loads, default=['kg-entity-rephrase'], help='Comma-separated list of tools (e.g., wikipedia)')
     parser.add_argument('--wandb_mode', type=str, default='disabled')
     parser.add_argument('--metrics', type=json.loads, default=['llm_gen', 'format', 'compare_token'], help='Metrics to evaluate')
+    parser.add_argument('--mode', type=str, default='report-explain',
+        help='Mode to run the experiment(report-explain, explain-only)')
+    parser.add_argument('--kg_with_rel', action='store_true', help='Whether to use kg-entity with relation')
     return parser.parse_args()
 
 
@@ -29,7 +37,7 @@ if __name__ == '__main__':
     structure_explain_list = []
     report_file_name = f'output/report/{args.folder_name}/{args.experiment_name}_{args.tool_list}.json'
     structure_explain_file_name = f'output/structure_explain/{args.folder_name}/{args.experiment_name}_{args.tool_list}.json'
-    perturbations = data_generator.perturbation_cell_context[:2]
+    perturbations = data_generator.perturbation_cell_context
 
     if os.path.exists(report_file_name):
         report_list = json.load(open(report_file_name, 'r'))
@@ -40,11 +48,20 @@ if __name__ == '__main__':
             continue
         question = "**Q: How does the following perturbation influence the cell in the described context, mechanistically and functionally?**\n\n"
         question += json.dumps(perturbation, indent=4)
+        kg_info = None
+        if 'kg-entity' in args.tool_list or 'kg-entity-rephrase' in args.tool_list:
+            kg_info = get_kg_entity_doc(i, args.kg_with_rel)
+        if 'kg-entity-rephrase' in args.tool_list:
+            kg_info = data_generator.rephrase_kg_info(kg_info, perturbation)
 
         # report generation
-        report = data_generator.generate_report(perturbation)
-        report_dict = {'index': i, 'perturbation': perturbation, 'report_text': report, 'question': question}
-        report_list.append(report_dict)
+        if 'report' in args.mode:
+            report = data_generator.generate_report(perturbation, kg_info)
+            report_dict = {'index': i, 'perturbation': perturbation, 'report_text': report, 'question': question,
+            'kg_info': kg_info}
+            report_list.append(report_dict)
+        else:
+            report = report_list[i]['report_text']
 
         # structure explain generation
         structure_explain = data_generator.generate_structure_explain(report, question)
@@ -62,3 +79,9 @@ if __name__ == '__main__':
                 json.dump(report_list, f)
             with open(structure_explain_file_name, 'w') as f:
                 json.dump(structure_explain_list, f)
+    gen_data = structure_explain_list
+    gt_data = pd.read_csv('data/curation_v1/results/structure-explain-results-v3-claude4.csv')[:len(gen_data)]
+    gt_data = gt_data.to_dict(orient='records')
+    
+
+    evaluate(gen_data, gt_data, args)

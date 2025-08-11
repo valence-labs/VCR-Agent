@@ -9,7 +9,7 @@ import json
 import re
 
 from explain.util import load_data
-from explain.kg.kg_tool import KGNeighborTool
+# from explain.kg.kg_tool import KGNeighborTool
 from explain.llm import LLMConfig
 from explain.llm import create_client
 
@@ -19,7 +19,7 @@ class DataGenerator:
         self.location = "us-east5"
         self.project = "vertexai-sandbox-e8a925d0"
 
-        self.llm_client = create_client(model=model_name, provider="litellm", project_id=self.project, location=self.location)
+        self.llm_client = create_client(model=model_name, provider="anthropic", project_id=self.project, location=self.location)
         self.tools = self.get_tools(tool_list)
         DATA_DIR = 'data/curation_v1/'
         self.action_primitives, self.perturbation_cell_context, self.report_template, self.structre_explain_template = load_data(DATA_DIR)
@@ -34,9 +34,9 @@ class DataGenerator:
             wiki = WikipediaAPIWrapper(lang="en", top_k_results=3, doc_content_chars_max=2000)
             wiki_tool = WikipediaQueryRun(api_wrapper=wiki)
             tools.append(wiki_tool)
-        if 'kg_neighbor' in tool_list:
-            kg_tool = KGNeighborTool()
-            tools.append(kg_tool)
+        # if 'kg_neighbor' in tool_list:
+        #     kg_tool = KGNeighborTool()
+        #     tools.append(kg_tool)
             
         return tools
 
@@ -50,8 +50,19 @@ class DataGenerator:
 
         return response
 
-    def generate_report(self, perturbation):
+    def generate_report(self, perturbation, kg_info):
         input_prompt = self.report_template.format(treatment=json.dumps(perturbation, indent=4))
+        if kg_info is not None:
+            # TODO: integrate with template 
+            expected_output_marker = "### EXPECTED OUTPUT"
+            idx = input_prompt.find(expected_output_marker)
+            input_prompt = (
+                    input_prompt[:idx]
+                    + f"\n## ADDITIONAL INFORMATION\n{kg_info}\n"
+                    +  "Please use the additional information to generate the report."
+                    + input_prompt[idx:]
+                )
+
         response = self.generate_response(input_prompt)
         return response
 
@@ -78,3 +89,27 @@ class DataGenerator:
         dag = self.extract_tag(structure_explain, "dag")
 
         return thinking, answer, explain, dag
+
+    def rephrase_kg_info(self, kg_info, perturbation):
+        input_prompt_template = """
+        You are a biomedical assistant that rephrase the following information.
+        Your task is to generate a **concise** and **informative** information given the knowledge graph information.
+        The information will later be used to generate a report, which will be used to describe how the specified perturbation affects celluar biology in the given context.
+        The future question is:
+
+        ## QUESTION
+        **Q: How does the following perturbation influence the cell in the described context, mechanistically and functionally?**  
+
+        ## PERTURBATION
+        {perturbation}
+
+        ## KNOWLEDGE GRAPH INFORMATION
+        {kg_info}
+
+        ## EXPECTED OUTPUT
+        Please generate a **concise** and **informative** information given the knowledge graph information.
+        You don't need to answer the question, just rephrase the knowledge graph information that will be helpful to generate the report.
+        """
+        input_prompt = input_prompt_template.format(kg_info=kg_info, perturbation=json.dumps(perturbation, indent=4))
+        response = self.generate_response(input_prompt)
+        return response
