@@ -17,6 +17,14 @@ dependencies = [
   "enhanced-chat-client",
   "anthropic>=0.49.0",
   "google-auth>=2.40.3",
+  "pydantic>=2.8.2",
+  "datasets",
+  "verifiers>=0.1.2",
+  "google-cloud>=0.34.0",
+  "google-genai>=1.28.0",
+  "google-cloud-secret-manager>=2.24.0",
+  "litellm>=1.74.15.post1",
+  "google-cloud-aiplatform>=1.38",
 ]
 
 [project.optional-dependencies]
@@ -84,6 +92,7 @@ exclude = [
     "__pycache__/",
     ".venv/",
     "*.egg-info/",
+    "notebooks/_dev/",
 ]
 
 [tool.ruff.lint]
@@ -105,8 +114,8 @@ ignore = [
     "N806",   # Variable in function should be lowercase (allows camelCase)
     "N803",   # Argument name should be lowercase (allows camelCase)
     "N802",   # Function name should be lowercase (allows camelCase)
-    "B008",   # Do not perform function calls in argument defaults
     "B006",   # Do not use mutable data structures for argument defaults
+    "W293",   # Blank line contains whitespace
 ]
 
 [tool.ruff.format]
@@ -122,6 +131,9 @@ skip-magic-trailing-comma = false
 [dependency-groups]
 dev = [
     "ipykernel>=6.30.0",
+    "langchain>=0.3.27",
+    "langchain-core>=0.3.72",
+    "langsmith>=0.4.9",
 ]
 
 [tool.ruff.lint.isort]
