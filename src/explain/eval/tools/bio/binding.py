@@ -35,6 +35,6 @@ class DTIVerifier(ToolVerifier):
             "target": args.target,
             "interaction_type": args.interaction_type,
             "strength_uM": args.strength,
-            "verification_status": "VERIFIED" if is_verified else "NOT_VERIFIED",
+            "info": "Interaction is VERIFIED" if is_verified else "Interaction could not be verified (NOT_VERIFIED)",
         }
         return reward, feedback

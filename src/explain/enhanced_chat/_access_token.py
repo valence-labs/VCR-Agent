@@ -4,6 +4,7 @@ import webbrowser
 
 import dotenv
 import httpx
+from diskcache import Cache  # Import diskcache's Cache
 from loguru import logger
 
 dotenv.load_dotenv()
@@ -12,7 +13,11 @@ OKTA_AUTH_ENDPOINT = os.getenv("OKTA_AUTH_ENDPOINT")
 OKTA_TOKEN_ENDPOINT = os.getenv("OKTA_TOKEN_ENDPOINT")
 CLIENT_ID = os.getenv("CLIENT_ID")
 
+_TOKEN_CACHE_DIR = os.path.expanduser("~/.okta_token_cache")
+cache = Cache(_TOKEN_CACHE_DIR)
 
+
+@cache.memoize(expire=3600)
 def get_access_token(auto_open=False):
     """
     Get access token using OAuth device code flow.

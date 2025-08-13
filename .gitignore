@@ -210,3 +210,6 @@ __marimo__/
 digest.txt
 data/
 notebooks/_dev/
+# parquet files:
+*.parquet
+*.pq
