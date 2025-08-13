@@ -98,8 +98,12 @@ class GeneExpressionVerifier(ToolVerifier):
         upregulated_genes, downregulated_genes = self._expression_regulation_results(args)
 
         # compare the prediction to groundtruth
-        up_regulation_results = [gene in upregulated_genes for gene in args.upregulated_genes]
-        down_regulation_results = [gene in downregulated_genes for gene in args.downregulated_genes]
+        up_regulation_results = [
+            self._compare_genes(gene, args.upregulated_genes_entities) for gene in upregulated_genes
+        ]
+        down_regulation_results = [
+            self._compare_genes(gene, args.downregulated_genes_entities) for gene in downregulated_genes
+        ]
 
         all_results = up_regulation_results + down_regulation_results
         reward = float(np.mean(all_results)) if all_results else 0.0
@@ -116,6 +120,12 @@ class GeneExpressionVerifier(ToolVerifier):
             },
         }
         return reward, feedback
+
+    def _compare_genes(self, genes_entities, gene: str):
+        for gene_entity in genes_entities:
+            if gene_entity.compare_string(gene):
+                return True
+        return False
 
     def _expression_regulation_results(self, args):
         # get gene_KO and reference

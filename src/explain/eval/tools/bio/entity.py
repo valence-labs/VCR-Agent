@@ -80,7 +80,11 @@ class BaseEntity(BaseModel):
     def retrieve_identifiers(self, ner_model: NERModel | None):
         return self
 
+    def compare_string(self, query: str):
+        entity_dict = self.model_dump()
+        return query in entity_dict.values()
 
+        
 class GeneEntity(BaseEntity):
     name: str
     ChEMBL: str = None
@@ -160,6 +164,10 @@ class GeneEntity(BaseEntity):
         # use ncbi gene id to get other identifier through uniprot mapping API
         self._ID_mapping(query_gene_id=self.GeneID, query_id_type="GeneID", tax_id=9606)
         return self
+
+    def compare_entity(self, query: BaseEntity):
+        # use `GeneID` as key ID
+        return self.GeneID == query.GeneID
 
 
 class CompoundEntity(BaseEntity):
