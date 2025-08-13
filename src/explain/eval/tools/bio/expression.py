@@ -4,7 +4,6 @@ import anndata
 import numpy as np
 import pandas as pd
 from anndata import AnnData
-from google.cloud import bigquery
 from loguru import logger
 from pydantic import BaseModel, Field
 from pydeseq2.dds import DeseqDataSet
@@ -12,6 +11,8 @@ from pydeseq2.default_inference import DefaultInference
 from pydeseq2.ds import DeseqStats
 
 from explain.eval.tools._base import ToolVerifier
+from explain.eval.tools.bio.entity import CellTypeEntity, CompoundEntity, GeneEntity, PerturbationEntity
+from explain.eval.tools.bio.utils import H5AD_PATH_DICT, PRECOMPUTED_FC, retrieve_from_bigquery
 
 
 class GeneExpressionArgs(BaseModel):
@@ -26,12 +27,51 @@ class GeneExpressionArgs(BaseModel):
     gkos: list[str] = Field(default=[], description="List of gene knockouts applied as perturbations")
     compounds: list[str] = Field(default=[], description="List of compound perturbations applied prior to measurement")
     dose: float | None = Field(default=None, description="Dose/concentration used in uM")
+
+    upregulated_genes_entities: list = []
+    downregulated_genes_entities: list = []
+    cell_type_entity: CellTypeEntity = None
+    gkos_entities: list = []
+    compounds_entities: list = []
+    perturbation_entity: PerturbationEntity = None
+
     # todo:
     # - check if there is perturbations with multiple compounds in different dosees
     # - unify the gene identifiers
     # - unify the compound identifiers
     # - unify the cell type identifiers
     # - unify and map reference , e.g. DMSO, centering-introns
+
+    def model_post_init(self, __context__=None):
+        # convert to upregulated genes
+        for gene in self.upregulated_genes_entities:
+            gene_entity = GeneEntity(name=gene)
+            self.upregulated_genes_entities.append(gene_entity.retrieve_identifiers())
+
+        # convert to downregulated genes
+        for gene in self.downregulated_genes_entities:
+            gene_entity = GeneEntity(name=gene)
+            self.upregulated_genes_entities.append(gene_entity.retrieve_identifiers())
+
+        # cell type
+        self.cell_type_entity = CellTypeEntity(name=self.cell_type)
+
+        # GKOs
+        if len(self.gkos) > 0:
+            for gene in self.gkos:
+                gene_entity = GeneEntity(name=gene)
+                self.gkos_entities.append(gene_entity.retrieve_identifiers())
+
+        # compounds
+        if len(self.compounds) > 0:
+            for cpd in self.compounds:
+                cpd_entity = CompoundEntity(name=cpd)
+                self.compounds_entities.append(cpd_entity.retrieve_identifiers())
+
+        # perturbation
+        self.perturbation_entity = PerturbationEntity(
+            gkos=self.gkos_entities, compounds=self.compounds_entities, cell_type=self.cell_type_entity, dose=self.dose
+        )
 
 
 class GeneExpressionVerifier(ToolVerifier):
@@ -42,6 +82,7 @@ class GeneExpressionVerifier(ToolVerifier):
     """
 
     effect_pval = 0.05
+    log2fc_threshold = 1
     name = "check_gene_expression"
     description = "Check if a source entity regulates gene expression under specific conditions"
     args_schema = GeneExpressionArgs
@@ -56,6 +97,7 @@ class GeneExpressionVerifier(ToolVerifier):
         # get gene expression regulation
         upregulated_genes, downregulated_genes = self._expression_regulation_results(args)
 
+        # compare the prediction to groundtruth
         up_regulation_results = [gene in upregulated_genes for gene in args.upregulated_genes]
         down_regulation_results = [gene in downregulated_genes for gene in args.downregulated_genes]
 
@@ -75,23 +117,10 @@ class GeneExpressionVerifier(ToolVerifier):
         }
         return reward, feedback
 
-    def _process_perturbation(self, args):
-        perturbation = ""
-        if args.gkos:
-            perturbation += "-".join(args.gkos)
-            # reference/control for gene perturbation
-            reference = "centering-introns"
-
-        if args.compounds and args.dose:
-            perturbation += "_" + "-".join(args.compounds) + "@" + args.dose
-            # reference/control for compound perturbation
-            reference = "DMSO"
-
-        return perturbation, reference
-
     def _expression_regulation_results(self, args):
         # get gene_KO and reference
-        perturbation, reference = self._process_perturbation(args)
+        perturbation, reference = args.perturbation_entity._get_entity()
+
         upregulated = []
         downregulated = []
 
@@ -151,24 +180,19 @@ class GeneExpressionVerifier(ToolVerifier):
         if de_res.shape[0] > 0:
             presence.update({g: g in de_res["gene_id"].unique() for g in query_genes})
 
-            # get fc threshold based on fc distribution
-            # we can use threshold
-            # - default log2FC > 1 or log2FC< -1
-            # log2fc_threshold = 1
-
-            # - top K %
             # - dynamic threshold based on distribution.
-            log2fc_threshold = get_log2fc_threshold(de_res, log2FC_col="log2_foldchange")
-            logger.info(f"Apply log2FC threshold: {log2fc_threshold}")
+            if not self.log2fc_threshold:
+                self.log2fc_threshold = get_log2fc_threshold(de_res, log2FC_col="log2_foldchange")
+            logger.info(f"Apply log2FC threshold: {self.log2fc_threshold}")
 
             # get list of upregulated gene
-            upregulated_genes = de_res.query(f"padj < {self.effect_pval} & log2_foldchange > {log2fc_threshold}")[
+            upregulated_genes = de_res.query(f"padj < {self.effect_pval} & log2_foldchange > {self.log2fc_threshold}")[
                 "gene_id"
             ].unique()
 
             # get list of downregulated gene
             downregulated_genes = de_res.query(
-                f"padj < {self.effect_pval} & log2_foldchange < {-1 * log2fc_threshold}"
+                f"padj < {self.effect_pval} & log2_foldchange < {-1 * self.log2fc_threshold}"
             )["gene_id"].unique()
 
         return upregulated_genes, downregulated_genes, presence
@@ -186,24 +210,23 @@ def get_precomputed_DE_datalake(perturbation: str, reference: str, cell_type: st
     Retrieve DE data from RXRX DeSeq2 via SQL query
     """
 
-    logger.info("Retrive DE data from DataLake")
-    client = bigquery.Client(project="datalake-prod-ef49c0c9")
+    logger.info("retrieve DE data from DataLake")
 
-    # todo: get_experiment_labels for the specified cell_type
-    # expt_labels = get_experiment_labels(cell_type)
-    # specify the experiment with """AND experiment_label IN ('{"', '".join(expt_labels)}') """
-    # check whether gene of interest exist precomputed database
     sql = f"""
         SELECT gene_id, log2_foldchange, padj FROM `trekseq_diffexp.trek_differentialexpression`
         WHERE reference_description LIKE '%{reference}%'
         AND test_description LIKE '{perturbation}%'
     """
+
     if cell_type:
         sql += f"   AND UPPER(experiment_label) LIKE UPPER('%{cell_type}%')"
 
-    query_job = client.query(sql)  # Make an API request.
+        # todo: get_experiment_labels for the specified cell_type
+        # expt_labels = get_experiment_labels(cell_type)
+        # specify the experiment with """AND experiment_label IN ('{"', '".join(expt_labels)}') """
+        # check whether gene of interest exist precomputed database
 
-    de_res = query_job.to_dataframe()
+    de_res = retrieve_from_bigquery(sql)
 
     return de_res
 
@@ -215,13 +238,7 @@ def get_precomputed_DE_table(perturbation: str, reference: str, cell_type: str) 
     # todo:
     #  - precomputing expression regulations for all the Tx data we have, rxrx and Tahor.)
     #  - update the data path dictionary after pre-computation
-    logger.info("Retrive DE data from precomputed data sheets.")
-
-    PRECOMPUTED_FC = {
-        "HUVEC":  #  merged data from Tahor_deseq2, trekseq, pertubseq_deseq2 etc.
-        "/rxrx/data/user/lu.zhu/outgoing/hooke-explain/Data/Expression/precomputed_deseq2_test.parquet",
-        # "cell type 2": [...]
-    }
+    logger.info("retrieve DE data from precomputed data sheets.")
 
     de_df = pd.read_parquet(PRECOMPUTED_FC.get(cell_type))
     # todo: update the file loading after deseq2 precomputation
@@ -256,9 +273,6 @@ def get_log2fc_threshold(result, bin_index: int = 0, log2FC_col="log2_foldchange
 
 
 def get_expression_data(cell_type: str) -> AnnData:
-    # todo: update the path dictionary
-    H5AD_PATH_DICT = {"HUVEC": "/rxrx/data/user/lu.zhu/outgoing/hooke-explain/Data/Expression/adata_test.h5ad"}
-
     h5ad_path = H5AD_PATH_DICT[cell_type]
     if h5ad_path:
         return anndata.read_h5ad(h5ad_path)
@@ -339,5 +353,4 @@ def compute_DeSeq2(
     return de_res
 
 
-# Todo: add Harmonizome
-# todo: add
+# Todo: add Harmonizome API
