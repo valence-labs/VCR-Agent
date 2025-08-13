@@ -2,17 +2,19 @@ import json
 from typing import Any
 
 import requests
+from loguru import logger
 from pydantic import BaseModel, Field
 
 from explain.eval.tools._base import ToolVerifier
+from explain.eval.tools.bio.entity import GeneEntity
 from explain.llm import create_client
-from explain.verifiers.verifier_utils import get_gene_ids
 
 
 class SCLArgs(BaseModel):
     """Arguments for checking drug-target interactions."""
 
-    protein_entity: str = Field(description="Protein/gene name")
+    protein: str = Field(description="Protein/gene name")
+    protein_entity: GeneEntity = None
     from_loc: str | None = Field(default=None, description="Orignial location")
     to_loc: str = Field(description="Translocated location")
     mechanism: str | None = Field(
@@ -22,6 +24,11 @@ class SCLArgs(BaseModel):
         default=None,
         description="Presence of any post translation modification such as 'phosphorylation', 'dimerization' etc.",
     )
+
+    def _get_entity_aliases(self):
+        # get protein entity and identifiers
+        protein_entity = GeneEntity(name=self.protein)
+        self.protein_entity = protein_entity.retrieve_identifiers()
 
 
 class SCLVerifier(ToolVerifier):
@@ -53,15 +60,16 @@ class SCLVerifier(ToolVerifier):
 
     def _get_scl_annotations(self, args):
         scl_bool, trans_scl_bool = False, False
-        entity_alias = get_gene_ids(args.protein_entity)
-        if entity_alias:
-            scl_info = self._getSCL(entity_alias)
+
+        if args.protein_entity:
+            scl_info = self._getSCL(args.protein_entity)
 
             scl_bool = (args.from_loc in scl_info["locations"]) & (args.to_loc in scl_info["locations"])
             trans_scl_bool = False
             if len(scl_info["translocations"]) > 0:
                 trans_scl_bool = self._tanslocation_match(args, scl_info["translocations"])
-
+        else:
+            logger.info("Make sure to run the entity retrieval.")
         # todo: maybe add plausibility score
         # todo: SCL term standardization
         return scl_bool, trans_scl_bool
@@ -78,6 +86,8 @@ class SCLVerifier(ToolVerifier):
         Returns:
             bool: True if a matching translocation is found in the reference, False otherwise.
         """
+        # todo: use smarter way for the comparison, e.g. LLM based matching
+
         from_loc_lower = args.from_loc.lower()
         to_loc_lower = args.to_loc.lower()
         has_modification = args.modification is not None
@@ -103,7 +113,7 @@ class SCLVerifier(ToolVerifier):
 
         return False
 
-    def _getSCL(self, entity_alias: dict) -> dict:
+    def _getSCL(self, entity_alias: GeneEntity) -> dict:
         """
         Retrieves the predicted subcellular locations for a given biological entity using multiple data sources.
         Args:
@@ -120,9 +130,9 @@ class SCLVerifier(ToolVerifier):
         # use KG, uniprot, human preotein atlas
 
         # get uniprot ID for uniprot SCLs and translocations
-        uniprot_scls, trans_scls = self._scl_from_uniprot(entity_alias["uniProtkbAccession"])
+        uniprot_scls, trans_scls = self._scl_from_uniprot(entity_alias.UniprotAC)
         # get ensembl_id for HPA SCLs
-        hpa_scls = self._scl_from_HPA(entity_alias["HPA"])
+        hpa_scls = self._scl_from_HPA(entity_alias.HPA)
         all_scls = set(uniprot_scls + hpa_scls)
         all_scls = [s.lower() for s in all_scls]
 
