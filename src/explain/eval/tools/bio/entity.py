@@ -1,14 +1,18 @@
+import json
 import re
 import time
 from abc import abstractmethod
-from typing import Any, Optional
+from typing import Any
 
+import datamol as dm
 import requests
 from flair.data import Sentence
 from flair.models import EntityMentionLinker
 from flair.nn import Classifier
 from loguru import logger
 from pydantic import BaseModel
+
+from explain.eval.tools.bio.utils import retrieve_from_bigquery
 
 
 class NERModel(BaseModel):
@@ -84,7 +88,7 @@ class BaseEntity(BaseModel):
         entity_dict = self.model_dump()
         return query in entity_dict.values()
 
-        
+
 class GeneEntity(BaseEntity):
     name: str
     ChEMBL: str = None
@@ -173,12 +177,65 @@ class GeneEntity(BaseEntity):
 class CompoundEntity(BaseEntity):
     name: str = None
     ChEMBL: str = None
+    PubChem: str = None
     REC_ID: str = None
     inchi_key: str = None
     smiles: str = None
+    std_smiles: str = None
+    mesh_id: str = None
+    iupac_name: str = None
 
-    def _get_entity(self):
-        return self.smiles
+    def retrieve_identifiers(self, ner_model: NERModel = None):
+        if self.smiles:
+            self.std_smiles = dm.standardize_smiles(self.smiles)
+            self.inchi_key = dm.to_inchikey(self.std_smiles)
+            self.iupac_name = get_iupac_name(self.inchi_key)
+
+        elif self.name:
+            response = get_compound_info_from_synonym(self.name)
+            if "error" in response and ner_model:
+                response = self._get_entity(ner_model)
+
+            if "error" not in response:
+                self.smiles = response["SMILES"]
+                self.inchi_key = response["InChIKey"]
+                self.iupac_name = response["IUPACName"]
+
+        # get chembl id
+        response = get_compound_info_from_inchikey(self.inchi_key)
+        if "error" not in response:
+            self.PubChem = response["CID"]
+            self.ChEMBL = response["ChEMBL"]
+
+        if self.inchi_key:
+            self._fetch_rxrx_id()
+
+        return self
+
+    def _get_entity(self, ner_model: NERModel):
+        self.mesh_id, ner_name = ner_model._predict_compound(self.name)
+        response = get_compound_info_from_synonym(ner_name)
+
+        return response
+
+    def _fetch_rxrx_id(self):
+        logger.info(f"Fetching REC_ID for {self.inchi_key}")
+
+        sql = f"""
+            SELECT rec_id
+            FROM cauldron__cauldron.compounds
+            WHERE inchi_key = '{self.inchi_key}'
+        """
+        res = retrieve_from_bigquery(sql)
+
+        if len(res) == 1:
+            self.REC_ID = res.loc[0, "rec_id"]
+        else:
+            logger.info("Molecule is unavaiable in RXRX datalake.")
+
+    def _ID_mapping(self):
+        if not self.inchi_key:
+            raise ValueError("Make sure to run 'CompoundEntity._get_entity()' first.")
 
 
 class CellTypeEntity(BaseEntity):
@@ -192,11 +249,11 @@ class CellTypeEntity(BaseEntity):
 
 
 class PerturbationEntity(BaseEntity):
-    name: Optional[str] = ''
-    gkos: Optional[list[GeneEntity]] = None
-    compounds: Optional[list[CompoundEntity]] = None
-    cell_type: Optional[CellTypeEntity] = None
-    dose: Optional[float] = None
+    name: str | None = ""
+    gkos: list[GeneEntity] | None = None
+    compounds: list[CompoundEntity] | None = None
+    cell_type: CellTypeEntity | None = None
+    dose: float | None = None
 
     def _get_entity(self, source: str = "rxrx"):
         """
@@ -217,4 +274,115 @@ class PerturbationEntity(BaseEntity):
                 reference = "DMSO"
 
             return perturbation, reference
-    
+
+
+def get_compound_info_from_inchikey(inchikey: str):
+    base_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug"
+    url = f"{base_url}/compound/inchikey/{inchikey}/xrefs/RegistryID/JSON"
+
+    try:
+        response = requests.get(url, timeout=10)  # 10-second timeout
+        data = response.json()
+
+        # Check for successful request
+        if response.status_code == 200:
+            # CID
+            CID = data["InformationList"]["Information"][0]["CID"]
+
+            # other identifiers
+            all_ids = data["InformationList"]["Information"][0]["RegistryID"]
+
+            # get chembl ID
+            ChEMBL = [rid for rid in all_ids if rid.startswith("CHEMBL")]
+
+            return {"CID": CID, "ChEMBL": ChEMBL[0] if len(ChEMBL) == 1 else ChEMBL}
+
+        # Handle common errors gracefully
+        elif response.status_code == 404:
+            return {"error": f"Result: Identifier {inchikey} not found in PubChem."}
+        else:
+            return {"error": f"Received status code {response.status_code} from PubChem."}
+
+    except requests.exceptions.RequestException as e:
+        return {"error": f"An error occurred during the API request: {e}"}
+
+
+def get_iupac_name(inchikey: str) -> dict:
+    """
+    Fetches the IUPAC name for a given InChIKey from the PubChem PUG REST API.
+
+    Args:
+        inchikey (str): The InChIKey of the compound.
+
+    Returns:
+        str: The IUPAC name if found, otherwise an error message.
+    """
+
+    # Construct the API URL for a plain text response
+    url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/inchikey/{inchikey}/property/IUPACName/TXT"
+
+    try:
+        # Send the GET request
+        response = requests.get(url)
+
+        # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+            # The response content is the plain text IUPAC name
+            return response.text.strip()
+        else:
+            # Handle potential errors (e.g., InChIKey not found)
+            return {
+                "error": f"Error: Failed to retrieve data. Status code: {response.status_code}\nResponse: {response.text}"
+            }
+    except requests.exceptions.RequestException as e:
+        # Handle network-related errors
+        return {"error": f"Error: A network error occurred: {e}"}
+
+
+def get_compound_info_from_synonym(synonym: str):
+    """
+    Retrieves a compound's information from a synonym using the PubChem API.
+
+    Args:
+        synonym (str): A common name or synonym for the compound.
+
+    Returns:
+        dict: A dictionary containing key compound information (CID, name,
+              formula, SMILES), or an error message.
+    """
+    # Step 1: Get the CID from the synonym
+    cid_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{synonym}/cids/TXT"
+    try:
+        cid_response = requests.get(cid_url)
+        if cid_response.status_code != 200:
+            return {"error": f"Could not find a compound ID for '{synonym}'. Status: {cid_response.status_code}"}
+
+        # The response text is the CID
+        cid = cid_response.text.strip()
+        print(f"Found CID for '{synonym}': {cid}")
+
+    except requests.exceptions.RequestException as e:
+        return {"error": f"Network error during CID retrieval: {e}"}
+
+    # Step 2: Get compound properties using the CID
+    # We'll use the property endpoint for a clean JSON response
+    props_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/property/SMILES,InChIKey,IUPACName/JSON"
+    try:
+        props_response = requests.get(props_url)
+        if props_response.status_code != 200:
+            return {"error": f"Failed to get properties for CID {cid}. Status: {props_response.status_code}"}
+
+        props_data = props_response.json()
+
+        # Extract the relevant data from the JSON structure
+        compound_properties = props_data["PropertyTable"]["Properties"][0]
+
+        return {
+            "CID": cid,
+            "SMILES": compound_properties["SMILES"],
+            "InChIKey": compound_properties["InChIKey"],
+            "IUPACName": compound_properties["IUPACName"],
+        }
+
+    except (requests.exceptions.RequestException, json.JSONDecodeError, KeyError) as e:
+        return {"error": f"Error retrieving or parsing compound data: {e}"}
