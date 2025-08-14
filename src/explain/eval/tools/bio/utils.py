@@ -1,8 +1,5 @@
-import time
 from pathlib import Path
 
-import requests
-from flair.models import EntityMentionLinker
 from google.cloud import bigquery
 
 # todo: to be relocated
@@ -17,7 +14,8 @@ PRECOMPUTED_FC = {
     # "cell type 2": [...]
 }
 
-def retrieve_from_bigquery(sql: str, as_dataframe:bool = True):
+
+def retrieve_from_bigquery(sql: str, as_dataframe: bool = True):
     """Retrive any data from datalake-prod-ef49c0c9 database"""
     client = bigquery.Client(project="datalake-prod-ef49c0c9")
 
@@ -25,4 +23,4 @@ def retrieve_from_bigquery(sql: str, as_dataframe:bool = True):
     if as_dataframe:
         results = query_job.to_dataframe()
 
-    return results  
+    return results
