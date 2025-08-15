@@ -1,5 +1,5 @@
 from explain.eval.score.score_util import dag_to_networkx_graph
-
+import numpy as np
 class StructuralEvaluator:
     def __init__(self,  **kwargs):
         pass
@@ -10,6 +10,8 @@ class StructuralEvaluator:
         Check whether the edge types are correct.
         """
         gt_graph = dag_to_networkx_graph(gt_dag)
+        if gen_dag is np.nan:
+            return 0
         gen_graph = dag_to_networkx_graph(gen_dag)
 
 

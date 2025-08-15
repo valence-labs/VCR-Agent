@@ -1,5 +1,6 @@
 import re
 import networkx as nx
+import numpy as np
 
 from explain.util import load_data
 from explain.eval.utils import check_answer_format, is_format_correct
@@ -37,7 +38,6 @@ class SyntaxEvaluator:
         """
         All mandatory tags present & closed; JSON-parsable primitives.
         """
-        # TODO
         parsed_sections = check_answer_format(raw_response)
         format_accuracy = is_format_correct(parsed_sections)
         return 1 if format_accuracy else 0
@@ -46,11 +46,15 @@ class SyntaxEvaluator:
         """
         Check whether the DAG is coherent.
         """
-        # TODO
+        ids = re.findall(r'\bid\s*=\s*[\'"](n\d+)[\'"]', structure_hypothesis)
+        # for set_context, we don't need to check the id coherence (remove the first line)
+        structure_hypothesis = '\n'.join(structure_hypothesis.split('\n')[1:])
         ids = re.findall(r'\bid\s*=\s*[\'"](n\d+)[\'"]', structure_hypothesis)
         # Check every primitive carries a unique id
         id_existence_in_primitive = len(ids) == len(structure_hypothesis.split('\n'))
         # Check whether all IDs referenced in <dag> exist in <explain>
+        if dag is np.nan:
+            return 0
         ids_in_dag = re.findall(r'\bn\d+\b', dag)
         return 1 if all(dag_id in ids for dag_id in set(ids_in_dag)) and id_existence_in_primitive else 0
 
@@ -58,6 +62,7 @@ class SyntaxEvaluator:
         """
         Check whether the DAG is well-formed.
         """
-        # TODO
+        if dag is np.nan:
+            return 0
         graph = dag_to_networkx_graph(dag)
         return 1 if nx.is_directed_acyclic_graph(graph) else 0
