@@ -45,20 +45,40 @@ class DataGenerator:
         messages = [
             {"role": "user", "content": input_prompt},
         ]
-        result = self.llm_client.generate(messages)
-        response = result.messages[-1]['content'][0]['text']
+        # INSERT_YOUR_CODE
+        import time
 
-        return response
+        max_retries = 5
+        retry_delay = 10  # seconds
 
-    def generate_report(self, perturbation, kg_info):
+        for attempt in range(max_retries):
+            try:
+                result = self.llm_client.generate(messages, )
+                response = result.messages[-1]['content'][0]['text']
+                return response
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    print(f"Rate limit hit (Anthropic). Retrying in {retry_delay} seconds... (attempt {attempt+1}/{max_retries})")
+                    time.sleep(retry_delay)
+                    continue
+                else:
+                    print("Max retries reached for Anthropic RateLimitError.")
+                    raise
+
+        # result = self.llm_client.generate(messages)
+        # response = result.messages[-1]['content'][0]['text']
+
+        # return response
+
+    def generate_report(self, perturbation, additional_info):
         input_prompt = self.report_template.format(treatment=json.dumps(perturbation, indent=4))
-        if kg_info is not None:
+        if len(additional_info) > 0:
             # TODO: integrate with template 
             expected_output_marker = "### EXPECTED OUTPUT"
             idx = input_prompt.find(expected_output_marker)
             input_prompt = (
                     input_prompt[:idx]
-                    + f"\n## ADDITIONAL INFORMATION\n{kg_info}\n"
+                    + f"\n# ADDITIONAL INFORMATION\n{additional_info}\n"
                     +  "Please use the additional information to generate the report."
                     + input_prompt[idx:]
                 )
@@ -108,6 +128,7 @@ class DataGenerator:
 
         ## EXPECTED OUTPUT
         Please generate a **concise** and **informative** information given the knowledge graph information.
+        Do not omit any information and try to include all the information in KNOWLEDGE GRAPH INFORMATION.
         You don't need to answer the question, just rephrase the knowledge graph information that will be helpful to generate the report.
         """
         input_prompt = input_prompt_template.format(kg_info=kg_info, perturbation=json.dumps(perturbation, indent=4))

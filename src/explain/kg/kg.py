@@ -5,6 +5,12 @@ import json
 import torch_geometric
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
+from typing import Union, List, Dict
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+from torch_geometric.utils import to_networkx
+from torch_geometric.utils import subgraph as pyg_subgraph
+import networkx as nx
 
 class KnowledgeGraph:
     def __init__(self, save_address='/rxrx/data/user/hamed.shirzad/outgoing/stark_prime_kg', 
@@ -59,15 +65,19 @@ class KnowledgeGraph:
         self.enc_language_model_name = enc_language_model_name
         self.enc_language_model = SentenceTransformer(self.enc_language_model_name)
         
-        node_embeddings = self.create_node_embeddings(use_rels=True)
+        self.node_embeddings = self.create_node_embeddings(use_rels=True)
         self.edge_type_embeddings = self.create_edge_embeddings()
         
         self.pyg_graph = torch_geometric.data.Data(
-            x=node_embeddings,
+            x=self.node_embeddings,
             edge_index=self.edge_index,
             edge_type=self.edge_types,
             node_type=self.node_types,
         )
+
+        self.kg_node_name_dict = {node['name']: idx for idx, node in self.node_info.items()}
+
+        # self.edge_map = {(int(src), int(dst)): idx for idx, (src, dst) in enumerate(zip(self.edge_index[0], self.edge_index[1]))}
     
     def create_node_embeddings(self, use_rels: bool = False, batch_size: int = 128, device=None) -> torch.Tensor:
         """Create node and edge embeddings from textual descriptions using the language model.
@@ -158,3 +168,225 @@ class KnowledgeGraph:
             lines.append(f"- Node ID {src} is connected to Node ID {dst} with edge type: {edge_type}")
             
         return "\n".join(lines)
+
+    def text_to_embedding(self, texts: Union[str, List[str]]) -> torch.Tensor:
+        """Convert text strings into numerical embeddings using the loaded language model.
+        
+        Args:
+            texts: Single text string or list of textual descriptions for nodes
+            
+        Returns:
+            torch.Tensor: Embedding vector for single text, or matrix of embeddings (one row per text) for multiple texts
+            
+        Raises:
+            RuntimeError: If the language model hasn't been loaded
+        """
+        if self.enc_language_model is None:
+            raise RuntimeError("Language model not loaded. Call load_language_model() first.")
+            
+        embeddings = self.enc_language_model.encode(texts, convert_to_tensor=True)
+        return embeddings
+
+    def find_similar_nodes(
+        self, 
+        query: str, 
+        k: int = 10, 
+        similarity_metric: str = "cosine",
+        use_precomputed_index: bool = True
+    ) -> Dict[int, float]:
+        """Find the top-k most similar nodes to a given query.
+        
+        Args:
+            query: Text query to find similar nodes for
+            k: Number of top similar nodes to return
+            similarity_metric: Similarity metric to use ("cosine", "euclidean", "dot")
+            use_precomputed_index: Whether to use precomputed FAISS index for faster search
+            
+        Returns:
+            Dictionary mapping node IDs to similarity scores (higher is more similar)
+            
+        Raises:
+            RuntimeError: If language model is not loaded
+            ValueError: If similarity metric is not supported
+        """
+        if self.enc_language_model is None:
+            raise RuntimeError("Language model not loaded. Call load_language_model() first.")
+            
+        # Get query embedding
+        query_embedding = self.text_to_embedding(query)
+        
+        if use_precomputed_index and hasattr(self, '_faiss_index'):
+            return self._search_with_faiss(query_embedding, k)
+        else:
+            return self._search_with_brute_force(query_embedding, k, similarity_metric)
+
+    def _search_with_brute_force(
+        self, 
+        query_embedding: torch.Tensor, 
+        k: int, 
+        similarity_metric: str
+    ) -> Dict[int, float]:
+        """Search for similar nodes using brute force computation.
+        
+        Args:
+            query_embedding: Query embedding vector
+            k: Number of top similar nodes to return
+            similarity_metric: Similarity metric to use
+            
+        Returns:
+            Dictionary mapping node IDs to similarity scores
+        """
+        # Get node embeddings for nodes that have descriptions
+        # node_ids = list(self.nodes_textual_descriptions.keys())
+        node_embeddings = self.node_embeddings
+        
+        # Convert to numpy for sklearn compatibility
+        query_np = query_embedding.cpu().numpy().reshape(1, -1)
+        node_embeddings_np = node_embeddings.cpu().numpy()
+        
+        # Compute similarities
+        if similarity_metric == "cosine":
+            similarities = cosine_similarity(query_np, node_embeddings_np)[0]
+        elif similarity_metric == "euclidean":
+            # Convert euclidean distance to similarity (1 / (1 + distance))
+            distances = np.linalg.norm(node_embeddings_np - query_np, axis=1)
+            similarities = 1 / (1 + distances)
+        elif similarity_metric == "dot":
+            similarities = np.dot(node_embeddings_np, query_np.T).flatten()
+        else:
+            raise ValueError(f"Unsupported similarity metric: {similarity_metric}")
+        
+        # Get top-k indices
+        top_indices = np.argsort(similarities)[::-1][:k]
+        
+        # Return results as dictionary
+        results = {}
+        for idx in top_indices:
+            results[idx] = float(similarities[idx])
+            
+        return results
+    
+    def _search_with_faiss(
+        self, 
+        query_embedding: torch.Tensor, 
+        k: int
+    ) -> Dict[int, float]:
+        """Search for similar nodes using precomputed FAISS index.
+        
+        Args:
+            query_embedding: Query embedding vector
+            k: Number of top similar nodes to return
+            
+        Returns:
+            Dictionary mapping node IDs to similarity scores
+        """
+        # Convert query to numpy and reshape
+        query_np = query_embedding.cpu().numpy().reshape(1, -1)
+        
+        # Search using FAISS
+        distances, indices = self._faiss_index.search(query_np, k)
+        
+        # Convert distances to similarities (FAISS returns distances, not similarities)
+        similarities = 1 / (1 + distances[0])
+        
+        # Map back to original node IDs
+        node_ids = list(self.nodes_textual_descriptions.keys())
+        results = {}
+        for i, idx in enumerate(indices[0]):
+            if idx < len(node_ids):  # Safety check
+                node_id = node_ids[idx]
+                results[node_id] = float(similarities[i])
+                
+        return results
+
+    def find_edge_index(self, target_edge: torch.Tensor) -> List[int]:
+        """Find the edge index of the given edge index.
+
+        Args:
+            target_edge_index: Target edge index tensor
+        """
+
+        BASE = int(self.edge_index.max()) + 1  # must be > any value in mat
+        keys = self.edge_index[0] * BASE + self.edge_index[1]  # shape (N,)
+
+        # Sort once
+        order = torch.argsort(keys)
+        keys_sorted = keys[order]
+
+        # Query
+        target_key = target_edge[0] * BASE + target_edge[1]
+        pos = torch.searchsorted(keys_sorted, target_key)
+
+        if pos < self.num_edges and keys_sorted[pos] == target_key:
+            idx = order[pos]   # found in original matrix
+        else:
+            idx = -1           # not found
+
+        return idx.item()
+
+    def edge_index_to_id(self, target_edge_index: torch.Tensor) -> List[int]:
+        """Convert edge index to node IDs.
+        
+        Args:
+            edge_index: Edge index tensor
+        """
+        # Build a dictionary mapping (src, dst) to its position in edge_index
+
+        # TODO: solve OOM error
+        edge_ids = [self.find_edge_index(edge) for edge in target_edge_index.transpose(1,0)]
+
+        return edge_ids
+
+            
+    def get_subgraph_from_nodes(self, node_indices: List[int]) -> List:
+        """Get the minimal subgraph from the given node indices.
+        
+        Args:
+            node_indices: List of node indices to include in the subgraph
+            
+        Returns:
+            Edge indices of the subgraph
+        """
+
+        G = to_networkx(self.pyg_graph, to_undirected=True)
+        T = torch.as_tensor(node_indices, dtype=torch.long).tolist()
+        T = list(dict.fromkeys(int(t) for t in T))  # unique, preserve order
+        # 2) Shortest paths & distances among terminals
+        paths, dists = {}, {}
+        for i in range(len(T)):
+            for j in range(i+1, len(T)):
+                u, v = T[i], T[j]
+                p = nx.shortest_path(G, u, v)
+                d = len(p) - 1
+                paths[(u, v)] = p
+                dists[(u, v)] = d
+
+        # 3) Choose terminal pairs
+        # if method == "all_pairs":
+        #     pairs = list(dists.keys())
+        MC = nx.Graph()
+        MC.add_nodes_from(T)
+        for (u, v), d in dists.items():
+            MC.add_edge(u, v, weight=d)
+        mst = nx.minimum_spanning_tree(MC, weight="weight")
+        pairs = list(mst.edges())
+        # else:
+        #     raise ValueError("method must be 'mst' or 'all_pairs'.")
+
+        # 4) Union the original-graph shortest paths for chosen pairs
+        nodes_keep = set(T)
+        for (u, v) in pairs:
+            p = paths.get((u, v), paths.get((v, u)))
+            nodes_keep.update(p)
+
+        # 5) Extract induced subgraph in PyG (relabels node ids to 0..n-1)
+        mask = torch.zeros(self.pyg_graph.num_nodes, dtype=torch.bool)
+        mask[list(nodes_keep)] = True
+        edge_index_sub, _ = pyg_subgraph(
+            mask, self.pyg_graph.edge_index, getattr(self.pyg_graph, 'edge_attr', None),
+            relabel_nodes=False
+        )
+
+        edge_ids = self.edge_index_to_id(edge_index_sub)
+
+        return edge_ids
