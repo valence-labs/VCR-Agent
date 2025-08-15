@@ -4,7 +4,7 @@ from urllib.parse import quote
 import requests
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ._base import ToolVerifier
+from .._base import ToolVerifier
 
 
 class PubChemArgs(BaseModel):
@@ -87,21 +87,21 @@ class PubChemResolver(ToolVerifier):
 
             return reward, payload
 
-        except Exception as e:  # noqa
+        except requests.exceptions.RequestException as e:  # noqa
             return 0.0, {"input_kind": input_kind, "input": q, "error": f"Unexpected error: {type(e).__name__}: {e}"}
 
     def _fetch_cid_by_name(self, name: str, timeout_s: float) -> int | None:
         j = self._get_json(f"{self.base_url}/name/{quote(name)}/cids/JSON", timeout_s)
         try:
             return j["IdentifierList"]["CID"][0]
-        except Exception:  # noqa
+        except (KeyError, IndexError, TypeError):
             return None
 
     def _fetch_cid_by_smiles(self, smiles: str, timeout_s: float) -> int | None:
         j = self._get_json(f"{self.base_url}/smiles/{quote(smiles)}/cids/JSON", timeout_s)
         try:
             return j["IdentifierList"]["CID"][0]
-        except Exception:  # noqa
+        except (KeyError, IndexError, TypeError):
             return None
 
     def _fetch_property_by_cid(self, cid: int, prop: str, timeout_s: float, smiles: bool = True) -> str | None:
@@ -117,7 +117,7 @@ class PubChemResolver(ToolVerifier):
                 return success_props[0] if success_props else None
             else:
                 return props[prop]
-        except Exception:  # noqa
+        except (KeyError, IndexError, TypeError):
             return None
 
     def _fetch_title_by_cid(self, cid: int, timeout_s: float) -> str | None:
@@ -125,14 +125,14 @@ class PubChemResolver(ToolVerifier):
         j = self._get_json(f"{self.base_url}/cid/{cid}/description/JSON", timeout_s)
         try:
             return j["InformationList"]["Information"][0]["Title"]
-        except Exception:  # noqa
+        except (KeyError, IndexError, TypeError):
             return None
 
     def _fetch_synonyms(self, cid: int, timeout_s: float) -> list[str] | None:
         j = self._get_json(f"{self.base_url}/cid/{cid}/synonyms/JSON", timeout_s)
         try:
             return j["InformationList"]["Information"][0]["Synonym"]
-        except Exception:  # noqa
+        except (KeyError, IndexError, TypeError):
             return None
 
     def _get_json(self, url: str, timeout_s: float) -> dict:

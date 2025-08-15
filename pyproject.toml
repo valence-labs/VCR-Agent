@@ -29,6 +29,8 @@ dependencies = [
   "polars>=1.32.2",
   "pyarrow>=21.0.0",
   "google-cloud-bigquery>=3.35.1",
+  "duckdb>=1.0.0",
+  "rdkit>=2023.9.5",
 ]
 
 [project.optional-dependencies]
