@@ -35,6 +35,8 @@ class AccuracyEvaluator:
         elif type == 'paragraph':
             gt_text = gt_text.split('.')
             gen_text = gen_text.split('.')
+            gt_text = gt_text[:-1] if gt_text[-1] == '' else gt_text
+            gen_text = gen_text[:-1] if gen_text[-1] == '' else gen_text
         else:
             raise ValueError(f"Invalid type: {type}")
         ref_para = " ".join(gt_text)
