@@ -1,0 +1,88 @@
+import os
+import json
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
+import wandb
+
+
+from explain.eval.score.syntax_score import SyntaxEvaluator
+from explain.eval.score.accuracy_score import AccuracyEvaluator
+from explain.eval.score.structure_explain import StructureExplain
+from explain.eval.score.structural_score import StructuralEvaluator
+
+print(os.getcwd())
+
+# structure explain object
+
+
+def evaluate(gen_data, gt_data, metrics=['syntax', 'token_accuracy', 'schema_validity', 'id_coherence', 'dag_well_formed', 'edge_type_accuracy', 'primitive_level_f1', 'argument_similarity']):
+
+    structure_explain = StructureExplain(gen_data)
+    gt_structure_explain = StructureExplain(gt_data)
+    syntax_evaluator = SyntaxEvaluator()
+    accuracy_evaluator = AccuracyEvaluator()
+    structural_evaluator = StructuralEvaluator()
+
+    scores = []
+
+    for i, (gt, gen) in enumerate(tqdm(zip(gt_structure_explain, structure_explain), total=len(gt_structure_explain))):
+        cur_score_dict = {'index': i}
+        if 'syntax' in metrics:
+            score = syntax_evaluator.primitive_validity(gen['explain']) 
+            cur_score_dict['syntax'] = score
+        # token accuracy for structure hypothesis
+        if 'token_accuracy' in metrics:
+            score = accuracy_evaluator.token_based_accuracy(gt['explain'], gen['explain'], 'structure_hypothesis')
+            cur_score_dict['token_accuracy/structure_hypothesis'] = score
+            # token accuracy for paragraph
+            score = accuracy_evaluator.token_based_accuracy(gt['answer'], gen['answer'], 'paragraph')
+            cur_score_dict['token_accuracy/paragraph'] = score
+        if 'schema_validity' in metrics:
+            # schema validity
+            score = syntax_evaluator.schema_validity(gen['raw_response'])
+            cur_score_dict['schema_validity'] = score
+        
+
+        # id coherence
+        if 'id_coherence' in metrics:
+            score = syntax_evaluator.id_coherence(gen['explain'], gen['dag'])
+            cur_score_dict['id_coherence'] = score
+        # dag well formed
+        if 'dag_well_formed' in metrics:
+            score = syntax_evaluator.dag_well_formed(gen['dag'])
+            cur_score_dict['dag_well_formed'] = score
+
+
+        # edge type accuracy
+        if 'edge_type_accuracy' in metrics:
+            score = structural_evaluator.edge_type_accuracy(gt['dag'], gen['dag'])
+            cur_score_dict['edge_type_accuracy'] = score
+        # primitive level f1
+        if 'primitive_level_f1' in metrics:
+            score = accuracy_evaluator.primitive_level_f1(gt['explain'], gen['explain'])
+            cur_score_dict['primitive_level_f1'] = score
+        if 'argument_similarity' in metrics:    
+            for mode in ['BERTScore', 'SentenceTransformers', 'openai_embeddings']:
+                # argument similarity for paragraph
+                score = accuracy_evaluator.argument_similarity(gt['answer'], gen['answer'], mode)
+                cur_score_dict['argument_similarity/paragraph/{mode}'] = score
+                # argument similarity for structure hypothesis
+                score = accuracy_evaluator.argument_similarity(gt['explain'], gen['explain'], mode)
+                cur_score_dict['argument_similarity/structure_hypothesis/{mode}'] = score
+
+        scores.append(cur_score_dict)
+
+    print('syntax', np.mean([score['syntax'] for score in scores]))
+    for key in scores[0].keys():
+        if 'token_accuracy' in key:
+            for k in scores[0][key].keys():
+                score = round(np.mean([score[key][k] for score in scores]), 4)
+                print(key, k, score)
+                wandb.log({f"{key}/{k}": score})
+        else:
+            score = round(np.mean([score[key] for score in scores]), 4)
+            print(key, score)
+            wandb.log({key: score})
+
+    wandb.finish()

@@ -7,6 +7,8 @@ from nltk.translate.meteor_score import meteor_score
 import numpy as np
 from bert_score import score
 from sentence_transformers import SentenceTransformer, util
+from explain.llm._client import OpenAIClient
+from explain.llm import create_client
 
 from explain.eval.score.score_util import get_primitives_from_structure_hypothesis
 
@@ -20,6 +22,8 @@ class AccuracyEvaluator:
     """
     
     def __init__(self,  **kwargs):
+        self.embedding_client = create_client(provider='openai')
+        self.embedding = self.embedding_client.client.sync_client.embeddings
         pass
 
 
@@ -106,6 +110,14 @@ class AccuracyEvaluator:
         f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
         return round(f1, 4)
 
+    def get_openai_embedding(self, text, model='text-embedding-3-large'):
+        
+        response = self.embedding.create(
+            model=model,
+            input=text
+        )
+        return response.data[0].embedding
+
     def argument_similarity(self, gt_text: str, gen_text: str, mode='BERTScore') -> float:
         """
         Check whether the generated primitives are in the allowed set.
@@ -114,7 +126,9 @@ class AccuracyEvaluator:
         # Base model: roberta-large
         if mode == 'BERTScore':
             precision, recall, f1 = score([gt_text], [gen_text], lang='en')
-            return round(f1.item(), 4)   
+            return round(f1.item(), 4)
+        
+        
         elif mode == 'SentenceTransformers':
             model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")  # strong 768-d encoder
 
@@ -124,3 +138,8 @@ class AccuracyEvaluator:
             cos_sim = util.cos_sim(emb1, emb2).item()
             return round(cos_sim, 4)
 
+        elif mode == 'openai_embeddings':
+            emb_ref = self.get_openai_embedding(gt_text)
+            emb_gen = self.get_openai_embedding(gen_text)
+            cos_sim = util.cos_sim(emb_ref, emb_gen).item()
+            return round(cos_sim, 4)
