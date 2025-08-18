@@ -164,11 +164,13 @@ def get_ner_node_index(entity_dict, kg):
 
     for entity, tag in entity_dict.items():
         node_index = None
+        # Exact matching
         if entity.lower() in kg.kg_node_name_dict.keys():
             node_index = kg.kg_node_name_dict[entity.lower()]
         elif entity in kg.kg_node_name_dict.keys():
             node_index = kg.kg_node_name_dict[entity]
         
+        # Synonym matching
         else:
             if tag == 'Disease':
                 # map to MONDO name (if not in MONDO, map to disease name)
