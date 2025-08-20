@@ -10,13 +10,16 @@ from explain.eval.score.syntax_score import SyntaxEvaluator
 from explain.eval.score.accuracy_score import AccuracyEvaluator
 from explain.eval.score.structure_explain import StructureExplain
 from explain.eval.score.structural_score import StructuralEvaluator
+from explain.eval.rubrics.correctness import CorrectnessRubric
+from explain.eval.rubrics.plausibility import PlausibilityRubric
 
 print(os.getcwd())
 
 # structure explain object
 
 
-def evaluate(gen_data, gt_data, metrics=['syntax', 'token_accuracy', 'schema_validity', 'id_coherence', 'dag_well_formed', 'edge_type_accuracy', 'primitive_level_f1', 'argument_similarity']):
+def evaluate(gen_data, gt_data, metrics=['syntax', 'token_accuracy', 'schema_validity', 'id_coherence', 'dag_well_formed', 'edge_type_accuracy', 'primitive_level_f1', 'argument_similarity',
+'llm/correctness', 'llm/plausibility']):
 
     structure_explain = StructureExplain(gen_data)
     gt_structure_explain = StructureExplain(gt_data)
@@ -42,8 +45,6 @@ def evaluate(gen_data, gt_data, metrics=['syntax', 'token_accuracy', 'schema_val
             # schema validity
             score = syntax_evaluator.schema_validity(gen['raw_response'])
             cur_score_dict['schema_validity'] = score
-        
-
         # id coherence
         if 'id_coherence' in metrics:
             score = syntax_evaluator.id_coherence(gen['explain'], gen['dag'])
@@ -52,8 +53,6 @@ def evaluate(gen_data, gt_data, metrics=['syntax', 'token_accuracy', 'schema_val
         if 'dag_well_formed' in metrics:
             score = syntax_evaluator.dag_well_formed(gen['dag'])
             cur_score_dict['dag_well_formed'] = score
-
-
         # edge type accuracy
         if 'edge_type_accuracy' in metrics:
             score = structural_evaluator.edge_type_accuracy(gt['dag'], gen['dag'])
@@ -66,14 +65,23 @@ def evaluate(gen_data, gt_data, metrics=['syntax', 'token_accuracy', 'schema_val
             for mode in ['BERTScore', 'SentenceTransformers', 'openai_embeddings']:
                 # argument similarity for paragraph
                 score = accuracy_evaluator.argument_similarity(gt['answer'], gen['answer'], mode)
-                cur_score_dict['argument_similarity/paragraph/{mode}'] = score
+                cur_score_dict[f'argument_similarity/paragraph/{mode}'] = score
                 # argument similarity for structure hypothesis
                 score = accuracy_evaluator.argument_similarity(gt['explain'], gen['explain'], mode)
-                cur_score_dict['argument_similarity/structure_hypothesis/{mode}'] = score
+                cur_score_dict[f'argument_similarity/structure_hypothesis/{mode}'] = score
+        if 'llm/correctness' in metrics:
+            llm_state = {}
+            correctness_rubric = CorrectnessRubric()
+            score = correctness_rubric.judge(prompt=gt['question'], answer=gt['explain'], completion=gen['explain'], state=llm_state)
+            cur_score_dict['llm/correctness'] = score['correctness']
+        if 'llm/plausibility' in metrics:
+            llm_state = {}
+            plausibility_rubric = PlausibilityRubric()
+            score = plausibility_rubric.judge(prompt=gt['question'], completion=gen['explain'], answer='', state=llm_state)
+            for key in score.keys():
+                cur_score_dict[f'llm/plausibility/{key}'] = score[key]
 
         scores.append(cur_score_dict)
-
-    print('syntax', np.mean([score['syntax'] for score in scores]))
     for key in scores[0].keys():
         if 'token_accuracy' in key:
             for k in scores[0][key].keys():
