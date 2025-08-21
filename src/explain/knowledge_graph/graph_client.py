@@ -21,6 +21,7 @@ KNOWLEDGE_GRAPH_TIMEOUT = int(os.environ.get("KNOWLEDGE_GRAPH_TIMEOUT", "30"))
 @dataclass
 class KGConfig:
     """Configuration for the knowledge graph."""
+
     url: str = KNOWLEDGE_GRAPH_URL
     timeout: int = KNOWLEDGE_GRAPH_TIMEOUT
     headers: dict[str, str] = {
