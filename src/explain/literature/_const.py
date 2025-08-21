@@ -44,6 +44,9 @@ KEYWORDS = {
             "protein stability",
             "mutation",
             "protein abundance",
+            "compartimentalize",
+            "sequester",
+            "shed"
         ],
     },
     "binding": {
