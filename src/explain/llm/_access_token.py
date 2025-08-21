@@ -45,6 +45,7 @@ def access_secret_version(
     return data
 
 
+@lru_cache(maxsize=1000)
 def set_env_secrets(secret_list: list[str] | None = None):
     """
     Set environment variables from Google Cloud Secret Manager.

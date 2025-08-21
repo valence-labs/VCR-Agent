@@ -21,7 +21,7 @@ dependencies = [
   "google-cloud>=0.34.0",
   "google-genai>=1.28.0",
   "google-cloud-secret-manager>=2.24.0",
-  "litellm>=1.74.15.post1",
+  "litellm>=1.75.5",
   "google-cloud-aiplatform>=1.38",
   "rxrx-enhanced-chat-sdk>=0.0.5",
   "diskcache>=5.6.3",
@@ -31,6 +31,10 @@ dependencies = [
   "google-cloud-bigquery>=3.35.1",
   "duckdb>=1.0.0",
   "rdkit>=2023.9.5",
+  "aiolimiter>=1.2.1",
+  "elasticsearch==8",
+  "fastavro>=1.12.0",
+  "db-dtypes>=1.4.3",
 ]
 
 [project.optional-dependencies]

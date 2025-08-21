@@ -1,3 +1,4 @@
+from ._access_token import set_env_secrets
 from ._client import LLMClient, LLMConfig, LLMResponse
 
 
@@ -12,6 +13,7 @@ def create_client(model: str | None = None, provider: str = "litellm", **kwargs)
     Returns:
         An LLM client instance conforming to the BaseLLMClient interface.
     """
+    set_env_secrets()
     provider = provider or "litellm"
     # Set default models for each provider
     default_models = {

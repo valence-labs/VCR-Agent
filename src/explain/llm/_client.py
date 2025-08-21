@@ -11,12 +11,13 @@ from typing import Any
 from dotenv import load_dotenv
 from loguru import logger
 
-from explain.eval.tools._base import ToolVerifier
 from explain.llm._access_token import set_env_secrets
 
 LITTELM_INSTALLED = False
 try:
     import litellm  # noqa: F401
+
+    litellm.drop_params = True
 
     LITTELM_INSTALLED = True
 except ImportError as e:
@@ -52,8 +53,8 @@ class LLMConfig:
 
     provider: str = "litellm"  # litellm, anthropic, gemini, openai
     model: str = "claude-sonnet-4@20250514"
-    max_tokens: int = 10000
-    temperature: float = 0.1
+    max_tokens: int | None = None
+    temperature: float = 1
     location: str | None = None
     project_id: str | None = None
 
@@ -89,7 +90,8 @@ class BaseLLMClient(ABC):
         """Format tools to the provider's format."""
         formatted_tools = []
         for tool in tools:
-            if isinstance(tool, ToolVerifier):
+            # avoid circular import with this
+            if hasattr(tool, "get_schema"):
                 tool_schema = tool.get_schema()
             else:
                 tool_schema = tool
@@ -607,6 +609,7 @@ class LiteLLMClient(BaseLLMClient):
                 messages=messages,
                 max_tokens=self.config.max_tokens,
                 temperature=self.config.temperature,
+                drop_params=True,
                 **kwargs,
             )
             message = response.choices[0].message
@@ -641,6 +644,7 @@ class LiteLLMClient(BaseLLMClient):
                 messages=messages,
                 max_tokens=self.config.max_tokens,
                 temperature=self.config.temperature,
+                drop_params=True,
                 **kwargs,
             )
             message = response.choices[0].message

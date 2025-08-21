@@ -17,7 +17,7 @@ class LiteratureSearchArgs(BaseModel):
     )
 
 
-class LiteratureSearchVerifier(ToolVerifier):
+class LitteratureSearcher(ToolVerifier):
     """
     Search biomedical literature across multiple Elasticsearch indexes.
     Returns a ranked list of articles (id, title, abstract, content, score) with source index information.
