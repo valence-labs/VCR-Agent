@@ -35,6 +35,9 @@ dependencies = [
   "elasticsearch==8",
   "fastavro>=1.12.0",
   "db-dtypes>=1.4.3",
+  "anndata",
+  "pydeseq2",
+  "hdf5plugin",
 ]
 
 [project.optional-dependencies]
