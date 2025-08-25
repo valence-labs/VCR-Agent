@@ -64,13 +64,14 @@ class ElasticSearchIndex:
         url=URL,
         index="full",
         rate_limit: int | None = None,
+        timeout: int | None = 180,
     ):
         index = self.INDEXES.get(index, index)
         self.__client = AsyncElasticsearch(
             hosts=[url],
             max_retries=20,
             retry_on_timeout=True,
-            request_timeout=120,
+            request_timeout=timeout,
         )
         self.__index = index
         self.__rate_limiter = AsyncLimiter(rate_limit) if isinstance(rate_limit, int) else NoopLimiter()
@@ -88,6 +89,19 @@ class ElasticSearchIndex:
         async with self.__rate_limiter:
             return await self.__client.search(index=self.__index, **body)
 
+    def __prepare_gene_id(self, ensembl_id: str) -> str:
+        """Prepare gene ID for ES query."""
+        if not ensembl_id.startswith("ENSEMBL:"):
+            return f"ENSEMBL:{ensembl_id}"
+        return ensembl_id
+
+    def __prepare_disease_id(self, mesh_id: str) -> str:
+        """Prepare disease ID for ES query."""
+        clean_id = mesh_id.replace("MESH:", "") if mesh_id.startswith("MESH:") else mesh_id
+        if not clean_id.startswith("http://"):
+            return f"http://id.nlm.nih.gov/mesh/{clean_id}"
+        return clean_id
+
     async def create_search_body(
         self,
         keywords: list[str],
@@ -95,66 +109,58 @@ class ElasticSearchIndex:
         top_k: int = 50,
         gene_id: str | None = None,
         disease_id: str | None = None,
-        fragment_size: int | None = 1000,
-        number_of_fragments: int | None = 4,
+        fragment_size: int = 1000,
+        number_of_fragments: int = 4,
     ) -> dict:
         """
         Constructs an Elasticsearch search body using nested queries for contextual precision.
-        Args:
-            keywords: List of keywords to search for
-            primitive_catalog: Type of input to search for
-            top_k: Maximum number of results
-            gene_id: Gene ID to search for
-            disease_id: Disease ID to search for
-            fragment_size: Size of the fragment to highlight
-            number_of_fragments: Number of fragments to highlight
         """
-
-        # 1. Merge relevant keyword groups
+        # Build keyword clauses with boosting
+        should_clauses = [{"match": {"sections.text": {"query": term, "boost": 5}}} for term in keywords]
         group_names = MAP_TO_KEYWORDS.get(primitive_catalog, [])
-        keyword_list = list(chain.from_iterable(KEYWORDS[group]["keywords"] for group in group_names))
-
-        # 2. Build `should` clauses from all search terms
-        should_clauses = [{"match_phrase": {"sections.text": {"query": term, "boost": 5}}} for term in keywords]
-        should_clauses.extend(
-            [{"match_phrase": {"sections.text": {"query": term, "boost": 1}}} for term in set(keyword_list)]
-        )
-        nested_query = {
-            "nested": {
-                "path": "sections",
-                "query": {"bool": {"must": []}},
-                "inner_hits": {
-                    "highlight": {
-                        "fields": {
-                            "sections.text": {
-                                "fragment_size": fragment_size or 1000,
-                                "number_of_fragments": number_of_fragments,
-                                "require_field_match": True,
-                            }
-                        },
-                        "pre_tags": ["<em>"],
-                        "post_tags": ["</em>"],
-                    }
-                },
-            }
-        }
-
-        # Add gene and disease filters if provided
-        if gene_id:
-            nested_query["nested"]["query"]["bool"]["must"].append({"term": {"sections.spans.id": {"value": gene_id}}})
-        if disease_id:
-            nested_query["nested"]["query"]["bool"]["must"].append(
-                {"term": {"sections.spans.parent_ids": {"value": disease_id}}}
+        if group_names:
+            background_keywords = set(chain.from_iterable(KEYWORDS[group]["keywords"] for group in group_names))
+            should_clauses.extend(
+                [{"match": {"sections.text": {"query": term, "boost": 1}}} for term in background_keywords]
             )
 
-        nested_query["nested"]["query"]["bool"]["must"].append(
-            {"bool": {"should": should_clauses, "minimum_should_match": 1}}
-        )
+        nested_must_clauses = [{"bool": {"should": should_clauses, "minimum_should_match": 1}}]
 
+        if gene_id:
+            nested_must_clauses.append({"term": {"sections.spans.id": self.__prepare_gene_id(gene_id)}})
+
+        if disease_id:
+            nested_must_clauses.append({"term": {"sections.spans.parent_ids": self.__prepare_disease_id(disease_id)}})
+
+        # Construct the final query body
         search_body = {
             "size": top_k,
             "_source": True,
-            "query": {"bool": {"must": [nested_query], "must_not": [{"exists": {"field": "retraction_reasons"}}]}},
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "nested": {
+                                "path": "sections",
+                                "query": {"bool": {"must": nested_must_clauses}},
+                                "inner_hits": {
+                                    "highlight": {
+                                        "fields": {
+                                            "sections.text": {
+                                                "fragment_size": fragment_size,
+                                                "number_of_fragments": number_of_fragments,
+                                            }
+                                        },
+                                        "pre_tags": ["<em>"],
+                                        "post_tags": ["</em>"],
+                                    }
+                                },
+                            }
+                        }
+                    ],
+                    "must_not": [{"exists": {"field": "retraction_reasons"}}],
+                }
+            },
         }
 
         return search_body
@@ -238,7 +244,6 @@ async def retrieve_article(client: ElasticSearchIndex, search_body: dict) -> lis
 
         hits = response.get("hits", {}).get("hits", [])
         logger.debug(f"Retrieved {len(hits)} hits")
-
         for _, hit in enumerate(hits):
             paper_id = hit.get("_id", "unknown_id")
             source = hit.get("_source", {})
@@ -335,6 +340,8 @@ async def search_indexes(
     """
     if indexes is None:
         indexes = ["full"]
+    if isinstance(indexes, str):
+        indexes = [indexes]
 
     # Run searches in parallel
     search_tasks = [

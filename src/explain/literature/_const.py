@@ -46,7 +46,7 @@ KEYWORDS = {
             "protein abundance",
             "compartimentalize",
             "sequester",
-            "shed"
+            "shed",
         ],
     },
     "binding": {
