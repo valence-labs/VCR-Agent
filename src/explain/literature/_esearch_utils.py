@@ -206,6 +206,7 @@ async def _search_single_index(
                 disease_id=disease_id,
                 **kwargs,
             )
+            print(search_body)
             articles = await retrieve_article(client, search_body)
 
             # Add source index to each article

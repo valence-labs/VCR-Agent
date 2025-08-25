@@ -38,6 +38,7 @@ dependencies = [
   "anndata",
   "pydeseq2",
   "hdf5plugin",
+  "flair>=0.15.1",
 ]
 
 [project.optional-dependencies]

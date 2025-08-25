@@ -11,9 +11,9 @@ from pydeseq2.default_inference import DefaultInference
 from pydeseq2.ds import DeseqStats
 
 from explain.eval.tools._base import ToolVerifier
-from explain.eval.tools.bio.entity import CellTypeEntity, CompoundEntity, GeneEntity, PerturbationEntity
-from explain.eval.tools.bio.utils import H5AD_PATH_DICT, PRECOMPUTED_FC, retrieve_from_bigquery
-
+from explain.eval.tools.bio.utils import H5AD_PATH_DICT, PRECOMPUTED_FC
+from explain.utils.entity import CellTypeEntity, CompoundEntity, GeneEntity, PerturbationEntity
+from explain.utils.bq import retrieve_from_bigquery
 
 class GeneExpressionArgs(BaseModel):
     """Arguments for checking regulation expression."""

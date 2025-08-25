@@ -3,8 +3,8 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 from explain.eval.tools._base import ToolVerifier
-from explain.eval.tools.bio.entity import CompoundEntity, GeneEntity
-from explain.eval.tools.bio.utils import retrieve_from_bigquery
+from explain.utils.entity import CompoundEntity, GeneEntity
+from explain.utils.bq import retrieve_from_bigquery
 
 
 class DTIVerificationArgs(BaseModel):

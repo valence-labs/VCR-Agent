@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from .._base import ToolVerifier
 from ._cmpd_cache import DuckDBCache
-from ._utils import _compute_inchikey
+from explain.utils.chem.mol_utils  import to_inchikey
 
 
 class ChEMBSearchLArgs(BaseModel):
@@ -32,7 +32,7 @@ class ChEMBSearchLArgs(BaseModel):
             raise ValueError("Provide at least one of 'name', 'smiles', or 'inchikey'.")
         if self.smiles:
             try:
-                self.inchikey = _compute_inchikey(self.smiles)
+                self.inchikey = to_inchikey(self.smiles)
             except Exception as e:
                 logger.error(e)
                 raise ValueError(f"Invalid SMILES string provided: {self.smiles}") from e

@@ -2,7 +2,7 @@ from rdkit.Chem import MolFromSmiles, MolToInchiKey, SaltRemover  # noqa
 from rdkit.Chem.MolStandardize import rdMolStandardize
 
 
-def _standardize_mol(
+def standardize_mol(
     mol,
     disconnect_metals: bool = False,
     normalize: bool = True,
@@ -34,7 +34,7 @@ def _standardize_mol(
     return mol
 
 
-def _compute_inchikey(smiles: str, standardize: bool = True) -> str:
+def to_inchikey(smiles: str, standardize: bool = True) -> str:
     """Compute InChIKey from SMILES.
     Args:
         smiles: SMILES string
@@ -42,5 +42,21 @@ def _compute_inchikey(smiles: str, standardize: bool = True) -> str:
     Returns:
         InChIKey string
     """
-    mol = _standardize_mol(smiles) if standardize else MolFromSmiles(smiles)
+    mol = standardize_mol(smiles) if standardize else MolFromSmiles(smiles)
     return MolToInchiKey(mol)
+
+
+def standardize_smiles(smiles: str) -> str:
+    r"""
+    Apply smile standardization procedure. This is a convenient function wrapped arrounf RDKit
+    smiles standardizer and tautomeric canonicalization.
+
+    Args:
+        smiles: Smiles to standardize
+
+    Returns:
+        standard_smiles: the standardized smiles
+    """
+
+    smiles = rdMolStandardize.StandardizeSmiles(smiles)
+    return smiles
