@@ -85,14 +85,17 @@ class Harmonizome(object):
         provided. If no name is provided and start_at is specified, returns a
         list starting at that cursor position.
         """
-        if name:
-            name = quote_plus(name)
-            return _get_by_name(entity, name)
-        if start_at is not None and type(start_at) is int:
-            return _get_with_cursor(entity, start_at)
-        url = '%s/%s/%s' % (API_URL, VERSION, entity)
-        result = json_from_url(url)
-        return result
+        try:
+            if name:
+                name = quote_plus(name)
+                return _get_by_name(entity, name)
+            if start_at is not None and type(start_at) is int:
+                return _get_with_cursor(entity, start_at)
+            url = '%s/%s/%s' % (API_URL, VERSION, entity)
+            result = json_from_url(url)
+            return result
+        except HTTPError as e:
+            return {'status': 'error'}
 
     @classmethod
     def next(cls, response):
