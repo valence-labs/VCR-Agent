@@ -47,7 +47,13 @@ class AccuracyEvaluator:
         hyp_para = " ".join(gen_text)
         # BLEU
         bleu_metric = BLEU(effective_order=True)
-        bleu_score = bleu_metric.corpus_score(gt_text, [gen_text]).score/100
+        if len(gen_text) == 0:
+            bleu_score = 0.0
+        else:
+            try:
+                bleu_score = bleu_metric.corpus_score(gt_text, [gen_text]).score/100
+            except:
+                bleu_score = 0.0
         # ROUGE micro: concatenate sentences into one string each
         rouge_scorer_micro = rouge_scorer.RougeScorer(["rouge1", "rouge2", "rougeL"], use_stemmer=True)
         rouge_score = rouge_scorer_micro.score(ref_para, hyp_para)
@@ -86,7 +92,10 @@ class AccuracyEvaluator:
         token_score['meteor_macro'] = float(np.mean(meteor_vals))
 
         for key in token_score.keys():
-            token_score[key] = round(token_score[key], 4)
+            if np.isnan(token_score[key]):
+                token_score[key] = 0
+            else:   
+                token_score[key] = round(token_score[key], 4)
 
         return token_score
 

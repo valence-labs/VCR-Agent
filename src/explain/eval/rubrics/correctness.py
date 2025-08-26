@@ -43,6 +43,7 @@ class BinaryCorrectnessEvaluator:
         Consider the factual accuracy, completeness, and key biological concepts mentioned.
         
         Respond either "yes" or "no" only. If the response is correct, respond "yes". If the response is incorrect, respond "no".
+        Your final respond should be in the tag <answer>yes</answer> or <answer>no</answer>.
         """
 
     def _evaluate(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs):
@@ -71,9 +72,10 @@ class BinaryCorrectnessEvaluator:
         """
         state = self._evaluate(prompt, completion, answer, state, **kwargs)
         judge_response: LLMResponse = state["judge_response"]
-        if "yes" == judge_response.content.lower():
-            return 1.0
-        return 0.0
+        extracted_response = judge_response.content.split('<answer>')[1].split('</answer>')[0]
+        if "yes" == extracted_response.lower():
+            return {'score': 1.0, 'full_response': judge_response.content}
+        return {'score': 0.0, 'full_response': judge_response.content}
 
 
 class CorrectnessRubric(JudgeRubric):
@@ -95,4 +97,5 @@ class CorrectnessRubric(JudgeRubric):
         self.judge_model = self.evaluator.llm_client.config.model
 
     def judge(self, prompt: Any, completion: str, answer: str, state: dict[str, Any], **kwargs) -> float:
-        return {"correctness": self.evaluator.correctness(prompt, completion, answer, state, **kwargs)}
+        response = self.evaluator.correctness(prompt, completion, answer, state, **kwargs)
+        return {"correctness": response['score'], "full_response": response['full_response']}

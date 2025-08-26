@@ -7,6 +7,8 @@ from explain.kg.kg import KnowledgeGraph
 from collections import Counter
 import ast
 
+tagger = PrefixedSequenceTagger.load("hunflair/hunflair2-ner")
+
 def load_data(data_dir):
     # load the action primitives
     with open(os.path.join(data_dir, "action_primitives.json")) as f:
@@ -22,7 +24,6 @@ def extract_entity_from_text(text):
     """
     Extract the entity from the perturbation.
     """
-    tagger = PrefixedSequenceTagger.load("hunflair/hunflair2-ner")
 
     sentence = Sentence(text)
     tagger.predict(sentence)
@@ -32,6 +33,29 @@ def extract_entity_from_text(text):
         result[entity.text] = entity.tag
 
     return result
+
+def map_perturbation_to_ner(perturbations):
+    """
+    Generates the perturbation-NER mapping.
+    """
+
+    perturbation_ner_dict = []
+    for pert_idx, perturbation in enumerate(tqdm(perturbations)):
+        cur_dict = {}
+        cur_dict['index'] = pert_idx
+        perturbation = ast.literal_eval(perturbation)
+        cur_dict['perturbation'] = perturbation
+        perturbation_partial_text = json.dumps(perturbation['perturbation'], indent=4)
+        perturbation_entity = extract_entity_from_text(perturbation_partial_text)
+        context_text = json.dumps(perturbation['context'], indent=4)
+        context_entity = extract_entity_from_text(context_text)
+        cur_dict['perturbation_entity'] = perturbation_entity
+        cur_dict['context_entity'] = context_entity
+        perturbation_ner_dict.append(cur_dict)
+
+
+    with open('data/perturbation_ner_mapping.json', 'w') as f:
+        json.dump(perturbation_ner_dict, f)
 
 def map_perturbation_to_kg_entity(perturbations):
     """
@@ -72,26 +96,3 @@ def map_perturbation_to_kg_entity(perturbations):
 
 
     json.dump(perturbation_dict, open('data/starkprimeKG/perturbation_kg_mapping.json', 'w'))
-
-def map_perturbation_to_ner(perturbations):
-    """
-    Generates the perturbation-NER mapping.
-    """
-
-    perturbation_ner_dict = []
-    for pert_idx, perturbation in enumerate(tqdm(perturbations)):
-        cur_dict = {}
-        cur_dict['index'] = pert_idx
-        perturbation = ast.literal_eval(perturbation)
-        cur_dict['perturbation'] = perturbation
-        perturbation_partial_text = json.dumps(perturbation['perturbation'], indent=4)
-        perturbation_entity = extract_entity_from_text(perturbation_partial_text)
-        context_text = json.dumps(perturbation['context'], indent=4)
-        context_entity = extract_entity_from_text(context_text)
-        cur_dict['perturbation_entity'] = perturbation_entity
-        cur_dict['context_entity'] = context_entity
-        perturbation_ner_dict.append(cur_dict)
-
-
-    with open('data/perturbation_ner_mapping.json', 'w') as f:
-        json.dump(perturbation_ner_dict, f)

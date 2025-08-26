@@ -29,7 +29,7 @@ class SyntaxEvaluator:
         """
         Check whether the generated primitives are in the allowed set.
         """
-        primitives = get_primitives_from_structure_hypothesis(structure_hypothesis)
+        primitives = get_primitives_from_structure_hypothesis(str(structure_hypothesis))
         if len(primitives) == 0:
             return 0
         score = sum([primitive in self.allowed_primitives for primitive in primitives])/len(primitives)
