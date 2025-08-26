@@ -3,7 +3,9 @@ import pubchempy as pcp
 import warnings
 import requests
 import os
-from explain.kg.kg import KnowledgeGraph
+from lxml import etree
+from typing import Optional, Dict
+
 from explain.util import extract_entity_from_text
 
 DATA_DIR = '/mnt/ps/home/CORP/yunhui.jang/research/hooke-explain/data'
@@ -80,14 +82,8 @@ def get_kg_info(index, perturbation, tool, kg, is_with_rel, num_neighbor):
         perturbation_ner_node_index = [n['node'] for n in perturbation_ner_node_index]
         perturbation_node_index = list(set(perturbation_exact_node_index + perturbation_ner_node_index))
 
-        
         context_ner_node_index, context_unmatching_entities = get_ner_node_index(context_entity, kg)
         context_ner_node_index = [n['node'] for n in context_ner_node_index]
-        # perturbation_ner_node_index = [ for pe in perturbation_entity]
-        # if len(context_ner_node_index) == 0:
-        #     context_ner_node_index = list(kg.find_similar_nodes(context_text, k=num_neighbor).keys())
-        # else:
-        #     pass
         unmatching_entity_node_index = []
         for unmatching_entity in perturbation_unmatching_entities+context_unmatching_entities:
             unmatching_entity_node_index.extend(list(kg.find_similar_nodes(unmatching_entity, k=num_neighbor).keys()))
@@ -160,8 +156,8 @@ def get_ner_node_index(entity_dict, kg):
     gene_protein_name_alias_dict = {k: v if type(v) is list else [v] for k, v in gene_protein_name_alias_dict.items()}
 
     drug_nodes = [node for node in kg.node_info.values() if node['type']=='drug']
-    drug_names = [node['name'] for node in drug_nodes]
-
+    # Drug name to DrugBank ID
+    drug_names_dict = {node['id']: node['name'] for node in drug_nodes}
     for entity, tag in entity_dict.items():
         node_index = None
         # Exact matching
@@ -189,22 +185,33 @@ def get_ner_node_index(entity_dict, kg):
 
             elif tag == 'Chemical':
                 # search for pubchem synonyms in the KG
-                compound = pcp.get_compounds(entity, 'name')
-                if len(compound) == 0:
-                    warnings.warn(f"Could not find the node index for {entity} in the KG.")
-                    break
-                else:
-                    compound = compound[0]
-                for syn in compound.synonyms:
-                    if syn in drug_names:
-                        node_index = kg.kg_node_name_dict[syn]
-                        break
+
                 # Match Drug Bank ID with pubchemid (can be replaced with DrugBank access)
                 if node_index is None:
-                    cid = compound.cid
-                    dbid = get_dbid_from_pubchemid(cid)
+                    # Search for DrugBank ID with drug name (only if drugbank_searcher is available)
+                    dbid = None
+                    drugbank_searcher = kg.get_drugbank_searcher()
+                    if drugbank_searcher is not None:
+                        dbid = drugbank_searcher.search_by_name(entity)
+                    # Match Drug Bank ID with pubchemid
+                    if dbid is None:
+                        try:
+                            compound = pcp.get_compounds(entity, 'name')
+                            if len(compound) > 0:
+                                compound = compound[0]
+                                for syn in compound.synonyms:
+                                    if syn in drug_names_dict.values():
+                                        node_index = kg.kg_node_name_dict[syn]
+                                        break
+                                if node_index is None:
+                                    cid = compound.cid
+                                    dbid = get_dbid_from_pubchemid(cid)
+                        except:
+                            pass
+                        
                     if dbid is not None:
-                        node_index = kg.kg_node_name_dict.get(dbid, None)
+                        drug_name = drug_names_dict.get(dbid, None)
+                        node_index = kg.kg_node_name_dict.get(drug_name, None)
 
             elif tag == 'Gene':
                 # search for alias in nodes with gene/protein node type
@@ -216,5 +223,5 @@ def get_ner_node_index(entity_dict, kg):
             index_list.append({'entity': entity, 'node': int(node_index)})
         else:
             unmatching_entities.append(entity)
-            warnings.warn(f"Could not find the node index for {entity} in the KG.")
+            warnings.warn(f"Could not find the node index for {tag} {entity} in the KG.")
     return index_list, unmatching_entities

@@ -5,17 +5,21 @@ import json
 import torch_geometric
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Optional
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 from torch_geometric.utils import to_networkx
 from torch_geometric.utils import subgraph as pyg_subgraph
 import networkx as nx
 
+# Global DrugBankSearcher instance to be shared across KnowledgeGraph instances
+_global_drugbank_searcher = None
+
 class KnowledgeGraph:
     def __init__(self, save_address='/rxrx/data/user/hamed.shirzad/outgoing/stark_prime_kg', 
                  enc_language_model_name='pritamdeka/S-PubMedBERT-MS-MARCO', 
-                 node_emb_save_address='/rxrx/data/user/hamed.shirzad/outgoing/stark_prime_kg'):
+                 node_emb_save_address='/rxrx/data/user/hamed.shirzad/outgoing/stark_prime_kg',
+                 drugbank_xml_path: str = "/rxrx/data/user/lu.zhu/outgoing/data/drugbank20231211/full_database.xml"):
         """
         Load a knowledge graph from saved files.
         
@@ -29,13 +33,14 @@ class KnowledgeGraph:
                        - 'michiyasunaga/BioLinkBERT-base' (BioLinkBERT for biomedical entity linking)
                        - 'all-MiniLM-L6-v2' (default sentence transformer model)
             node_emb_save_address (str): Directory path where the node embeddings are saved
+            drugbank_xml_path (str): Path to DrugBank XML file (only used when DrugBankSearcher is first accessed)
         """
         self.save_address = save_address
         
         # Load tensors
         self.edge_index = torch.load(os.path.join(save_address, 'edge_index.pt')) # shape: (2, #num_edges)
         self.edge_types = torch.load(os.path.join(save_address, 'edge_types.pt')) # shape: (#num_edges)
-        self.node_types = torch.load(os.path.join(save_address, 'node_types.pt')) # shape: (#num_nodes)
+        self.node_types = torch.load(os.path.join(save_address, 'node_types.pt'))
         
         # Load dictionaries
         with open(os.path.join(save_address, 'edge_type_dict.pkl'), 'rb') as f:
@@ -76,8 +81,42 @@ class KnowledgeGraph:
         )
 
         self.kg_node_name_dict = {node['name']: idx for idx, node in self.node_info.items()}
+        
+        # Store DrugBank XML path for lazy loading
+        self._drugbank_xml_path = drugbank_xml_path
+        self._drugbank_searcher = None
 
         # self.edge_map = {(int(src), int(dst)): idx for idx, (src, dst) in enumerate(zip(self.edge_index[0], self.edge_index[1]))}
+    
+    def get_drugbank_searcher(self):
+        """
+        Get the DrugBankSearcher instance, initializing it lazily if needed.
+        
+        Returns:
+            DrugBankSearcher instance or None if initialization fails
+        """
+        global _global_drugbank_searcher
+        
+        if _global_drugbank_searcher is None:
+            try:
+                from explain.kg.drugbanksearcher import DrugBankSearcher
+                _global_drugbank_searcher = DrugBankSearcher(self._drugbank_xml_path)
+                print("DrugBankSearcher initialized successfully")
+            except Exception as e:
+                print(f"Warning: Failed to initialize DrugBankSearcher: {e}")
+                return None
+        
+        return _global_drugbank_searcher
+    
+    @property
+    def drugbank_searcher(self):
+        """
+        Property to access DrugBankSearcher with lazy loading.
+        
+        Returns:
+            DrugBankSearcher instance or None if not available
+        """
+        return self.get_drugbank_searcher()
     
     def create_node_embeddings(self, use_rels: bool = False, batch_size: int = 128, device=None) -> torch.Tensor:
         """Create node and edge embeddings from textual descriptions using the language model.
