@@ -1,102 +1,102 @@
 [
     {
         "action": "set_context",
-        "description": "Defines the biological background before the new perturbation is applied (cell model, genotype, disease, prior treatments). *Not* a claim to be falsified.",
+        "description": "Defines the biological context before a perturbation is applied (cell model, genotype, disease state, prior treatments). This establishes background conditions but is not a causal claim to be falsified.",
         "signature": "set_context({cell_type, genotype, disease, prior_perturbation, extras})"
     },
     {
         "action": "binds_to",
-        "description": "Direct physical binding of two biomolecules (drug-target, protein-protein, ligand-receptor).",
+        "description": "Represents a direct physical binding event between two biomolecules (e.g., drug-target, protein-protein, ligand-receptor). Binding strength should be specified via affinity (nM) when known.",
         "signature": "binds_to(id, actor, target, {affinity, unit, residues_actor, residues_target, via, confidence})"
     },
     {
         "action": "modulates_molecule_activity",
-        "description": "Increases or decreases the catalytic / signalling activity of a single protein, enzyme, transporter, TF or RNA.",
+        "description": "Causal modulation of the functional activity of a single molecule (protein, enzyme, transporter, transcription factor, or RNA). Requires explicit direction = up (increase activity) or down (decrease activity).",
         "signature": "modulates_molecule_activity(id, target, direction, {via, confidence})"
     },
     {
         "action": "modulates_pathway_activity",
-        "description": "Increases or decreases the activity of a named pathway or biological process (e.g. MAPK, autophagy, EMT).",
+        "description": "Causal modulation of the activity of a defined pathway or process (e.g., MAPK signaling, autophagy, EMT). Requires explicit direction = up or down.",
         "signature": "modulates_pathway_activity(id, pathway, direction, {via, confidence})"
     },
     {
         "action": "modulates_complex",
-        "description": "Promotes assembly or causes disassembly of a multi-subunit complex; can include stoichiometry changes.",
+        "description": "Causal effect on the assembly, disassembly, or stoichiometry of a molecular complex. Requires explicit direction = up (promotes assembly/stabilization) or down (causes disassembly/destabilization).",
         "signature": "modulates_complex(id, members, complex, direction, {stoichiometry, via, confidence})"
     },
     {
         "action": "regulates_expression",
-        "description": "Alters steady-state mRNA level or isoform ratio of one or more genes (bulk, single-cell or signature). Use `mechanism` to tag cases like alternative splicing.",
+        "description": "Alters the steady-state RNA levels or isoform ratios of one or more genes. Requires explicit direction = up (increased expression) or down (decreased expression). Optional mechanism tags (e.g., alternative splicing).",
         "signature": "regulates_expression(id, regulator, gene_list, direction, {mechanism, via, confidence})"
     },
     {
         "action": "regulates_translation",
-        "description": "Post-transcriptional control at the ribosome level (e.g. eIF inhibition, uORF usage, IRES activation).",
+        "description": "Causal modulation of protein synthesis at the ribosome level (e.g., eIF inhibition, uORF/IRES usage). Requires explicit direction = up (increased translation) or down (decreased translation).",
         "signature": "regulates_translation(id, regulator, rna_id, direction, {mechanism, via, confidence})"
     },
     {
         "action": "post_translational_modification",
-        "description": "Adds or removes a specific PTM or proteolytic cleavage on a protein site (phospho, ubiquitin, acetyl, etc.).",
+        "description": "Addition or removal of a post-translational modification (e.g., phosphorylation, ubiquitination, acetylation) or cleavage at a specific site. Requires explicit direction = up (addition/increase) or down (removal/decrease).",
         "signature": "post_translational_modification(id, protein, mod_type, site, direction, {via, confidence})"
     },
     {
         "action": "localises_to",
-        "description": "Moves a molecule between compartments. Use `to=\"extracellular\"` for secretion or `from=\"extracellular\"` for uptake; add `mechanism` (e.g. exocytosis, transporter).",
+        "description": "Causal movement of an entity between compartments (e.g., cytoplasm → nucleus, secretion, uptake). Must specify both source and destination. Optional mechanism field for transport process (e.g., exocytosis).",
         "signature": "localises_to(id, entity, from_loc, to_loc, {mechanism, via, confidence})"
     },
     {
         "action": "converts_substrate",
-        "description": "Enzymatic conversion of one chemical entity into another (metabolic reaction or proteolytic processing).",
+        "description": "Enzymatic conversion of one substrate into another product.",
         "signature": "converts_substrate(id, enzyme, substrate, product, {via, confidence})"
     },
     {
         "action": "degrades_or_stabilises",
-        "description": "Changes protein abundance by altering half-life (ubiquitin-proteasome degradation, PROTAC, chaperone rescue).",
+        "description": "Causal modulation of target protein stability/abundance via half-life changes (e.g., ubiquitin-proteasome degradation, PROTAC-induced degradation, chaperone stabilization). Requires explicit direction = up (stabilization/increased abundance) or down (degradation/reduced abundance).",
         "signature": "degrades_or_stabilises(id, regulator, target, direction, {via, confidence})"
     },
     {
         "action": "gain_of_function",
-        "description": "Genetic variant or edit that increases the normal activity of the specified protein.",
-        "signature": "gain_of_function(id, variant_id, protein, {via, confidence})"
+        "description": "A genetic alteration (variant, mutation, or edit) that increases the functional activity of a protein relative to wild type.",
+        "signature": "gain_of_function(id, variant, protein, {via, confidence})"
     },
     {
         "action": "loss_of_function",
-        "description": "Genetic variant, knock-down or knock-out that reduces or abolishes activity of the specified protein.",
-        "signature": "loss_of_function(id, variant_id, protein, {via, confidence})"
+        "description": "A genetic alteration (variant, mutation, knockdown, knockout) that decreases or abolishes the activity of a protein relative to wild type.",
+        "signature": "loss_of_function(id, variant, protein, {via, confidence})"
     },
     {
         "action": "induces_phenotype",
-        "description": "Creates or worsens a measurable phenotype or cell-state transition. Optional `from_state` / `to_state` capture events like EMT or senescence.",
+        "description": "Causal induction or worsening of a measurable phenotype or cell-state transition (e.g., proliferation, EMT, senescence). Optional `from_state`/`to_state` capture state transitions.",
         "signature": "induces_phenotype(id, source, phenotype, {via, confidence, from_state, to_state})"
     },
     {
         "action": "alleviates_phenotype",
-        "description": "Reverts or mitigates an abnormal phenotype back toward normal (rescue). Same optional state fields as above.",
+        "description": "Causal mitigation or rescue of a phenotype, shifting it toward normal. Optional `from_state`/`to_state` capture state transitions.",
         "signature": "alleviates_phenotype(id, actor, phenotype, {via, confidence, from_state, to_state})"
     },
     {
         "action": "similar_to",
-        "description": "Non-causal functional similarity (transcriptomic, phenotypic, structural) between two entities.",
+        "description": "Non-causal functional similarity between two entities (transcriptomic, phenotypic, structural). Does not imply mechanistic regulation.",
         "signature": "similar_to(id, entity_a, entity_b, evidence_type, {confidence, via})"
     },
     {
         "action": "correlates_with",
-        "description": "Statistical association without established causality (GWAS hit, literature co-mention, co-expression).",
+        "description": "Statistical association between two entities without implying causality (e.g., GWAS hits, co-expression).",
         "signature": "correlates_with(id, entity_a, entity_b, evidence_type, {confidence})"
     },
     {
         "action": "participates_in",
-        "description": "Links an entity to a GO term, pathway or compartment (background annotation).",
+        "description": "Background annotation linking an entity to a pathway, GO term, or cellular compartment.",
         "signature": "participates_in(id, entity, ontology_id, {evidence_type, confidence})"
     },
     {
         "action": "cell_cell_interaction",
-        "description": "Ligand-receptor signalling from one cell type to another plus the immediate downstream outcome.",
+        "description": "Causal ligand-receptor signaling between two cell types, including the immediate downstream outcome. Outcome direction must be specified when modulation is implied (up/down).",
         "signature": "cell_cell_interaction(id, sender, receiver, ligand, receptor, outcome, {via, confidence})"
     },
     {
         "action": "chromatin_modification",
-        "description": "Adds or removes histone/DNA marks at a defined genomic locus, affecting chromatin accessibility.",
+        "description": "Addition or removal of a histone/DNA mark at a genomic locus, altering chromatin accessibility. Requires explicit direction = up (addition/increased marking) or down (removal/decreased marking).",
         "signature": "chromatin_modification(id, mark, locus, direction, {via, confidence})"
     }
 ]

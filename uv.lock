@@ -1229,6 +1229,7 @@ dev = [
     { name = "langsmith" },
     { name = "matplotlib" },
     { name = "rdkit" },
+    { name = "ruff" },
 ]
 
 [package.metadata]
@@ -1277,6 +1278,7 @@ dev = [
     { name = "langsmith", specifier = ">=0.4.9" },
     { name = "matplotlib", specifier = ">=3.10.5" },
     { name = "rdkit", specifier = ">=2025.3.5" },
+    { name = "ruff", specifier = ">=0.12.5" },
 ]
 
 [[package]]

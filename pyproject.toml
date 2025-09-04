@@ -149,6 +149,7 @@ dev = [
     "langsmith>=0.4.9",
     "matplotlib>=3.10.5",
     "rdkit>=2025.3.5",
+    "ruff>=0.12.5",
 ]
 
 [tool.ruff.lint.isort]

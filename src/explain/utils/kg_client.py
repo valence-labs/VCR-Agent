@@ -4,7 +4,8 @@ import csv
 import os
 from dataclasses import dataclass
 from io import StringIO
-from typing import Any, Optional
+from typing import Any
+
 import dotenv
 import httpx
 from loguru import logger
@@ -12,7 +13,7 @@ from loguru import logger
 dotenv.load_dotenv()
 
 KNOWLEDGE_GRAPH_URL = os.environ.get(
-    "KNOWLEDGE_GRAPH_URL", "https://graphdb-ingress-test.centaur-platform-dev.com/repositories/cb-head"
+    "KNOWLEDGE_GRAPH_URL", "https://graphdb-ingress-test.centaur-platform.com/repositories/cb-head"
 )
 KNOWLEDGE_GRAPH_TIMEOUT = int(os.environ.get("KNOWLEDGE_GRAPH_TIMEOUT", "30"))
 
@@ -29,11 +30,11 @@ class KGConfig:
 class KGClient:
     """SPARQL client for querying the knowledge graph."""
 
-    def __init__(self, config: Optional[KGConfig] = None):
+    def __init__(self, config: KGConfig | None = None):
         if config is None:
             config = KGConfig()
         self.config = config
-        self._headers :dict[str, str] = {
+        self._headers: dict[str, str] = {
             "Content-Type": "application/sparql-query",
             "Accept": "text/tab-separated-values",
         }
@@ -53,12 +54,11 @@ class KGClient:
         """Clean up HTTP client resources."""
         await self.client.aclose()
 
-
     async def get_gene_info(self, ensembl_id: str) -> dict[str, Any] | None:
         """Get gene information by Ensembl ID."""
         sparql_query = f"""
             PREFIX cbs: <https://www.exscientia.ai/cb_schema#>
-            SELECT DISTINCT ?symbol ?name ?synonym ?hgnc ?entrez ?refseq ?uniprot_ac
+            SELECT DISTINCT ?symbol ?name ?synonym ?hgnc ?entrez ?refseq ?uniprot_id
             WHERE {{
                 ?gene a cbs:Gene ;
                     cbs:hasId "{ensembl_id}" ;
@@ -88,10 +88,10 @@ class KGClient:
                     FILTER(CONTAINS(str(?refseq_assertion), "refseq"))
                 }}
 
-                OPTIONAL {{ 
+                OPTIONAL {{
                     ?gene cbs:encodesProtein ?protein .
                     ?protein cbs:identifiedBy ?uniprot_assertion .
-                    ?uniprot_assertion cbs:hasValue ?uniprot_ac .
+                    ?uniprot_assertion cbs:hasValue ?uniprot_id .
                 }}
             }}"""
 
@@ -105,19 +105,25 @@ class KGClient:
             "name": results[0].get("?name", ""),
             "entrez_id": next((r.get("?entrez") for r in results if r.get("?entrez")), None),
             "refseq_id": next((r.get("?refseq") for r in results if r.get("?refseq")), None),
-            "uniprot_ac": next((r.get("?uniprot_ac") for r in results if r.get("?uniprot_ac")), None),
+            "uniprot_id": next((r.get("?uniprot_id") for r in results if r.get("?uniprot_id")), None),
             "hgnc_id": next((r.get("?hgnc") for r in results if r.get("?hgnc")), None),
             "synonyms": list({r.get("?synonym") for r in results if r.get("?synonym")}),
         }
         return gene_info
 
     async def get_compound_info(self, compound_id: str) -> dict[str, Any] | None:
-        """Get compound information by compound ID."""
+        """Get compound information by compound ID.
+        Args:
+            compound_id has to be a Chembl ID (e.g. CHEMBL1234567)
+
+        Returns:
+            dict: Compound information
+        """
         sparql_query = f"""
             PREFIX cbs: <https://www.exscientia.ai/cb_schema#>
-            SELECT DISTINCT 
-                   ?smiles 
-                   ?primary_name 
+            SELECT DISTINCT
+                   ?smiles
+                   ?primary_name
                    ?synonym
                    (GROUP_CONCAT(DISTINCT CONCAT(?identifier_source_name, ":", ?identifier_value); separator="|") as ?all_identifiers)
             WHERE {{
@@ -167,14 +173,13 @@ class KGClient:
             "identifiers": all_identifiers,
         }
 
-
     async def get_disease_info(self, disease_id: str) -> dict[str, Any] | None:
         """Get comprehensive disease information by disease ID (Mondo ID or MeSH ID)."""
         # Handle different ID formats
         clean_id = disease_id
         is_mesh_input = False
         is_mondo_input = False
-        
+
         if disease_id.upper().startswith("MONDO"):
             # Extract just the numeric part from MONDO:0019737 or MONDO_0019737
             clean_id = disease_id.replace(":", "").replace("_", "")[5:]
@@ -186,7 +191,6 @@ class KGClient:
         elif disease_id.startswith("D") and len(disease_id) > 1 and disease_id[1:].isdigit():
             is_mesh_input = True
 
-        
         sparql_query = f"""
             PREFIX cbs: <https://www.exscientia.ai/cb_schema#>
             PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -291,11 +295,10 @@ class KGClient:
         selected_result = None
         for result in results:
             # Check if this result has actual data (not all empty)
-            if (result.get("?name") or result.get("?definition") or 
-                result.get("?mesh_id") or result.get("?synonyms")):
+            if result.get("?name") or result.get("?definition") or result.get("?mesh_id") or result.get("?synonyms"):
                 selected_result = result
                 break
-        
+
         if not selected_result:
             return None
 
@@ -329,14 +332,14 @@ class KGClient:
         if selected_result.get("?broader_diseases"):
             broader_diseases = [s.strip() for s in selected_result["?broader_diseases"].split(" | ") if s.strip()]
 
-        # Parse narrower diseases  
+        # Parse narrower diseases
         narrower_diseases = []
         if selected_result.get("?narrower_diseases"):
             narrower_diseases = [s.strip() for s in selected_result["?narrower_diseases"].split(" | ") if s.strip()]
 
         return {
             "id": disease_id,
-            "mondo_id": mondo_id, 
+            "mondo_id": mondo_id,
             "mesh_id": selected_result.get("?mesh_id", "") or (clean_id if is_mesh_input else ""),
             "umls_id": selected_result.get("?umls_id", ""),
             "ncit_id": selected_result.get("?ncit_id", ""),
@@ -348,21 +351,19 @@ class KGClient:
             "narrower_diseases": narrower_diseases,  # Child disease subcategories
             "external_identifiers": external_identifiers,  # Structured by source
         }
-        
-    
 
     async def get_cellular_context_info(self, name_filter: str = None) -> dict[str, Any] | None:
         """Get cellular context information (cell lines and cell types) by name."""
-        
+
         # Build filter clause
         filter_clause = ""
         if name_filter:
             filter_clause = f'FILTER(CONTAINS(LCASE(?name), "{name_filter.lower()}"))'
-        
+
         sparql_query = f"""
             PREFIX cbs: <https://www.exscientia.ai/cb_schema#>
-            SELECT DISTINCT ?name 
-                   ?id 
+            SELECT DISTINCT ?name
+                   ?id
                    ?cell_type
                    ?description
                    (GROUP_CONCAT(DISTINCT ?synonym_value; separator=" | ") as ?synonyms)
@@ -390,7 +391,7 @@ class KGClient:
                 # Basic properties
                 OPTIONAL {{ ?cell cbs:hasDescription ?description }}
                 OPTIONAL {{ ?cell cbs:associatesWithSex ?sex }}
-                OPTIONAL {{ 
+                OPTIONAL {{
                     ?cell cbs:hasOrigin ?origin .
                     BIND(STRAFTER(STR(?origin), "cell_line_") AS ?origin_type)
                 }}
@@ -418,7 +419,7 @@ class KGClient:
                             cbs:cellLineMentionContainedBy ?pubmed_ref .
                 }}
             }}
-            GROUP BY ?name ?id ?cell_type ?description ?sex ?origin_type 
+            GROUP BY ?name ?id ?cell_type ?description ?sex ?origin_type
                      ?derived_tissue_name ?native_cell_name ?native_cell_description
         """
 
@@ -460,9 +461,6 @@ class KGClient:
         # If only one result, return it directly
         if len(processed_results) == 1:
             return processed_results[0]
-        
+
         # Multiple results - return structured response
-        return {
-            "results": processed_results,
-            "count": len(processed_results)
-        }
+        return {"results": processed_results, "count": len(processed_results)}

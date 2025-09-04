@@ -11,7 +11,7 @@ from explain.utils.chem.mol_utils import to_inchikey
 class ChEMBLClient:
     """
     Client for retrieving compound information from ChEMBL API.
-    
+
     Can resolve molecules by name, SMILES, or InChI key and returns:
       - chembl_id
       - name (preferred name)
@@ -21,23 +21,27 @@ class ChEMBLClient:
       - additional metadata
     """
 
-    def __init__(self, base_url: str = "https://www.ebi.ac.uk/chembl/api/data", timeout: float = 20.0, cache_path: str | None = None):
+    def __init__(
+        self,
+        base_url: str = "https://www.ebi.ac.uk/chembl/api/data",
+        timeout: float = 20.0,
+        cache_path: str | None = None,
+    ):
         self.base_url = base_url
         self.timeout = timeout
         self.cache = DuckDBCache(cache_path) if cache_path else None
 
-    def get_compound_info(self,
-                         name: str | None = None,
-                         smiles: str | None = None,
-                         inchikey: str | None = None) -> dict[str, Any]:
+    def get_compound_info(
+        self, name: str | None = None, smiles: str | None = None, inchikey: str | None = None
+    ) -> dict[str, Any]:
         """
         Resolve a compound from ChEMBL using InChIKey (preferred) or name (synonym lookup).
-        
+
         Args:
             name: Molecule name for search
             smiles: Molecule SMILES (will be converted to InChIKey)
             inchikey: Molecule InChI Key (most reliable)
-            
+
         Returns:
             Dictionary with compound information or error message
         """
@@ -45,10 +49,10 @@ class ChEMBLClient:
         name = name.strip() if name else None
         smiles = smiles.strip() if smiles else None
         inchikey = inchikey.strip() if inchikey else None
-        
+
         if not any([name, smiles, inchikey]):
             return {"error": "Provide at least one of 'name', 'smiles', or 'inchikey'."}
-        
+
         # Convert SMILES to InChIKey if provided
         if smiles and not inchikey:
             try:
@@ -56,7 +60,7 @@ class ChEMBLClient:
             except Exception as e:
                 logger.error(e)
                 return {"error": f"Invalid SMILES string provided: {smiles}"}
-        
+
         # Check cache first
         if self.cache and inchikey:
             cached = self.cache.query(inchikey)
@@ -64,17 +68,17 @@ class ChEMBLClient:
                 logger.info(f"Cached compound: {inchikey}")
                 payload = cached.get("payload") if isinstance(cached, dict) else None
                 return payload if isinstance(payload, dict) else cached
-        
+
         # If no inchikey match, try cache by name via synonyms
         if self.cache and name and not inchikey:
             cached_by_name = self.cache.query_by_synonym(name)
             if cached_by_name:
                 payload = cached_by_name.get("payload") if isinstance(cached_by_name, dict) else None
                 return payload if isinstance(payload, dict) else cached_by_name
-        
+
         try:
             compound_data: dict | None = None
-            
+
             if inchikey:
                 url = f"{self.base_url}/molecule.json?molecule_structures__standard_inchi_key={quote(inchikey)}"
                 data = self._get_json(url)
@@ -99,7 +103,7 @@ class ChEMBLClient:
             compound_info = self._extract_compound_info(compound_data)
             if not compound_info.get("chembl_id"):
                 compound_info["warning"] = "Record found but could not extract ChEMBL ID."
-            
+
             # Save to cache if enabled
             if self.cache and compound_info.get("inchikey"):
                 try:
@@ -115,7 +119,7 @@ class ChEMBLClient:
                 except Exception as e:
                     logger.error(e)
                     pass
-            
+
             return compound_info
 
         except requests.exceptions.RequestException as e:
@@ -157,7 +161,6 @@ class ChEMBLClient:
         synonyms = sorted(best_by_key.values(), key=str.lower) if best_by_key else None
 
         is_drug = bool(data.get("therapeutic_flag")) or data.get("max_phase") is not None
-
         info = {
             # IDs
             "chembl_id": data.get("molecule_chembl_id"),

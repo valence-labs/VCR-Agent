@@ -1,8 +1,5 @@
 from pathlib import Path
 
-import numpy as np
-from google import genai
-
 # todo: to be relocated
 DATA_DIR_ROOT = Path("/rxrx/data/user/lu.zhu/outgoing/hooke-explain/Data")  # TO BE RELOCTED
 ChEMBL_PATH = DATA_DIR_ROOT / "Binding" / "ChEMBL_35_Drug_Mechanism.csv"
@@ -39,13 +36,3 @@ PHENOPRINT_INFERENCE = {"HUVEC": DATA_DIR_ROOT / "Phenotype/phenotype_known_test
 PHENOPRINT_SIMILARITY_MATRIX = {"HUVEC": DATA_DIR_ROOT / "Phenoprint/precomputed_cosim_matrix_test.parquet"}
 
 PHENOPRINT_DART_SCORE = {"HUVEC": DATA_DIR_ROOT / "Phenoprint/DART/dart_huvec.csv"}
-
-
-
-
-
-def get_llm_embeddings(text: str, client: genai.client.Client | None = None):
-    if not client:
-        client = genai.Client()
-    embedding_response = client.models.embed_content(model="models/text-embedding-004", contents=text)
-    return np.array(embedding_response.embeddings[0].values)

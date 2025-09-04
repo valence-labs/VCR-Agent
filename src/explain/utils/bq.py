@@ -1,5 +1,6 @@
 from google.cloud import bigquery
 
+
 def retrieve_from_bigquery(sql: str, as_dataframe: bool = True, project: str = "datalake-prod-ef49c0c9"):
     """Retrieve data from datalake-prod-ef49c0c9 database
     Args:

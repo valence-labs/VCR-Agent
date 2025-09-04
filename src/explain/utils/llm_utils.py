@@ -1,10 +1,8 @@
-from typing import Optional, Union
-
 from explain.llm import create_client
 from explain.llm._client import LLMClient
 
 
-def get_entity_type(input: str, client: Optional[LLMClient] = None) -> str:
+def get_entity_type(input: str, client: LLMClient | None = None) -> str:
     """
     Classify input text as 'compound', 'protein', or 'pathway' using an LLM.
 
@@ -64,7 +62,7 @@ def get_entity_type(input: str, client: Optional[LLMClient] = None) -> str:
     return res.content
 
 
-def compare_phenotypes(phenotype_1: str, phenotype_2: str, client: Optional[LLMClient] = None) -> Union[bool, str]:
+def compare_phenotypes(phenotype_1: str, phenotype_2: str, client: LLMClient | None = None) -> bool | str:
     """
     Compare two phenotype descriptions and determine if they describe the same cellular phenotype.
 
@@ -80,9 +78,9 @@ def compare_phenotypes(phenotype_1: str, phenotype_2: str, client: Optional[LLMC
         client = create_client(provider="litellm", model="gemini-2.5-flash")
 
     llm_instruction = """
-        Task: Decide whether the following two texts describe the same cellular phenotype, 
-        even if they use different wording or synonyms. 
-        Consider them the same if their meanings are equivalent. 
+        Task: Decide whether the following two texts describe the same cellular phenotype,
+        even if they use different wording or synonyms.
+        Consider them the same if their meanings are equivalent.
         Only return true or false without explanation.
     
     Instructions:
@@ -97,7 +95,7 @@ def compare_phenotypes(phenotype_1: str, phenotype_2: str, client: Optional[LLMC
 
         Return false if the terms describe distinct or unrelated cellular phenotypes.
 
-        Examples: 
+        Examples:
 
         Example 1: True
 
@@ -125,7 +123,7 @@ def compare_phenotypes(phenotype_1: str, phenotype_2: str, client: Optional[LLMC
     Text 2: "{phenotype_2}"
 
     """
-    
+
     content = llm_instruction + input_text
 
     res = client.generate([{"role": "user", "content": content}])
