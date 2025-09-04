@@ -25,6 +25,10 @@ dependencies = [
   "google-cloud-secret-manager>=2.24.0",
   "litellm>=1.74.15.post1",
   "google-cloud-aiplatform>=1.38",
+  "anndata",
+  "pydeseq2",
+  "hdf5plugin",
+  "db-dtypes"
 ]
 
 [project.optional-dependencies]
