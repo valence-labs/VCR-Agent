@@ -13,8 +13,6 @@ dependencies = [
   "loguru>=0.7.3",
   "pandas>=2.3.1",
   "tqdm>=4.67.1",
-  "cb-reach",
-  "enhanced-chat-client",
   "anthropic>=0.49.0",
   "google-auth>=2.40.3",
   "pydantic>=2.8.2",
@@ -23,12 +21,24 @@ dependencies = [
   "google-cloud>=0.34.0",
   "google-genai>=1.28.0",
   "google-cloud-secret-manager>=2.24.0",
-  "litellm>=1.74.15.post1",
+  "litellm>=1.75.5",
   "google-cloud-aiplatform>=1.38",
+  "rxrx-enhanced-chat-sdk>=0.0.5",
+  "diskcache>=5.6.3",
+  "nest-asyncio>=1.6.0",
+  "polars>=1.32.2",
+  "pyarrow>=21.0.0",
+  "google-cloud-bigquery>=3.35.1",
+  "duckdb>=1.0.0",
+  "rdkit>=2023.9.5",
+  "aiolimiter>=1.2.1",
+  "elasticsearch==8",
+  "fastavro>=1.12.0",
+  "db-dtypes>=1.4.3",
   "anndata",
   "pydeseq2",
   "hdf5plugin",
-  "db-dtypes"
+  "flair>=0.15.1",
 ]
 
 [project.optional-dependencies]
@@ -79,8 +89,6 @@ pyg-lib = [
     # Windows CPU
     { url = "https://data.pyg.org/whl/torch-2.6.0+cpu/pyg_lib-0.4.0+pt26cpu-cp312-cp312-win_amd64.whl", marker = "sys_platform == 'win32'"},
 ]
-cb-reach = { path = "cb-reach/src", editable = true }
-enhanced-chat-client = { path = "cb-reach/enhanced-chat-client", editable = true }
 
 [tool.ruff]
 # Increase line length from default 88 to 120
@@ -91,13 +99,14 @@ target-version = "py312"
 
 # Exclude directories from linting
 exclude = [
-    "cb-reach/",
     ".git/",
     "__pycache__/",
     ".venv/",
     "*.egg-info/",
-    "notebooks/_dev/",
+    "notebooks/",
 ]
+
+
 
 [tool.ruff.lint]
 # Enable a subset of rules - being less stringent
@@ -138,6 +147,9 @@ dev = [
     "langchain>=0.3.27",
     "langchain-core>=0.3.72",
     "langsmith>=0.4.9",
+    "matplotlib>=3.10.5",
+    "rdkit>=2025.3.5",
+    "ruff>=0.12.5",
 ]
 
 [tool.ruff.lint.isort]

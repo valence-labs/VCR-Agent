@@ -1,18 +1,19 @@
 import asyncio
 import time
 from dataclasses import dataclass
+from itertools import zip_longest
 from typing import Any
 
-from enhanced_chat_client.api.bulk_controller_v1 import (
+from loguru import logger
+from rxrx.enhanced_chat.api.bulk_controller_v1 import (
     bulk_controller_v1_create,
     bulk_controller_v1_export,
     bulk_controller_v1_status,
 )
-from enhanced_chat_client.models.bulk_conversation_input import BulkConversationInput
-from enhanced_chat_client.models.model import Model
-from enhanced_chat_client.models.output_style import OutputStyle
-from enhanced_chat_client.models.tagged_prompt import TaggedPrompt
-from loguru import logger
+from rxrx.enhanced_chat.models.bulk_conversation_input import BulkConversationInput
+from rxrx.enhanced_chat.models.model import Model
+from rxrx.enhanced_chat.models.output_style import OutputStyle
+from rxrx.enhanced_chat.models.tagged_prompt import TaggedPrompt
 from tqdm import tqdm
 
 
@@ -88,11 +89,11 @@ class EnhancedChatManager:
         """Create prompts for bulk job"""
         if global_tags is None:
             global_tags = []
-        if data_tags is None:
+        if data_tags is None or len(data_tags) == 0:
             data_tags = []
         prompts = [
-            TaggedPrompt(prompt=template.format(**item), tags=global_tags + [tag])
-            for item, tag in zip(data, data_tags, strict=False)
+            TaggedPrompt(prompt=template.format(**item), tags=[x for x in global_tags + [tag] if x is not None])
+            for item, tag in zip_longest(data, data_tags, fillvalue=None)
         ]
         return prompts
 

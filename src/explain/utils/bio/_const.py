@@ -1,9 +1,5 @@
 from pathlib import Path
 
-import numpy as np
-from google import genai
-from google.cloud import bigquery
-
 # todo: to be relocated
 DATA_DIR_ROOT = Path("/rxrx/data/user/lu.zhu/outgoing/hooke-explain/Data")  # TO BE RELOCTED
 ChEMBL_PATH = DATA_DIR_ROOT / "Binding" / "ChEMBL_35_Drug_Mechanism.csv"
@@ -40,21 +36,3 @@ PHENOPRINT_INFERENCE = {"HUVEC": DATA_DIR_ROOT / "Phenotype/phenotype_known_test
 PHENOPRINT_SIMILARITY_MATRIX = {"HUVEC": DATA_DIR_ROOT / "Phenoprint/precomputed_cosim_matrix_test.parquet"}
 
 PHENOPRINT_DART_SCORE = {"HUVEC": DATA_DIR_ROOT / "Phenoprint/DART/dart_huvec.csv"}
-
-
-def retrieve_from_bigquery(sql: str, as_dataframe: bool = True):
-    """Retrive any data from datalake-prod-ef49c0c9 database"""
-    client = bigquery.Client(project="datalake-prod-ef49c0c9")
-
-    query_job = client.query(sql)
-    if as_dataframe:
-        results = query_job.to_dataframe()
-
-    return results
-
-
-def get_llm_embeddings(text: str, client: genai.client.Client | None = None):
-    if not client:
-        client = genai.Client()
-    embedding_response = client.models.embed_content(model="models/text-embedding-004", contents=text)
-    return np.array(embedding_response.embeddings[0].values)
