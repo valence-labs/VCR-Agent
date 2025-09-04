@@ -8,9 +8,9 @@ from explain.util import extract_entity_from_text
 
 def harmonizome_gene_to_doc(gene_info):
     """
-    gene_info:
+    Turn the harmonizome gene information into a text format.
     """
-    if gene_info == "":
+    if gene_info == "" or 'name' not in gene_info.keys():
         return ""
     text = dedent(f"""
     The gene name is {gene_info['name']} and the gene symbol is {gene_info['symbol']}.
@@ -21,9 +21,10 @@ def harmonizome_gene_to_doc(gene_info):
 
     return text
 
-def harmonizome_gene_set_to_doc(gene_set_info):
+
+def map_gene_set_to_related_genes(gene_set_info):
     """
-    gene_set_name:
+    Turn the harmonizome gene set information into a list of related genes.
     """
     
     gene_set = gene_set_info['geneSets'][0]
@@ -37,6 +38,14 @@ def harmonizome_gene_set_to_doc(gene_set_info):
     # TODO: add rule-based filtering to the gene set (current version: only keep the first 20 genes)
     gene_set = [data['gene']['symbol'] for data in gene_set_info['associations']]
     gene_set = gene_set[:20]
+
+    return gene_set
+
+def harmonizome_gene_set_to_doc(gene_set_info):
+    """
+    Turn the harmonizome gene set information into a text format.
+    """
+    gene_set = map_gene_set_to_related_genes(gene_set_info)
     text = f"""
     The related genes are {', '.join(gene_set)}.\n
     The gene information is as follows:
@@ -50,12 +59,14 @@ def harmonizome_gene_set_to_doc(gene_set_info):
     return dedent(text)
 
 
-def get_harmonizome_info(perturbation, is_ner=False):
+def get_harmonizome_info(index, perturbation, is_ner=False):
 
     result = ""
+    gene_info_list, gene_set_info_list = [], []
+    # search from ner entities
     if is_ner:
         perturbation_text = json.dumps(perturbation, indent=4)
-        entities = extract_entity_from_text(perturbation_text)
+        entities = extract_entity_from_text(perturbation_text, index)
         for entity, tag in entities.items():
             if tag == 'Gene':
                 gene_info = Harmonizome.get(Entity.GENE, name=entity)
@@ -77,6 +88,7 @@ def get_harmonizome_info(perturbation, is_ner=False):
                 result += harmonizome_gene_set_to_doc(info)
         result += "\n\n"
     else:
+        # without ner, search from perturbation text (target, name, disease model)
         # for target
         target = perturbation['perturbation']['target']
         try:
@@ -88,6 +100,7 @@ def get_harmonizome_info(perturbation, is_ner=False):
         else:
             target_doc = "### TARGET GENE INFORMATION\nThe target gene of the perturbation is " + target + ". "
             target_doc += harmonizome_gene_to_doc(gene_info)
+            gene_info_list.append(gene_info)
 
         # for preturbation disease name (get related genes)
         name = perturbation['perturbation']['name']
@@ -98,6 +111,7 @@ def get_harmonizome_info(perturbation, is_ner=False):
         if 'status' not in gene_set_info.keys():
             gene_set_doc = "### PERTURBATION NAME INFORMATION\nThe perturbation name is " + name + ". "
             gene_set_doc += harmonizome_gene_set_to_doc(gene_set_info)
+            gene_set_info_list.append(gene_set_info)
         else:
             gene_set_doc = ""
 
@@ -109,10 +123,12 @@ def get_harmonizome_info(perturbation, is_ner=False):
                 break
         disease_model_doc = "### DISEASE MODEL INFORMATION\nThe disease model of the context is " + perturbation_disease_model + ". "
         disease_model_doc += harmonizome_gene_set_to_doc(gene_set_info)
+        gene_set_info_list.append(gene_set_info)
 
         result = target_doc + gene_set_doc + disease_model_doc
 
+    final_gene_info = {'gene_info': gene_info_list, 'gene_set_info': gene_set_info_list}
 
-    return result
+    return result, final_gene_info
 
 

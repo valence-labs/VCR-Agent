@@ -10,6 +10,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 from torch_geometric.utils import to_networkx
 from torch_geometric.utils import subgraph as pyg_subgraph
+from torch_geometric.utils import k_hop_subgraph
 import networkx as nx
 
 # Global DrugBankSearcher instance to be shared across KnowledgeGraph instances
@@ -429,3 +430,13 @@ class KnowledgeGraph:
         edge_ids = self.edge_index_to_id(edge_index_sub)
 
         return edge_ids
+
+    def get_k_hop_neighbors(self, node_index: int, k: int=1) -> List[int]:
+        """Get the k-hop neighbors of the given node index.
+        
+        Args:
+            node_index: Index of the node to get neighbors for
+            k: Number of hops to consider
+        """
+        edge_index_sub, _ = k_hop_subgraph(node_index, k, self.edge_index)
+        return edge_index_sub

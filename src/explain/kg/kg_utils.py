@@ -3,8 +3,6 @@ import pubchempy as pcp
 import warnings
 import requests
 import os
-from lxml import etree
-from typing import Optional, Dict
 
 from explain.util import extract_entity_from_text
 
@@ -16,6 +14,8 @@ mondo_node_label_dict = {node['lbl']: idx for idx, node in enumerate(mondo_nodes
 mondo_label_node_dict = {v: k for k, v in mondo_node_label_dict.items()}
 mondo_node_synonyms = {node['lbl']: node['meta']['synonyms'] for node in mondo_nodes if 'meta' in node.keys() and 'synonyms' in node['meta'].keys()}
 
+global perturbation_ner_mapping
+perturbation_ner_mapping = json.load(open('data/perturbation_ner_mapping.json', 'r'))
 
 def entity_matching_info(perturbation_index):
     """
@@ -30,7 +30,8 @@ def entity_matching_info(perturbation_index):
 
 def get_kg_entity_doc(perturbation_index, kg, with_rel=False):
     kg_infos, org_infos = entity_matching_info(perturbation_index)
-    doc_info_total = ""
+    doc_parts = []
+    
     for kg_info, org_info in zip(kg_infos, org_infos):
         kg_node_index = int(kg_info['node_index'])
         if with_rel:
@@ -38,18 +39,23 @@ def get_kg_entity_doc(perturbation_index, kg, with_rel=False):
         else:
             doc_info = kg.doc_info_without_rel[kg_node_index]
 
-        doc_info_total += f"This is the document information of {org_info['type']} {org_info['value']}.\n"
-        doc_info_total += doc_info
-        doc_info_total += "\n"
+        doc_parts.append(f"This is the document information of {org_info['type']} {org_info['value']}.\n")
+        doc_parts.append(doc_info)
+        doc_parts.append("\n")
 
-    return doc_info_total
+    return ''.join(doc_parts)
 
 def get_kg_info(index, perturbation, tool, kg, is_with_rel, num_neighbor):
-    perturbation_text = json.dumps(perturbation, indent=4)
-    perturbation_partial_text = json.dumps(perturbation['perturbation'], indent=4)
-    perturbation_entity = extract_entity_from_text(perturbation_partial_text)
-    context_text = json.dumps(perturbation['context'], indent=4)
-    context_entity = extract_entity_from_text(context_text)
+     # NER
+    if index in [perturbation_ner_dict['index'] for perturbation_ner_dict in perturbation_ner_mapping]:
+        perturbation_entity = perturbation_ner_mapping[index]['perturbation_entity']
+        context_entity = perturbation_ner_mapping[index]['context_entity']
+    else:
+        perturbation_text = json.dumps(perturbation, indent=4)
+        perturbation_partial_text = json.dumps(perturbation['perturbation'], indent=4)
+        perturbation_entity = extract_entity_from_text(perturbation_partial_text, index)
+        context_text = json.dumps(perturbation['context'], indent=4)
+        context_entity = extract_entity_from_text(context_text, index)
     
     extracted_graph_info = {}
     # Phase 1: node selection 
@@ -89,7 +95,6 @@ def get_kg_info(index, perturbation, tool, kg, is_with_rel, num_neighbor):
             unmatching_entity_node_index.extend(list(kg.find_similar_nodes(unmatching_entity, k=num_neighbor).keys()))
 
         node_list = list(set(perturbation_node_index + context_ner_node_index + unmatching_entity_node_index))
-
     # Phase 2: subgraph extraction or node information extraction
     if 'kg-entity' == tool or 'kg-entity-rephrase' == tool:
         # Get the single node information (exact matching nodes)
