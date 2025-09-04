@@ -1,7 +1,7 @@
 import re
-from functools import cache
-from collections.abc import Sequence
 from collections import defaultdict
+from collections.abc import Sequence
+from functools import cache
 from typing import Any
 
 import requests
@@ -36,6 +36,7 @@ ALIAS_GROUPS = [
     ["extracellular region", "extracellular space", "secreted", "outside cell"],
 ]
 
+
 class LocalizationClient:
     """
     Client for subcellular localization analysis.
@@ -56,7 +57,7 @@ class LocalizationClient:
         self.sources = sources
         self.timeout_s = timeout_s
 
-    @cache
+    @cache # noqa
     def get_locations(self, uniprot_ac: str) -> list[str]:
         """Get subcellular locations for a protein."""
         locations: list[str] = []
@@ -70,7 +71,6 @@ class LocalizationClient:
         normed = {self._normalize_location(loc) for loc in locations if loc}
         normed.discard("")
         return sorted(normed)
-
 
     def is_located_in(self, uniprot_ac: str, location: str, known_locations: list[str] = None) -> bool:
         """Check if protein is located in a specific location."""
@@ -87,7 +87,6 @@ class LocalizationClient:
         from_found = self.is_located_in(uniprot_ac, from_loc, known_locations)
         to_found = self.is_located_in(uniprot_ac, to_loc, known_locations)
         return from_found and to_found
-
 
     def get_translocations(self, uniprot_ac: str) -> list[dict[str, Any]]:
         """
@@ -110,22 +109,39 @@ class LocalizationClient:
         # --- light bucket map (only to drop intra-family pairs) ---
         BUCKETS = {
             # nucleus family
-            "nucleus": "nucleus", "nucleoplasm": "nucleus", "nuclear": "nucleus", "nucleolus": "nucleus",
+            "nucleus": "nucleus",
+            "nucleoplasm": "nucleus",
+            "nuclear": "nucleus",
+            "nucleolus": "nucleus",
             # cytoplasm family
-            "cytoplasm": "cytoplasm", "cytosol": "cytoplasm", "cytoskeleton": "cytoplasm",
+            "cytoplasm": "cytoplasm",
+            "cytosol": "cytoplasm",
+            "cytoskeleton": "cytoplasm",
             # mtoc family
-            "microtubule organizing center": "mtoc", "mtoc": "mtoc",
-            "centrosome": "mtoc", "spindle pole body": "mtoc", "basal body": "mtoc",
+            "microtubule organizing center": "mtoc",
+            "mtoc": "mtoc",
+            "centrosome": "mtoc",
+            "spindle pole body": "mtoc",
+            "basal body": "mtoc",
             # membranes
-            "plasma membrane": "plasma_membrane", "cell membrane": "plasma_membrane",
+            "plasma membrane": "plasma_membrane",
+            "cell membrane": "plasma_membrane",
             "membrane": "membrane_generic",
             # organelles (kept distinct so pairs remain permissive)
-            "golgi": "golgi", "golgi apparatus": "golgi", "golgi complex": "golgi",
-            "endoplasmic reticulum": "er", "er": "er",
-            "mitochondria": "mitochondria", "mitochondrion": "mitochondria",
-            "lysosome": "lysosome", "endosome": "endosome", "peroxisome": "peroxisome",
-            "extracellular region": "extracellular", "extracellular space": "extracellular",
+            "golgi": "golgi",
+            "golgi apparatus": "golgi",
+            "golgi complex": "golgi",
+            "endoplasmic reticulum": "er",
+            "er": "er",
+            "mitochondria": "mitochondria",
+            "mitochondrion": "mitochondria",
+            "lysosome": "lysosome",
+            "endosome": "endosome",
+            "peroxisome": "peroxisome",
+            "extracellular region": "extracellular",
+            "extracellular space": "extracellular",
         }
+
         def bucket_of(loc: str) -> str:
             return BUCKETS.get(loc.lower(), f"other::{loc.lower()}")
 
@@ -176,9 +192,12 @@ class LocalizationClient:
                 if key not in seen:
                     seen.add(key)
                     events.append(
-                        {"from": a, "to": b,
-                        "evidence": "HPA/UniProt leaves all-pairs (heuristic)",
-                        "note": "Alias-normalized; intra-bucket pairs pruned"}
+                        {
+                            "from": a,
+                            "to": b,
+                            "evidence": "HPA/UniProt leaves all-pairs (heuristic)",
+                            "note": "Alias-normalized; intra-bucket pairs pruned",
+                        }
                     )
 
         # --- (2) path edges (always kept) ---
@@ -191,9 +210,12 @@ class LocalizationClient:
                 if key not in seen:
                     seen.add(key)
                     events.append(
-                        {"from": a, "to": b,
-                        "evidence": "UniProt/HPA path (hierarchy)",
-                        "note": "Consecutive nodes from path-like location"}
+                        {
+                            "from": a,
+                            "to": b,
+                            "evidence": "UniProt/HPA path (hierarchy)",
+                            "note": "Consecutive nodes from path-like location",
+                        }
                     )
 
         return events
@@ -237,11 +259,10 @@ class LocalizationClient:
         comments = data.get("comments", [])
         return [c for c in comments if c.get("commentType") == "SUBCELLULAR LOCATION"]
 
-
     def _get_hpa_locations(self, uniprot_ac: str) -> list[str]:
         """Fetch HPA subcellular locations (flat schema) and return a deduped list."""
         all_locs = self._get_hpa_location_dict(uniprot_ac)
-        return sorted(set([l for loc in all_locs.values() for l in loc]))
+        return sorted(set([loc for locs in all_locs.values() for loc in locs]))
 
     def _get_hpa_location_dict(self, uniprot_ac: str) -> list[str]:
         """Fetch HPA subcellular locations (flat schema) and return a deduped list."""
@@ -266,14 +287,17 @@ class LocalizationClient:
                     hpa = resp.json()
 
                     main = get_ci(hpa, "Subcellular main location", []) or []
-                    add  = get_ci(hpa, "Subcellular additional location", []) or []
+                    add = get_ci(hpa, "Subcellular additional location", []) or []
                     any_ = get_ci(hpa, "Subcellular location", []) or []
 
                     # normalize to lists
-                    
-                    if isinstance(main, str): main = [main]
-                    if isinstance(add, str):  add  = [add]
-                    if isinstance(any_, str): any_ = [any_]
+
+                    if isinstance(main, str):
+                        main = [main]
+                    if isinstance(add, str):
+                        add = [add]
+                    if isinstance(any_, str):
+                        any_ = [any_]
 
                     all_locs["main"].extend(main)
                     all_locs["additional"].extend(add)
@@ -288,7 +312,6 @@ class LocalizationClient:
         except Exception as e:
             logger.warning(f"Failed to get HPA locations for {uniprot_ac}: {e}")
             return {}
-
 
     def _uniprot_to_ensembl_ids(self, uniprot_ac: str) -> list[str]:
         """Map UniProt accession to Ensembl Gene IDs via UniProt xrefs."""

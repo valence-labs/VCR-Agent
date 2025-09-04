@@ -4,6 +4,7 @@ from ._base import ToolVerifier
 from .esearch import LitteratureSearcher
 from .evidencer import Evidencer
 
-REGISTERED_TOOLS = ToolVerifier._registry
 LITERATURE_TOOLS = dict((x.name, x) for x in [LitteratureSearcher(), Evidencer()])
-BIOLOGICAL_TOOLS = bio.BIOLOGICAL_TOOLS
+BIOLOGICAL_TOOLS = dict((x.name, x) for x in [bio.DTIVerifier(), bio.SCLVerifier()])
+CHEMICAL_TOOLS = dict((x.name, x) for x in [chem.ChEMBLResolver(), chem.PubChemResolver()])
+REGISTERED_TOOLS = ToolVerifier._registry

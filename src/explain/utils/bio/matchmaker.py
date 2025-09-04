@@ -11,7 +11,9 @@ class MatchMakerClient(BaseDTIClient):
     Searches BOTH matchmaker_rxrx AND matchmaker_chembl tables with compound resolution.
     """
 
-    def __init__(self, project: str = "datalake-prod-ef49c0c9", drop_duplicates: bool = True, binding_threshold: float = 2.0):
+    def __init__(
+        self, project: str = "datalake-prod-ef49c0c9", drop_duplicates: bool = True, binding_threshold: float = 2.0
+    ):
         super().__init__(binding_threshold=binding_threshold)  # Z-score threshold (default)
         self.project = project
         self.mm_tables = [f"{project}.cyclica_90d.matchmaker_rxrx", f"{project}.cyclica_90d.matchmaker_chembl"]

@@ -1,7 +1,7 @@
+import asyncio
 from typing import Any
 
 from pydantic import BaseModel, Field
-import asyncio
 
 from explain.eval.tools._base import ToolVerifier
 from explain.utils.bio.localization import LocalizationClient
@@ -56,11 +56,13 @@ class SCLVerifier(ToolVerifier):
 
         # Get all known locations for the protein
         all_locations = self.localization_client.get_locations(uniprot_id)
-        can_translocate = self.localization_client.can_translocate(uniprot_id, args.from_loc, args.to_loc, known_locations=all_locations)
+        can_translocate = self.localization_client.can_translocate(
+            uniprot_id, args.from_loc, args.to_loc, known_locations=all_locations
+        )
 
         reward = float(can_translocate)
         # TODO: Add mechanism and modification
-        
+
         feedback = {
             "protein": args.protein,
             "uniprot_id": uniprot_id,

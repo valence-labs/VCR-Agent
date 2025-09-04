@@ -12,6 +12,7 @@ class BiorefClient(BaseDTIClient):
       - bioref_std_measurement_value is used as the potency value
     Organism filter is applied ONLY if provided (organism is not required).
     """
+
     # binding_threshold is in nM
     def __init__(self, project: str = "datalake-dev-ea785c15", binding_threshold: float = 10000.0, **kwargs):
         super().__init__(**kwargs)

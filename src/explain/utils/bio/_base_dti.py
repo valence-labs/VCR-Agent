@@ -1,7 +1,7 @@
 """Base interface for drug-target interaction clients."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any
 
 
 class DTIResult:
@@ -46,7 +46,7 @@ class DTIResult:
 class BaseDTIClient(ABC):
     """Abstract base class for drug-target interaction clients."""
 
-    def __init__(self, binding_threshold: Optional[float] = None):
+    def __init__(self, binding_threshold: float | None = None):
         self.binding_threshold = binding_threshold
 
     @abstractmethod

@@ -1,5 +1,5 @@
 import asyncio
-from typing import Union, List
+
 import httpx
 
 
@@ -7,7 +7,7 @@ class UniProtMapper:
     @classmethod
     async def map(
         cls,
-        input_ids: Union[str, List[str]],
+        input_ids: str | list[str],
         from_db: str = "GeneID",
         to_db: str = "UniProtKB",
         tax_id: int = 9606,

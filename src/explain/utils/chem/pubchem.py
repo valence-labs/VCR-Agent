@@ -1,6 +1,7 @@
-from typing import Any, Union
 from functools import lru_cache
+from typing import Any
 from urllib.parse import quote
+
 import requests
 
 
@@ -195,7 +196,7 @@ class PubChemClient:
         except (KeyError, IndexError, TypeError):
             return None
 
-    def _fetch_property_by_cid(self, cid: int, prop: Union[str, list[str]], smiles: bool = False) -> str | None:
+    def _fetch_property_by_cid(self, cid: int, prop: str | list[str], smiles: bool = False) -> str | None:
         """
         Fetch a property by CID.
         If smiles is True, return any smiles we could find.
@@ -230,7 +231,7 @@ class PubChemClient:
         except (KeyError, IndexError, TypeError):
             return None
 
-    @lru_cache(maxsize=1000)
+    @lru_cache(maxsize=1000)  # noqa
     def _get_json(self, url: str) -> dict:
         r = requests.get(url, timeout=self.timeout)
         r.raise_for_status()

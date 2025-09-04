@@ -151,7 +151,7 @@ class GeneEntity(BaseEntity):
         self.hpa_id = uniprot_info.get("hpa_id") or self.hpa_id
         self.uniprot_function_summary = uniprot_info.get("uniprot_function_summary") or self.uniprot_function_summary
 
-    def get_summary(self) -> str:
+    async def get_summary(self) -> str:
         """Get the summary function of the gene."""
         if self.uniprot_function_summary is None:
             uniprot_info = asyncio.run(UniProtMapper.map(self.id, from_db="Ensembl", tax_id=9606))
@@ -369,7 +369,7 @@ class GeneEntity(BaseEntity):
                 elif db == "HPA":
                     self.hpa_id = row.get("id")
 
-    async def get_interactions(self, other_gene: Union[str, "GeneEntity"]) -> list[dict[str, Any]]:
+    async def get_process_interaction(self, other_gene: Union[str, "GeneEntity"]) -> list[dict[str, Any]]:
         """
         Get interaction types between this gene and another gene.
 
