@@ -5,9 +5,11 @@ from tqdm import tqdm
 import pandas as pd
 import wandb
 import time
+import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from explain.llm.data_generator import DataGenerator
+from explain.util import set_perturbation_ner_mapping
 from explain.eval.score.evaluate import evaluate
 from explain.kg.kg_utils import get_kg_info
 from explain.kg.kg import KnowledgeGraph
@@ -26,7 +28,7 @@ def parse_args():
                         default='test')
     parser.add_argument('--experiment_name', type=str, help='Experiment name',
                         default='test')
-    parser.add_argument('--tool_list', type=json.loads, default=["pubmed-ner-fast"], help='Comma-separated list of tools (e.g., wikipedia)')
+    parser.add_argument('--tool_list', type=json.loads, default=["kg-ner"], help='Comma-separated list of tools (e.g., wikipedia)')
     parser.add_argument('--wandb_mode', type=str, default='disabled')
     parser.add_argument('--mode', type=str, default='report-explain',
         help='Mode to run the experiment (report-explain, explain-only)')
@@ -38,6 +40,8 @@ def parse_args():
     parser.add_argument('--paperqa_num_papers', type=int, default=30, help='Number of papers to use for paperqa')
     parser.add_argument('--pubmed_num_papers', type=int, default=30, help='Number of papers to use for pubmed')
     parser.add_argument('--max_items', type=int, default=0, help='Limit number of perturbations to process (0 means all)')
+    parser.add_argument('--pert_path', type=str, default="data/perturbation_ner_mapping.json", help='Perturbation path')
+
     return parser.parse_args()
 
 
@@ -45,24 +49,24 @@ def fetch_tool_info(tool_name):
     start = time.time()
     result = {"tool": tool_name, "additional": ""}
     if 'kg' in tool_name:
-        kg_info, extracted_graph_info = get_kg_info(i, perturbation, tool_name, kg, args.kg_with_rel, args.kg_num_neighbor)
+        kg_info, extracted_graph_info = get_kg_info(index, perturbation, tool_name, kg, args.kg_with_rel, args.kg_num_neighbor)
         kg_info = data_generator.post_process_additional_info(kg_info, tool_name, perturbation)
         result["kg_info"] = kg_info
         result["extracted_graph_info"] = extracted_graph_info
         result['additional'] = kg_info
     elif 'harmonizome' in tool_name:
         ner_flag = 'ner' in tool_name
-        harmonizome_info = get_harmonizome_info(i, perturbation, is_ner=ner_flag)
+        harmonizome_info = get_harmonizome_info(index, perturbation, is_ner=ner_flag)
         harmonizome_info = data_generator.post_process_additional_info(harmonizome_info, tool_name, perturbation)
         result["harmonizome_info"] = harmonizome_info
         result['additional'] = harmonizome_info
     elif 'wikipedia' in tool_name:
-        wikipedia_info = get_wikipedia_info(i, perturbation)
+        wikipedia_info = get_wikipedia_info(index, perturbation)
         wikipedia_info = data_generator.post_process_additional_info(wikipedia_info, tool_name, perturbation)
         result["wikipedia_info"] = wikipedia_info
         result['additional'] = wikipedia_info
     elif 'paperqa' in tool_name:
-        paperqa_info, papers_info = get_paperqa_info(i, perturbation, question, args.paperqa_num_papers, mode=tool_name)
+        paperqa_info, papers_info = get_paperqa_info(index, perturbation, question, args.paperqa_num_papers, mode=tool_name)
         papers_info = data_generator.post_process_additional_info(papers_info, tool_name, perturbation)
         result["paperqa_info"] = paperqa_info
         result["papers_info"] = papers_info
@@ -70,7 +74,7 @@ def fetch_tool_info(tool_name):
         if 'paperqa_list' not in tool_name:
             result['additional'] += '## PAPERQA INFORMATION\n' + paperqa_info + '\n\n'
     elif 'pubmed' in tool_name:
-        pubmed_info = get_pubmed_info(i, perturbation, question, args.pubmed_num_papers, mode=tool_name)
+        pubmed_info = get_pubmed_info(index, perturbation, question, args.pubmed_num_papers, mode=tool_name)
         pubmed_info = data_generator.post_process_additional_info(pubmed_info, tool_name, perturbation)
         result["pubmed_info"] = pubmed_info
         result['additional'] = pubmed_info
@@ -83,6 +87,20 @@ def fetch_tool_info(tool_name):
 
 if __name__ == '__main__':
     args = parse_args()
+    # get index tag
+    if 'tahoe' in args.pert_path:
+        index_tag = 'tahoe_'
+    elif 'rxrx' in args.pert_path:
+        match = re.search(r'\d+', args.pert_path)
+        number_in_pert_path = match.group(0) if match else None
+        index_tag = f'rxrx_{number_in_pert_path}_'
+    else:
+        index_tag = ''
+    perturbation_ner_mapping = json.load(open(args.pert_path, 'r'))
+    perturbation_ner_mapping_data_indices = [index_tag + str(item['index']) for item in perturbation_ner_mapping]
+    set_perturbation_ner_mapping(perturbation_ner_mapping, perturbation_ner_mapping_data_indices)
+
+
     if args.wandb_id != "":
         wandb.init(entity='valencelabs', project="hooke-explain-datagen", mode=args.wandb_mode, name=f"{args.experiment_name}_{args.tool_list}_{args.kg_num_neighbor}",
         id=args.wandb_id, resume=True)
@@ -90,14 +108,14 @@ if __name__ == '__main__':
         wandb.init(entity='valencelabs', project="hooke-explain-datagen", mode=args.wandb_mode, name=f"{args.experiment_name}_{args.tool_list}_{args.kg_num_neighbor}")
     wandb.config.update(args)
 
-    data_generator = DataGenerator(args.model_type, args.tool_list, order=args.order)
+    data_generator = DataGenerator(args.model_type, args.tool_list, order=args.order, pert_path=args.pert_path)
     report_list = []
     structure_explain_list = []
     if len(args.report_file_name) > 0:
         report_file_name = args.report_file_name
     else:
-        report_file_name = f'output/report/{args.folder_name}/{args.experiment_name}_{args.tool_list}_{args.kg_num_neighbor}.json'
-    structure_explain_file_name = f'output/structure_explain/{args.folder_name}/{args.experiment_name}_{args.tool_list}_{args.kg_num_neighbor}.json'
+        report_file_name = f'output/report/{args.folder_name}/{index_tag}{args.experiment_name}_{args.tool_list}_{args.kg_num_neighbor}.json'
+    structure_explain_file_name = f'output/structure_explain/{args.folder_name}/{index_tag}{args.experiment_name}_{args.tool_list}_{args.kg_num_neighbor}.json'
     # Ensure output directories exist
     os.makedirs(os.path.dirname(report_file_name), exist_ok=True)
     os.makedirs(os.path.dirname(structure_explain_file_name), exist_ok=True)
@@ -113,15 +131,17 @@ if __name__ == '__main__':
             report_list = report_list.to_dict(orient='records')
     if os.path.exists(structure_explain_file_name):
         structure_explain_list = json.load(open(structure_explain_file_name, 'r'))
-    
-    # Track processed indices for fast membership checks
-    processed_structure_indices = set(d['index'] for d in structure_explain_list) if len(structure_explain_list) > 0 else set()
-    additional_info, paperqa_info, wikipedia_info, harmonizome_info, kg_info = "", "", "", "", ""
-    extracted_graph_info, papers_info, pubmed_info = {}, {}, ""
+    # load kg
     if any('kg' in tool for tool in args.tool_list):
         kg = KnowledgeGraph()
+    
+
+    processed_structure_indices = set(index_tag + str(d['index']) for d in structure_explain_list) if len(structure_explain_list) > 0 else set()
+    additional_info, paperqa_info, wikipedia_info, harmonizome_info, kg_info = "", "", "", "", ""
+    extracted_graph_info, papers_info, pubmed_info = {}, {}, ""
     for i, perturbation in enumerate(tqdm(perturbations)):
-        if i in processed_structure_indices:
+        index = index_tag + str(perturbation['index'])
+        if index in processed_structure_indices:
             continue
         # Reset per-iteration variables to avoid cross-contamination and large prompts
         additional_info = ""
@@ -173,7 +193,7 @@ if __name__ == '__main__':
         time_start = time.time()
         if 'report' in args.mode:
             report = data_generator.generate_report(perturbation, additional_info)
-            report_dict = {'index': i, 'perturbation': perturbation, 'report_text': report, 'question': question,
+            report_dict = {'index': index, 'perturbation': perturbation, 'report_text': report, 'question': question,
             'kg_info': kg_info, 'extracted_graph_info': extracted_graph_info, 'harmonizome_info': harmonizome_info,
             'wikipedia_info': wikipedia_info, 'paperqa_info': paperqa_info, 'papers_info': papers_info, 'pubmed_info': pubmed_info}
             report_list.append(report_dict)
@@ -193,7 +213,7 @@ if __name__ == '__main__':
         else:
             structure_explain = data_generator.generate_structure_explain(report, question)
         thinking, answer, explain, dag = data_generator.process_structure_explain(structure_explain)
-        structure_explain_dict = {'index': i, 'input_perturbation': perturbation, 'thinking': thinking,
+        structure_explain_dict = {'index': index, 'input_perturbation': perturbation, 'thinking': thinking,
         'answer': answer, 'explain': explain, 'dag': dag, 'raw_response': structure_explain,
         'question': question, 'input_report_text': report, 'additional_info': additional_info}
 
@@ -202,21 +222,24 @@ if __name__ == '__main__':
 
         
         structure_explain_list.append(structure_explain_dict)
-        processed_structure_indices.add(i)
+        processed_structure_indices.add(index)
 
         if i % 5 == 0 or len(structure_explain_list) == len(perturbations):
             # Sort report_list by index
             report_list.sort(key=lambda x: x['index'])
             structure_explain_list.sort(key=lambda x: x['index'])
-            print(i)
             with open(report_file_name, 'w') as f:
                 json.dump(report_list, f)
             with open(structure_explain_file_name, 'w') as f:
                 json.dump(structure_explain_list, f)
     gen_data = structure_explain_list
+    # TODO: need to sort the index by string
+    gen_data.sort(key=lambda x: int(x['index']))
     gt_data = pd.read_csv('data/curation_v1/results/structure-explain-results-v4-claude4.csv')[:len(gen_data)]
     gt_data = gt_data.to_dict(orient='records')
     
-    score_file_name = f'output/score/{args.folder_name}/{args.experiment_name}_{args.tool_list}_{args.kg_num_neighbor}.json'
-    os.makedirs(os.path.dirname(score_file_name), exist_ok=True)
-    evaluate(gen_data, gt_data, score_file_name)
+    
+    if index_tag == "":
+        score_file_name = f'output/score/{args.folder_name}/{args.experiment_name}_{args.tool_list}_{args.kg_num_neighbor}.json'
+        os.makedirs(os.path.dirname(score_file_name), exist_ok=True)
+        evaluate(gen_data, gt_data, score_file_name)

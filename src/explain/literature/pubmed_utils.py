@@ -11,6 +11,11 @@ h5_file = "/rxrx/data/user/yunhui.jang/outgoing/pubmed_vectors/pubmed_embeddings
 retriever = AbstractRetriever(h5_file, db_file, chunk_size=250000, use_cuda=True)
 
 def get_pubmed_info(index, perturbation, question, num_papers, mode='ner', paper_info_column=['title', 'abstract']):
+    '''
+    Current best version: pubmed-fast-ner
+    fast: use fastrag server (if not, use AbstractRetriever)
+    ner: use ner entities (if not, use question text)
+    '''
     if 'ner' in mode:   
         perturbation_text = json.dumps(perturbation, indent=4)
         entities = extract_entity_from_text(perturbation_text, index)
@@ -20,7 +25,7 @@ def get_pubmed_info(index, perturbation, question, num_papers, mode='ner', paper
 
     if 'fast' in mode:
         url = f"http://localhost:8003/find_matches"
-        payload = {"query": query, "k": 2*num_papers}
+        payload = {"query": query, "k": num_papers+10}
         try:
             r = requests.post(url, json=payload, timeout=60)
             r.raise_for_status()
@@ -39,7 +44,7 @@ def get_pubmed_info(index, perturbation, question, num_papers, mode='ner', paper
 
 
     else:    
-        pmids, distances, documents = retriever.search(query, 2*num_papers)
+        pmids, distances, documents = retriever.search(query, num_papers+10)
 
     papers_info = []
     for i, (abstract, similarity) in enumerate(zip(documents, distances)):

@@ -88,6 +88,7 @@ class KnowledgeGraph:
         self._drugbank_searcher = None
 
         # self.edge_map = {(int(src), int(dst)): idx for idx, (src, dst) in enumerate(zip(self.edge_index[0], self.edge_index[1]))}
+        self._ensure_ner_caches()
     
     def get_drugbank_searcher(self):
         """
@@ -440,3 +441,28 @@ class KnowledgeGraph:
         """
         edge_index_sub, _ = k_hop_subgraph(node_index, k, self.edge_index)
         return edge_index_sub
+
+    def _ensure_ner_caches(self):
+        """Build one-time caches on the KG instance for fast lookups."""
+        if not hasattr(self, '_kg_node_name_lower'):
+            self._kg_node_name_lower = {name.lower(): idx for name, idx in self.kg_node_name_dict.items()}
+        if not hasattr(self, '_alias_to_node_index'):
+            alias_map = {}
+            for node in self.node_info.values():
+                if node.get('type') != 'gene/protein':
+                    continue
+                aliases = node.get('details', {}).get('alias')
+                if not aliases:
+                    continue
+                if not isinstance(aliases, list):
+                    aliases = [aliases]
+                node_idx = self.kg_node_name_dict.get(node['name'])
+                for alias in aliases:
+                    alias_map[alias] = node_idx
+            self._alias_to_node_index = alias_map
+        if not hasattr(self, '_drugbank_id_to_name'):
+            self._drugbank_id_to_name = {node['id']: node['name'] for node in self.node_info.values() if node.get('type') == 'drug'}
+        if not hasattr(self, '_pubchem_cache'):
+            self._pubchem_cache = {}
+        if not hasattr(self, '_ner_entity_cache'):
+            self._ner_entity_cache = {}

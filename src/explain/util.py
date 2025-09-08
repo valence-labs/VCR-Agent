@@ -7,22 +7,28 @@ from explain.kg.kg import KnowledgeGraph
 from collections import Counter
 import ast
 import pandas as pd
+from copy import deepcopy
 
-global perturbation_ner_mapping
 global tagger
 
 tagger = PrefixedSequenceTagger.load("hunflair/hunflair2-ner")
-# TODO: need to be fixed for the entire dataset (fix perturbation index also)
-perturbation_ner_mapping = json.load(open('data/perturbation_ner_mapping.json', 'r'))
-perturbation_ner_mapping_data_indices = [item['index'] for item in perturbation_ner_mapping]
 
-def load_data(data_dir):
+
+def set_perturbation_ner_mapping(mapping, indices):
+    global perturbation_ner_mapping
+    global perturbation_ner_mapping_data_indices
+    perturbation_ner_mapping = mapping
+    perturbation_ner_mapping_data_indices = indices
+
+def load_data(data_dir, pert_path):
     # load the action primitives
     with open(os.path.join(data_dir, "action_primitives.json")) as f:
         action_primitives = json.load(f)
-    pert_path = os.path.join('../../../emmanuel.noutahi/project/outgoing/hooke/hooke-explain/', "data", "perturbations_old.json")
-    with open(pert_path) as f:
-        perturbation_cell_context = json.load(f)
+    if len(pert_path) > 0:
+        with open(pert_path) as f:
+            perturbation_cell_context = json.load(f)
+    else:
+        perturbation_cell_context = []
     report_template = open(os.path.join(data_dir, "templates/generate-report.txt")).read()
     structre_explain_template = open(os.path.join(data_dir, "templates/structure-explain.txt")).read()
     return action_primitives, perturbation_cell_context, report_template, structre_explain_template
@@ -31,8 +37,10 @@ def extract_entity_from_text(text, pert_idx):
     """
     Extract the entity from the perturbation.
     """
-    if pert_idx in perturbation_ner_mapping_data_indices:
-        result = {**perturbation_ner_mapping[pert_idx]['perturbation_entity'], **perturbation_ner_mapping[pert_idx]['context_entity']}
+    
+    if perturbation_ner_mapping is not None and pert_idx in perturbation_ner_mapping_data_indices:
+        index = perturbation_ner_mapping_data_indices.index(pert_idx)
+        result = {**perturbation_ner_mapping[index]['perturbation_entity'], **perturbation_ner_mapping[index]['context_entity']}
     else:
         result = {}
         sentence = Sentence(text)
@@ -53,6 +61,7 @@ def map_perturbation_to_ner(perturbations, file_name):
     else:
         perturbation_ner_dict = []
     index_set = set([pert_dict['index'] for pert_dict in perturbation_ner_dict])
+    set_perturbation_ner_mapping(perturbation_ner_dict, index_set)
     for pert_idx, perturbation in enumerate(tqdm(perturbations)):
         if perturbation is None or pert_idx in index_set:
             continue
@@ -76,9 +85,12 @@ def map_perturbation_to_ner(perturbations, file_name):
             perturbation_ner_dict = sorted(perturbation_ner_dict, key=lambda x: x['index'])
             with open(file_name, 'w') as f:
                 json.dump(perturbation_ner_dict, f)
+    perturbation_ner_dict = sorted(perturbation_ner_dict, key=lambda x: x['index'])
+    with open(file_name, 'w') as f:
+        json.dump(perturbation_ner_dict, f)
 
 
-def map_perturbation_to_kg_entity(perturbations):
+def map_perturbation_to_kg_entity(perturbations, index_tag):
     """
     Generates the perturbation-KG entity mapping.
     """
@@ -89,42 +101,43 @@ def map_perturbation_to_kg_entity(perturbations):
     kg_node_info = kg.node_info
     kg_node_name_dict = {node['name']: idx for idx, node in kg_node_info.items()}
     for pert_idx, pert in enumerate(tqdm(perturbations)):
+        pert = pert['perturbation']
         perturbation_dict[pert_idx] = {}
-        context = pert['context']
-        perturbation = pert['perturbation']
+
+        context_list = pert['context']
+        if 'tahoe' in index_tag or 'rxrx' in index_tag:
+            perturbation_list = pert['perturbations']
+        else:
+            perturbation_list = [pert['perturbation']]
         perturbation_dict[pert_idx]['kg_info'] = []
         perturbation_dict[pert_idx]['org_data'] = []
-        
-        for key, value in context.items():
-            if value in kg_node_name_dict.values():
-                node_index = kg_node_name_dict[value]
-                kg_info = kg_node_info[node_index]
-                kg_info['node_index'] = node_index
-                perturbation_dict[pert_idx]['kg_info'].append(kg_node_info[node_index])
-                perturbation_dict[pert_idx]['org_data'].append({'type': 'context', 'key': key, 'value': value})
-                print(key, value, node_index)
-        
-        for key, value in perturbation.items():
-            if isinstance(value, list):
-                value = value[0]
-            if value in kg_node_name_dict.keys():
-                node_index = kg_node_name_dict[value]
-                kg_info = kg_node_info[node_index]
-                kg_info['node_index'] = node_index
-                perturbation_dict[pert_idx]['kg_info'].append(kg_info)
-                perturbation_dict[pert_idx]['org_data'].append({'type': 'perturbation', 'key': key, 'value': value})
-                print(key, value, node_index)
+        for context in context_list:
+            for key, value in context.items():
+                if value in kg_node_name_dict.values():
+                    node_index = kg_node_name_dict[value]
+                    kg_info = kg_node_info[node_index]
+                    kg_info['node_index'] = node_index
+                    perturbation_dict[pert_idx]['kg_info'].append(kg_node_info[node_index])
+                    perturbation_dict[pert_idx]['org_data'].append({'type': 'context', 'key': key, 'value': value})
+                    print(key, value, node_index)
+        for perturbation in perturbation_list:
+            for key, value in perturbation.items():
+                if isinstance(value, list):
+                    value = value[0]
+                if value in kg_node_name_dict.keys():
+                    node_index = kg_node_name_dict[value]
+                    kg_info = kg_node_info[node_index]
+                    kg_info['node_index'] = node_index
+                    perturbation_dict[pert_idx]['kg_info'].append(kg_info)
+                    perturbation_dict[pert_idx]['org_data'].append({'type': 'perturbation', 'key': key, 'value': value})
+                    print(key, value, node_index)
 
 
-    json.dump(perturbation_dict, open('data/starkprimeKG/perturbation_kg_mapping.json', 'w'))
+    json.dump(perturbation_dict, open(f'data/starkprimeKG/perturbation_kg_mapping_{index_tag}.json', 'w'))
 
 def json_to_csv(file_name):
     data = json.load(open(file_name, 'r'))
     df = pd.DataFrame(data)
     df.to_csv(file_name.replace('.json', '.csv'), index=False)
 
-
-json_to_csv('output/structure_explain/baseline/baseline_two_step_claude_[]_1.json')
-json_to_csv('output/structure_explain/baseline/baseline_two_step_gemini_[]_1.json')
-json_to_csv("output/structure_explain/multi_tool/multi_tool_['kg-ner', 'harmonizome', 'wikipedia', 'paperqa_list']_1.json")
 

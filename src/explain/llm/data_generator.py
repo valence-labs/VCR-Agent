@@ -22,7 +22,8 @@ class DataGenerator:
         self.llm_client_rephrase = create_client(provider=model_name, project_id=self.project, location=self.location)
         self.tools = self.get_tools(tool_list)
         DATA_DIR = 'data/curation_v1/'
-        self.action_primitives, self.perturbation_cell_context, self.report_template, self.structre_explain_template = load_data(DATA_DIR)
+        pert_path = kwargs['pert_path']
+        self.action_primitives, self.perturbation_cell_context, self.report_template, self.structre_explain_template = load_data(DATA_DIR, pert_path)
         self.one_step_explain_template = open(os.path.join(DATA_DIR, "templates/one-step.txt")).read()
         if 'order' in kwargs and kwargs['order']:
             self.structure_explain_template = open(os.path.join(DATA_DIR, "templates/structure-explain-order.txt")).read()

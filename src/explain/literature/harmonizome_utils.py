@@ -1,7 +1,8 @@
 import json
 from urllib.request import urlopen
 from textwrap import dedent
-
+from concurrent.futures import ThreadPoolExecutor
+import numpy as np
 
 from explain.literature.harmonizome import Harmonizome, Entity
 from explain.util import extract_entity_from_text
@@ -41,26 +42,47 @@ def map_gene_set_to_related_genes(gene_set_info):
 
     return gene_set
 
-def harmonizome_gene_set_to_doc(gene_set_info):
-    """
-    Turn the harmonizome gene set information into a text format.
-    """
+def harmonizome_gene_set_to_doc(gene_set_info, max_workers=8):
+
+
     gene_set = map_gene_set_to_related_genes(gene_set_info)
+    genes = list(dict.fromkeys(gene_set))  # dedup, preserve order
+
+    def fetch_gene_text(gene):
+        try:
+            gene_info = Harmonizome.get(Entity.GENE, name=gene)
+            return harmonizome_gene_to_doc(gene_info)
+        except Exception:
+            return ""
+
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        gene_texts = list(pool.map(fetch_gene_text, genes))
+
     text = f"""
-    The related genes are {', '.join(gene_set)}.\n
+    The related genes are {', '.join(genes)}.\n
     The gene information is as follows:
     """
-    # Add gene information for each gene
-    for gene in gene_set:
-        gene_info = Harmonizome.get(Entity.GENE, name=gene)
-        gene_text = harmonizome_gene_to_doc(gene_info)
-        text += gene_text
-
+    text += "".join(gene_texts)
     return dedent(text)
 
 
-def get_harmonizome_info(index, perturbation, is_ner=False):
+def map_known_targets_to_genes(known_targets):
+    """
+    Map the known targets to the genes.
+    """
+    if type(known_targets) == str:
+        genes = known_targets.split(',')
+    elif type(known_targets) == list:
+        genes = known_targets
+    else:
+        genes = []
+    return genes
 
+def get_harmonizome_info(index, perturbation, is_ner=False):
+    '''
+    Current best version: is_ner=False
+    ner: use ner entities (if not, use rule-based mapping (target: gene / perturbation name: gene set / cell type: gene set / disease model: gene set))
+    '''
     result = ""
     gene_info_list, gene_set_info_list = [], []
     # search from ner entities
@@ -90,40 +112,64 @@ def get_harmonizome_info(index, perturbation, is_ner=False):
     else:
         # without ner, search from perturbation text (target, name, disease model)
         # for target
-        target = perturbation['perturbation']['target']
-        try:
-            gene_info = Harmonizome.get(Entity.GENE, name=target)
-        except:
-            gene_info = {'status': 'error'}
-        if 'status' in gene_info.keys():
-            target_doc = ""
+        if 'tahoe' in index or 'rxrx' in index:
+            chem_targets = [map_known_targets_to_genes(pert['known targets']) for pert in perturbation['perturbation']['perturbations'] if pert['perturbation type'] == 'chemical']
+            gene_targets = [pert['gene symbol'] for pert in perturbation['perturbation']['perturbations'] if pert['perturbation type'] == 'genetic']
+            targets = list(set(*chem_targets + gene_targets))
+            targets = [target for target in targets if len(target) > 0]
         else:
-            target_doc = "### TARGET GENE INFORMATION\nThe target gene of the perturbation is " + target + ". "
-            target_doc += harmonizome_gene_to_doc(gene_info)
-            gene_info_list.append(gene_info)
+            targets = [perturbation['perturbation']['perturbation']['target']]
+        target_doc = ""
+        for target in targets:
+            if len(target) == 0:
+                continue
+            try:
+                gene_info = Harmonizome.get(Entity.GENE, name=target)
+            except:
+                gene_info = {'status': 'error'}
+            if 'status' not in gene_info.keys():
+                target_doc += "### TARGET GENE INFORMATION\nThe target gene of the perturbation is " + target + ". "
+                target_doc += harmonizome_gene_to_doc(gene_info)
+                gene_info_list.append(gene_info)
 
-        # for preturbation disease name (get related genes)
-        name = perturbation['perturbation']['name']
-        try:
-            gene_set_info = Harmonizome.get(Entity.ATTRIBUTE, name=name)
-        except:
-            gene_set_info = {'status': 'error'}
-        if 'status' not in gene_set_info.keys():
-            gene_set_doc = "### PERTURBATION NAME INFORMATION\nThe perturbation name is " + name + ". "
-            gene_set_doc += harmonizome_gene_set_to_doc(gene_set_info)
-            gene_set_info_list.append(gene_set_info)
+        # for preturbation chemical name (get related genes)
+        if 'tahoe' in index or 'rxrx' in index:
+            names = [pert['name'] for pert in perturbation['perturbation']['perturbations'] if pert['perturbation type'] == 'chemical']
         else:
+            names = [perturbation['perturbation']['perturbation']['name']]
+        for name in names:
             gene_set_doc = ""
-
-        # TODO: cell context mapping after NER for disease model (current version: search the matching word)
-        perturbation_disease_model = perturbation['context']['disease_model']
-        for word in perturbation_disease_model.split():
-            gene_set_info = Harmonizome.get(Entity.ATTRIBUTE, name=word)
+            try:
+                gene_set_info = Harmonizome.get(Entity.ATTRIBUTE, name=name)
+            except:
+                gene_set_info = {'status': 'error'}
             if 'status' not in gene_set_info.keys():
-                break
-        disease_model_doc = "### DISEASE MODEL INFORMATION\nThe disease model of the context is " + perturbation_disease_model + ". "
-        disease_model_doc += harmonizome_gene_set_to_doc(gene_set_info)
-        gene_set_info_list.append(gene_set_info)
+                gene_set_doc += "### PERTURBATION NAME INFORMATION\nThe perturbation name is " + name + ". "
+                gene_set_doc += harmonizome_gene_set_to_doc(gene_set_info)
+                gene_set_info_list.append(gene_set_info)
+
+        disease_model_doc = ""
+        # TODO: cell context mapping after NER for disease model (current version: search the matching word)
+        if 'tahoe' in index or 'rxrx' in index:
+            cell_type = perturbation['perturbation']['context'][0]['cell type']
+            try:
+                gene_set_info = Harmonizome.get(Entity.ATTRIBUTE, name=cell_type)
+            except:
+                gene_set_info = {'status': 'error'}
+            if 'status' not in gene_set_info.keys():
+                disease_model_doc += "### CELL TYPE INFORMATION\nThe cell type of the context is " + cell_type + ". "
+                disease_model_doc += harmonizome_gene_set_to_doc(gene_set_info)
+                gene_set_info_list.append(gene_set_info)
+
+        else:
+            perturbation_disease_model = perturbation['perturbation']['context']['disease_model']
+            for word in perturbation_disease_model.split():
+                gene_set_info = Harmonizome.get(Entity.ATTRIBUTE, name=word)
+                if 'status' not in gene_set_info.keys():
+                    break
+            disease_model_doc = "### DISEASE MODEL INFORMATION\nThe disease model of the context is " + perturbation_disease_model + ". "
+            disease_model_doc += harmonizome_gene_set_to_doc(gene_set_info)
+            gene_set_info_list.append(gene_set_info)
 
         result = target_doc + gene_set_doc + disease_model_doc
 
