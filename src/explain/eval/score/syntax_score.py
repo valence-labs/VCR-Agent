@@ -21,7 +21,7 @@ class SyntaxEvaluator:
         Get the allowed primitives.
         """
         DATA_DIR = 'data/curation_v1'
-        action_primitives, _, _, _ = load_data(DATA_DIR)
+        action_primitives, _, _, _ = load_data(DATA_DIR, "")
         action_primitives = [primitive['action'] for primitive in action_primitives]
         return action_primitives
 

@@ -34,7 +34,9 @@ def evaluate(gen_data, gt_data, score_file_name, metrics=['syntax', 'token_accur
 
     for i, (gt, gen) in enumerate(tqdm(zip(gt_structure_explain, structure_explain), total=len(gt_structure_explain))):
         
-
+        if str(gt['index']) != str(gen['index']):
+            print(gt['index'], gen['index'])
+            raise ValueError('Index mismatch')
         
         cur_score_dict = {'index': i}
 
