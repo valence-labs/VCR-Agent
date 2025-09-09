@@ -232,14 +232,15 @@ if __name__ == '__main__':
                 json.dump(report_list, f)
             with open(structure_explain_file_name, 'w') as f:
                 json.dump(structure_explain_list, f)
-    gen_data = structure_explain_list
-    # TODO: need to sort the index by string
-    gen_data.sort(key=lambda x: int(x['index']))
-    gt_data = pd.read_csv('data/curation_v1/results/structure-explain-results-v4-claude4.csv')[:len(gen_data)]
-    gt_data = gt_data.to_dict(orient='records')
-    
-    
+
     if index_tag == "":
+        # Do the evaluation for the dataset with GT (EC)
+        gen_data = structure_explain_list
+        gen_data.sort(key=lambda x: str(x['index']))
+        gt_data = pd.read_csv('data/curation_v1/results/structure-explain-results-v4-claude4.csv')[:len(gen_data)]
+        gt_data = gt_data.to_dict(orient='records')
+        gt_data.sort(key=lambda x: str(x['index']))
+
         score_file_name = f'output/score/{args.folder_name}/{args.experiment_name}_{args.tool_list}_{args.kg_num_neighbor}.json'
         os.makedirs(os.path.dirname(score_file_name), exist_ok=True)
         evaluate(gen_data, gt_data, score_file_name)
