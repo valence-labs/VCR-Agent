@@ -213,6 +213,6 @@ data/
 # mine
 *.toml
 *.ipynb
-uv.lock
 *.json
 sbatch_log/
+wandb/
