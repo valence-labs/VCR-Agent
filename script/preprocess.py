@@ -6,6 +6,8 @@ import argparse
 from explain.util import map_perturbation_to_ner
 from tqdm import tqdm
 
+from explain.utils.chem.pubchem import PubChemClient
+
 
 def natural_key(s):
     # split into digit chunks and non-digit chunks
@@ -13,28 +15,42 @@ def natural_key(s):
             for text in re.split(r'(\d+)', s)]
 
 
-def preprocess_ner():
-    rxrx_path = '/rxrx/data/user/lu.zhu/outgoing/benchmarking/rxrx_experiments/all_context_perturbations_structured'
-    for file in sorted(os.listdir(rxrx_path), key=natural_key):
-        print(file)
-        if file.endswith('.json') and file.startswith('perturbations_batch_'):
-            index = file.split('_')[-1].split('.')[0]
-            perturbations_rxrx = json.load(open(os.path.join(rxrx_path, file), 'r'))
-            map_perturbation_to_ner(perturbations_rxrx, f'/rxrx/data/user/yunhui.jang/outgoing/hunflair/perturbation_ner_mapping_rxrx_{index}.json')
+def preprocess(input_path, preprocessed_path):
+    '''
+    input_path: input perturbation path
+    preprocessed_file_path: preprocessed perturbation path
+    '''
+    # NER mapping
+    perturbations = json.load(open(os.path.join(input_path), 'r'))
+    map_perturbation_to_ner(perturbations, preprocessed_path)
+    # PubChem info mapping
+    processed_perturbations = json.load(open(preprocessed_path, 'r'))
+    map_pubchem_info(processed_perturbations, preprocessed_path)
 
-def preprocess_filter_with_reservation():
+def map_pubchem_info(perturbations, preprocessed_path):
+    pubchem_client = PubChemClient()
+    for i, perturbation in enumerate(tqdm(perturbations)):
+        for pert in perturbation['perturbation']['perturbations']:
+            if pert['perturbation type'] == 'chemical':
+                if 'pubchem_info' not in pert.keys():
+                    pubchem_info = pubchem_client.get_compound_info(smiles=pert['smiles'])
+                    pert['pubchem_info'] = pubchem_info
+        if i % 50 == 0 or i == len(perturbations) - 1:
+            with open(preprocessed_path, 'w') as f:
+                json.dump(perturbations, f)
+
+def preprocess_filter_with_reservation(input_path='/rxrx/data/user/yunhui.jang/outgoing/hunflair'):
     '''
     Filter with reserved bc experiment or reserved bc compound
     '''
-    rxrx_path = '/rxrx/data/user/yunhui.jang/outgoing/hunflair'
     reserved_bc_expt_count = 0
     reserved_bc_comp_count = 0
     reserved_all_count = 0
     total_count = 0
-    for file in tqdm(sorted(os.listdir(rxrx_path), key=natural_key)):
+    for file in tqdm(sorted(os.listdir(input_path), key=natural_key)):
         if 'rxrx' in file:
             index = file.split('_')[-1].split('.')[0]
-            perturbations_rxrx = json.load(open(os.path.join(rxrx_path, file), 'r'))
+            perturbations_rxrx = json.load(open(os.path.join(input_path, file), 'r'))
                 # remove duplicates
             perturbations_rxrx = dedupe_ignoring_index(perturbations_rxrx, keep="first", drop_index_in_output=True)
             reserved_bc_expt = [pert for pert in perturbations_rxrx if pert['perturbation']['all_reserved_bc_expt']]
@@ -54,12 +70,11 @@ def preprocess_filter_with_reservation():
     print(reserved_bc_expt_count/total_count, reserved_bc_comp_count/total_count, reserved_all_count/total_count)
 
 
-def preprocess_filter_with_ner_matching(num_samples=30000):
-    rxrx_path = '/rxrx/data/user/yunhui.jang/outgoing/hunflair'
+def preprocess_filter_with_ner_matching(num_samples=30000, input_path='/rxrx/data/user/yunhui.jang/outgoing/hunflair'):
     data = []
-    for file in tqdm(sorted(os.listdir(rxrx_path), key=natural_key)[:2]):
+    for file in tqdm(sorted(os.listdir(input_path), key=natural_key)[:2]):
         if 'rxrx' in file:
-            perturbations_rxrx = json.load(open(os.path.join(rxrx_path, file), 'r'))
+            perturbations_rxrx = json.load(open(os.path.join(input_path, file), 'r'))
             perturbations_rxrx = dedupe_ignoring_index(perturbations_rxrx, keep="first", drop_index_in_output=True)
             perturbations_rxrx = [pert for pert in perturbations_rxrx if not pert['perturbation']['all_reserved_bc_expt'] and not pert['perturbation']['reserved_bc_comp']]
             data.extend(perturbations_rxrx)
@@ -128,33 +143,13 @@ def dedupe_ignoring_index(records, keep="first", drop_index_in_output=False, lis
         out = [_strip(r) for r in out]
     return out
 
-
-def remove_duplicates():
-    data = []
-    for i in range(0,24):
-        with open(f'/rxrx/data/user/yunhui.jang/outgoing/hunflair/perturbation_ner_mapping_rxrx_{i}.json', 'r') as f:
-            data_i = json.load(f)
-        data.extend(data_i)
-
-    unique_no_idx = dedupe_ignoring_index(data, keep="first", drop_index_in_output=True)
-
-    # TODO: add datawise indices
-
-    return unique_no_idx
-
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--index', type=str, default='3')
+    parser.add_argument('--input_path', type=str, default='/rxrx/data/user/lu.zhu/outgoing/benchmarking/rxrx_experiments/all_context_perturbations_structured/perturbations_batch_0.json')
+    parser.add_argument('--preprocessed_path', type=str, default='/rxrx/data/user/yunhui.jang/outgoing/hunflair/perturbation_ner_mapping_rxrx_0.json')
     return parser.parse_args()
 
 if __name__ == '__main__':
-    # args = parse_args()
-    for index in [3,4,5,6,8]:
-        path = f'data/rxrx/prioritized_context_perturbations_structured_data/perturbations_batch_{index}.json'
-        with open(path) as f:
-            data = json.load(f)
-        reserved_data = [d for d in data if d['reserved_bc_expt'] or d['reserved_bc_comp']]
-        print(len(reserved_data))
-        print(len(data))
-        json.dump(reserved_data, open(f'data/rxrx/reserved/reserved_perturbations_batch_{index}.json', 'w'))
-        map_perturbation_to_ner(reserved_data, f'data/rxrx/reserved/reserved_perturbation_ner_mapping_batch_{index}.json')
+    args = parse_args()
+    preprocess(args.input_path, args.preprocessed_path)
