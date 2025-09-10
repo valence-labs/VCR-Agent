@@ -114,11 +114,9 @@ def get_harmonizome_info(index, perturbation, is_ner=False):
         # for target
         if 'tahoe' in index or 'rxrx' in index:
             chem_targets = [map_known_targets_to_genes(pert['known targets']) for pert in perturbation['perturbation']['perturbations'] if pert['perturbation type'] == 'chemical']
+            chem_targets = [gene for sublist in chem_targets for gene in sublist]
             gene_targets = [pert['gene symbol'] for pert in perturbation['perturbation']['perturbations'] if pert['perturbation type'] == 'genetic']
-            if 'tahoe' in index:
-                targets = list(set(*chem_targets + gene_targets))
-            else:
-                targets = list(set(chem_targets + gene_targets))
+            targets = list(set(chem_targets + gene_targets))
             targets = [target for target in targets if len(target) > 0]
         else:
             targets = [perturbation['perturbation']['perturbation']['target']]
