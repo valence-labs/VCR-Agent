@@ -6,6 +6,7 @@ import requests
 import os
 
 from explain.util import extract_entity_from_text
+from explain.utils.chem.pubchem import PubChemClient
 
 DATA_DIR = '/mnt/ps/home/CORP/yunhui.jang/research/hooke-explain/data'
 with open(os.path.join(DATA_DIR, 'mondo.json'), 'r') as f:
@@ -14,6 +15,8 @@ mondo_nodes = mondo_data['graphs'][0]['nodes']
 mondo_node_label_dict = {node['lbl']: idx for idx, node in enumerate(mondo_nodes) if 'lbl' in node.keys()}
 mondo_label_node_dict = {v: k for k, v in mondo_node_label_dict.items()}
 mondo_node_synonyms = {node['lbl']: node['meta']['synonyms'] for node in mondo_nodes if 'meta' in node.keys() and 'synonyms' in node['meta'].keys()}
+
+pubchem_client = PubChemClient()
 
 # Fast MONDO synonym lookup: synonym value -> label
 mondo_synonym_to_label = {}
@@ -59,61 +62,33 @@ def get_kg_entity_doc(perturbation_index, kg, with_rel=False):
 
 def get_kg_info(index, perturbation, tool, kg, is_with_rel, num_neighbor):
     # NER
-    perturbation_text = json.dumps(perturbation, indent=4)
     if 'tahoe' in index or 'rxrx' in index:
         perturbation_partial_text = json.dumps(perturbation['perturbation']['perturbations'], indent=4)
     else:
         perturbation_partial_text = json.dumps(perturbation['perturbation']['perturbation'], indent=4)
     context_text = json.dumps(perturbation['perturbation']['context'], indent=4)
     perturbation_entity = extract_entity_from_text(perturbation_partial_text, index)
-    
+    # Get NER entities
     context_entity = extract_entity_from_text(context_text, index)
-    
+    # Get NER node indices
     extracted_graph_info = {}
-    # Phase 1: node selection 
-    if 'entity-embedding' in tool:
-        # KG-entity-embedding: prioritize the nodes that could be acquires (others: embedding-based)
-        kg_node_perturbation, _ = entity_matching_info(index)
-        if len(kg_node_perturbation) > 0:
-            perturbation_similar_node_index = [int(kg_node['node_index']) for kg_node in kg_node_perturbation]
-        else:
-            perturbation_similar_node_index = list(kg.find_similar_nodes(perturbation_partial_text, k=num_neighbor).keys())
-        context_similar_node_index = list(kg.find_similar_nodes(context_text, k=num_neighbor).keys())
-        node_list = list(set(perturbation_similar_node_index + context_similar_node_index))
-    elif 'entity' in tool:
-        # KG-entity: get the excat matching entity information from the knowledge graph
-        kg_info = get_kg_entity_doc(index, kg, is_with_rel)
-    elif 'embedding' in tool:
-        if 'subgraph' in tool:
-            perturbation_similar_node_index = list(kg.find_similar_nodes(perturbation_partial_text, k=num_neighbor).keys())
-            context_similar_node_index = list(kg.find_similar_nodes(context_text, k=num_neighbor).keys())
-            node_list = list(set(perturbation_similar_node_index + context_similar_node_index))
-        else:
-            similar_node_dict = kg.find_similar_nodes(perturbation_text, k=num_neighbor)
-            node_list = list(similar_node_dict.keys())
-    elif 'ner' in tool:
-        perturbation_ner_node_index, perturbation_unmatching_entities = get_ner_node_index(perturbation_entity, kg)
-        perturbation_ner_node_index = [n['node'] for n in perturbation_ner_node_index]
+    perturbation_ner_node_index, perturbation_unmatching_entities = get_ner_node_index(perturbation_entity, kg)
+    perturbation_ner_node_index = [n['node'] for n in perturbation_ner_node_index]
+    context_ner_node_index, context_unmatching_entities = get_ner_node_index(context_entity, kg)
+    context_ner_node_index = [n['node'] for n in context_ner_node_index]
+    # Search for similar nodes when matching node does not exist in KG
+    unmatching_entity_node_index = []
+    for unmatching_entity in perturbation_unmatching_entities+context_unmatching_entities:
+        unmatching_entity_node_index.extend(list(kg.find_similar_nodes(unmatching_entity, k=num_neighbor).keys()))
 
-        context_ner_node_index, context_unmatching_entities = get_ner_node_index(context_entity, kg)
-        context_ner_node_index = [n['node'] for n in context_ner_node_index]
-        unmatching_entity_node_index = []
-        for unmatching_entity in perturbation_unmatching_entities+context_unmatching_entities:
-            unmatching_entity_node_index.extend(list(kg.find_similar_nodes(unmatching_entity, k=num_neighbor).keys()))
-
-        node_list = list(set(perturbation_ner_node_index + context_ner_node_index + unmatching_entity_node_index))
-    # Phase 2: subgraph extraction or node information extraction
-    if 'kg-entity' == tool or 'kg-entity-rephrase' == tool:
-        # Get the single node information (exact matching nodes)
-        pass
-    elif 'subgraph' in tool:
-        # KG-embedding-subgraph, KG-entity-embedding-subgraph: get the subgraph from the set of nodes
+    node_list = list(set(perturbation_ner_node_index + context_ner_node_index + unmatching_entity_node_index))
+    # subgraph extraction or node information extraction
+    if 'subgraph' in tool:
         subgraph = kg.get_subgraph_from_nodes(node_list)
         extracted_graph_info['node_list'] = [str(node) for node in node_list]
         extracted_graph_info['subgraph'] = subgraph
         kg_info = kg.subgraph_to_text(subgraph)
     else:
-        # KG-embedding, KG-embedding-rephrase (get the top K similar nodes)
         extracted_graph_info['node_list'] = [str(node) for node in node_list]
         kg_info = ""
         for similar_node in node_list:
@@ -125,32 +100,6 @@ def get_kg_info(index, perturbation, tool, kg, is_with_rel, num_neighbor):
 
     return kg_info, extracted_graph_info
 
-def get_dbid_from_pubchemid(cid):
-    """
-    Turn the pubchem CID into drugbank ID
-    """
-    rv = requests.get(
-            f"https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/{cid}/JSON"
-    )
-    j = rv.json()
-    # Walk the PUG-View tree and collect DrugBank IDs
-    def walk(section):
-        hits = []
-        if section.get("TOCHeading") == "DrugBank ID":
-            for info in section.get("Information", []):
-                for s in info.get("Value", {}).get("StringWithMarkup", []):
-                    hits.append(s["String"])
-        for child in section.get("Section", []) or []:
-            hits.extend(walk(child))
-        return hits
-
-    drugbank_ids = []
-    for rec in j.get("Record", {}).get("Section", []):
-        drugbank_ids.extend(walk(rec))
-    drugbank_ids = sorted(set(drugbank_ids))
-    if len(drugbank_ids) == 0:
-        return None
-    return drugbank_ids[0]
 
 def get_ner_node_index(entity_dict, kg):
     """
@@ -200,34 +149,28 @@ def get_ner_node_index(entity_dict, kg):
                             node_index = kg.kg_node_name_dict.get(node_name)
 
             elif tag == 'Chemical':
-                if node_index is None:
-                    dbid = None
+                # 0) Try PubChem cache
+                cached = kg._pubchem_cache.get(entity_lower)
+                dbid = None
+                if cached:
+                    node_index = cached.get('node_index')
+                    dbid = cached.get('dbid')
+
+                # 1) Fallback: DrugBank searcher
+                if not dbid:
                     searcher = kg.get_drugbank_searcher()
                     if searcher is not None:
                         dbid = searcher.search_by_name(entity)
-                    if dbid is None:
-                        cached = kg._pubchem_cache.get(entity_lower)
-                        if cached is not None:
-                            node_index = cached.get('node_index')
-                            dbid = cached.get('dbid')
-                        if node_index is None and dbid is None:
-                            try:
-                                compound = pcp.get_compounds(entity, 'name')
-                                if len(compound) > 0:
-                                    compound = compound[0]
-                                    for syn in compound.synonyms:
-                                        if syn in drug_names_dict.values():
-                                            node_index = kg.kg_node_name_dict.get(syn)
-                                            break
-                                    if node_index is None:
-                                        cid = compound.cid
-                                        dbid = get_dbid_from_pubchemid(cid)
-                            except Exception:
-                                pass
-                            kg._pubchem_cache[entity_lower] = {'node_index': node_index, 'dbid': dbid}
-                    if dbid is not None and node_index is None:
-                        drug_name = drug_names_dict.get(dbid)
-                        node_index = kg.kg_node_name_dict.get(drug_name)
+                # 2) Fallback: Try PubChem
+                if not dbid:
+                    compound = pubchem_client.get_compound_info(name=entity)
+                    dbid = next((s for s in compound.get('synonyms', []) if s.startswith('DB')), None)
+                # Set node index if dbid is found
+                if dbid:
+                    drug_name = drug_names_dict.get(dbid)
+                    node_index = kg.kg_node_name_dict.get(drug_name)
+                    if node_index:
+                        kg._pubchem_cache[entity_lower] = {'node_index': node_index, 'dbid': dbid}
 
             elif tag == 'Gene':
                 node_index = kg._alias_to_node_index.get(entity)

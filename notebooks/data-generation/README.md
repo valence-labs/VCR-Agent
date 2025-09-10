@@ -26,16 +26,28 @@ export PATH="$HOME/julia/bin:$PATH" # add to PATH (put this in ~/.bashrc or your
 julia --version
 ```
 
+Clone the PubMed-related repositories and download the pubmed_data.db file to data/
+```bash
+git clone https://github.com/kyunghyuncho/pubmed-vectors.git
+git clone https://github.com/domluna/pubmedFastRAG/tree/main
+```
+
+```bash
+python pubmed-vectors/download_pubmed.py
+```
+
 ## Input
-The input format follows:
+The input format follows the example. Note that some entities could be missing.
 
 ```json
 [{  'index': 0,
     "perturbation": {
         'context': [{
-            'perturbation_type': 'soluble factor', 
+            'perturbation type': 'soluble factor', 
             'description': 'Soluble factor addition of VEGF', 'cell_type': 'N/A', 
             'disease_model': 'Angiogenic factor/tumors'
+            'cell type': ,
+            'subtype': ,
         }], 
         'perturbations': [{
             'type': 'chemical', 
@@ -43,6 +55,7 @@ The input format follows:
             'name': 'Nintedanib', 
             'target': 'VEGFR', 
             'moa_type': 'antibody'
+            'known targets': ,
         }]
     }
 },

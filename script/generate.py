@@ -11,8 +11,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from explain.llm.data_generator import DataGenerator
 from explain.util import set_perturbation_ner_mapping
 from explain.eval.score.evaluate import evaluate
-from explain.kg.starkprimekg_utils import get_kg_info
-from explain.kg.starkprimekg import StarkPrimeKG
+from explain.starkprimekg.starkprimekg_utils import get_kg_info
+from explain.starkprimekg.starkprimekg import StarkPrimeKG
 from explain.literature.harmonizome_utils import get_harmonizome_info
 from explain.literature.wikipedia_utils import get_wikipedia_info
 from explain.literature.paperqa_utils import get_paperqa_info

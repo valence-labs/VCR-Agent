@@ -101,7 +101,7 @@ class StarkPrimeKG:
         
         if _global_drugbank_searcher is None:
             try:
-                from explain.kg.drugbanksearcher import DrugBankSearcher
+                from explain.starkprimekg.drugbanksearcher import DrugBankSearcher
                 _global_drugbank_searcher = DrugBankSearcher(self._drugbank_xml_path)
                 print("DrugBankSearcher initialized successfully")
             except Exception as e:

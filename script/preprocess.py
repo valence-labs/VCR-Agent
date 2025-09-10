@@ -15,17 +15,19 @@ def natural_key(s):
             for text in re.split(r'(\d+)', s)]
 
 
-def preprocess(input_path, preprocessed_path):
+def preprocess(input_path, preprocessed_path, mode='ner-pubchem'):
     '''
     input_path: input perturbation path
     preprocessed_file_path: preprocessed perturbation path
     '''
     # NER mapping
-    perturbations = json.load(open(os.path.join(input_path), 'r'))
-    map_perturbation_to_ner(perturbations, preprocessed_path)
+    if 'ner' in mode:
+        perturbations = json.load(open(os.path.join(input_path), 'r'))
+        map_perturbation_to_ner(perturbations, preprocessed_path)
     # PubChem info mapping
-    processed_perturbations = json.load(open(preprocessed_path, 'r'))
-    map_pubchem_info(processed_perturbations, preprocessed_path)
+    if 'pubchem' in mode:
+        processed_perturbations = json.load(open(preprocessed_path, 'r'))
+        map_pubchem_info(processed_perturbations, preprocessed_path)
 
 def map_pubchem_info(perturbations, preprocessed_path):
     pubchem_client = PubChemClient()
@@ -35,6 +37,16 @@ def map_pubchem_info(perturbations, preprocessed_path):
                 if 'pubchem_info' not in pert.keys():
                     pubchem_info = pubchem_client.get_compound_info(smiles=pert['smiles'])
                     pert['pubchem_info'] = pubchem_info
+                if 'pubchem_info' in pert.keys():
+                    pubchem_info = pert['pubchem_info']
+                    if 'name' in pubchem_info.keys():
+                        # Treat the first synonym without number as the drug name (normally USAN/INN)
+                        synonym = [s for s in pubchem_info['synonyms'] if not any(c.isdigit() for c in s)]
+                        if len(synonym) > 0:
+                            synonym = synonym[0]
+                            if synonym not in perturbation['perturbation_entity']:
+                                perturbation['perturbation_entity'][synonym] = 'Chemical'
+
         if i % 50 == 0 or i == len(perturbations) - 1:
             with open(preprocessed_path, 'w') as f:
                 json.dump(perturbations, f)
@@ -146,10 +158,11 @@ def dedupe_ignoring_index(records, keep="first", drop_index_in_output=False, lis
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--index', type=str, default='3')
-    parser.add_argument('--input_path', type=str, default='/rxrx/data/user/lu.zhu/outgoing/benchmarking/rxrx_experiments/all_context_perturbations_structured/perturbations_batch_0.json')
-    parser.add_argument('--preprocessed_path', type=str, default='/rxrx/data/user/yunhui.jang/outgoing/hunflair/perturbation_ner_mapping_rxrx_0.json')
+    parser.add_argument('--input_path', type=str, default='data/rxrx/reserved/reserved_perturbations_batch_0.json')
+    parser.add_argument('--preprocessed_path', type=str, default='data/rxrx/reserved/reserved_perturbation_ner_mapping_batch_0.json')
+    parser.add_argument('--mode', type=str, default='ner-pubchem', choices=['ner-pubchem', 'pubchem', 'ner'])
     return parser.parse_args()
 
 if __name__ == '__main__':
     args = parse_args()
-    preprocess(args.input_path, args.preprocessed_path)
+    preprocess(args.input_path, args.preprocessed_path, mode=args.mode)

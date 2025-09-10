@@ -37,7 +37,8 @@ def extract_entity_from_text(text, pert_idx):
     
     if perturbation_ner_mapping is not None and pert_idx in perturbation_ner_mapping_data_indices:
         index = perturbation_ner_mapping_data_indices.index(pert_idx)
-        result = {**perturbation_ner_mapping[index]['perturbation_entity'], **perturbation_ner_mapping[index]['context_entity']}
+        perturbation = perturbation_ner_mapping[index]
+        result = {**perturbation['perturbation_entity'], **perturbation['context_entity']}
     else:
         result = {}
         sentence = Sentence(text)
