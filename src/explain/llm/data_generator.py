@@ -11,43 +11,32 @@ from explain.llm import create_client
 from explain.literature.harmonizome_utils import map_gene_set_to_related_genes
 from explain.literature.harmonizome import Harmonizome, Entity
 
+
+
 class DataGenerator:
     def __init__(self, model_name: str, tool_list: list[str], **kwargs):
         self.model_name = model_name
-        self.location = "us-east5"
-        self.project = "vertexai-sandbox-e8a925d0"
 
-        self.llm_client_report = create_client(provider=model_name, project_id=self.project, location=self.location)
-        self.llm_client_explain = create_client(provider=model_name, project_id=self.project, location=self.location)
-        self.llm_client_rephrase = create_client(provider=model_name, project_id=self.project, location=self.location)
-        self.tools = self.get_tools(tool_list)
-        DATA_DIR = 'data/curation_v1/'
-        pert_path = kwargs['pert_path']
-        self.action_primitives, self.perturbation_cell_context, self.report_template, self.structre_explain_template = load_data(DATA_DIR, pert_path)
-        self.one_step_explain_template = open(os.path.join(DATA_DIR, "templates/one-step.txt")).read()
+        project_id = kwargs.get("project_id", os.getenv("VERTEXAI_PROJECT"))
+        location = kwargs.get("location", os.getenv("VERTEXAI_LOCATION"))
+        data_dir = kwargs.get("data_dir", os.getenv("DATA_DIR"))
+
+        self.llm_client_report = create_client(provider=model_name, project_id=project_id, location=location)
+        self.llm_client_explain = create_client(provider=model_name, project_id=project_id, location=location)
+        self.llm_client_rephrase = create_client(provider=model_name, project_id=project_id, location=location)
+        
+
+        self.action_primitives, self.perturbation_cell_context, self.report_template, self.structure_explain_template = load_data(data_dir, kwargs['pert_path'])
+        self.one_step_explain_template = open(os.path.join(data_dir, "templates/one-step.txt")).read()
         if 'order' in kwargs and kwargs['order']:
-            self.structure_explain_template = open(os.path.join(DATA_DIR, "templates/structure-explain-order.txt")).read()
+            self.structure_explain_template = open(os.path.join(data_dir, "templates/structure-explain-order.txt")).read()
         if 'openai' in model_name:
             self.encoding = tiktoken.encoding_for_model("gpt-4-1")
         
         # Add caching for responses
         self.response_cache = {}
-        self.max_cache_size = 1000
+        self.max_cache_size = int(kwargs.get("max_cache_size",1000))
 
-    def get_tools(self, tool_list: list[str]):
-        """
-        Get the list of tools for Langchain 
-        """
-        tools = []
-        if 'wikipedia' in tool_list:
-            wiki = WikipediaAPIWrapper(lang="en", top_k_results=3, doc_content_chars_max=2000)
-            wiki_tool = WikipediaQueryRun(api_wrapper=wiki)
-            tools.append(wiki_tool)
-        # if 'kg_neighbor' in tool_list:
-        #     kg_tool = KGNeighborTool()
-        #     tools.append(kg_tool)
-            
-        return tools
 
     def _get_cache_key(self, input_prompt):
         """Generate a cache key for the input prompt"""
@@ -109,7 +98,6 @@ class DataGenerator:
     def generate_report(self, perturbation, additional_info):
         input_prompt = self.report_template.format(treatment=json.dumps(perturbation, indent=4))
         if len(additional_info) > 0:
-            # TODO: integrate with template 
             expected_output_marker = "### EXPECTED OUTPUT"
             idx = input_prompt.find(expected_output_marker)
             input_prompt = (
@@ -123,19 +111,11 @@ class DataGenerator:
         return response
 
     def generate_structure_explain(self, report, question):
-        input_prompt = self.structre_explain_template.format(action_primitives=self.action_primitives,
+        input_prompt = self.structure_explain_template.format(action_primitives=self.action_primitives,
                                                         report=report,
                                                         question=question)
-        trial = 0
-        while trial < 10:
-            response = self.generate_response(input_prompt, mode='explain')
-            if response is None:
-                trial += 1
-                continue
-            if len(response) > 0:
-                break
-        if trial == 10:
-            return ""
+        response = self.generate_response(input_prompt, mode='explain')
+
         return response
 
 
@@ -191,48 +171,55 @@ class DataGenerator:
         return response
 
     def schema_additional_info(self, info, tool):
-        schema_info = []
         if 'kg' in tool:
-            entities = info.split('\n\n')[:-1]
-            for entity in entities:
-                total_entity = entity.split('- ')   
-                total_entity = [en.strip() for en in total_entity if len(en) > 0]
-                total_entity = [{en.split(':')[0].strip(): ':'.join(en.split(':')[1:]).strip()} for en in total_entity if len(en.split(':')) > 1]
-                schema_info.append(total_entity)
-            
-            result = {"KG nodes": schema_info}
+            return json.dumps(self._schema_from_kg(info))
+        if 'harmonizome' in tool:
+            return json.dumps(self._schema_from_harmonizome(info))
+        if 'wikipedia' in tool:
+            return json.dumps(self._schema_from_wikipedia(info))
+        if 'paperqa' in tool:
+            return json.dumps(self._schema_from_paperqa(info))
+        return json.dumps({})
 
-        elif 'harmonizome' in tool:
-            gene_entities = info[-1]['gene_info']
-            gene_set_entities = info[-1]['gene_set_info']
-            for gene_entity in gene_entities:
-                gene_entity['gene_name'] = gene_entity['name']
-                schema_info.append(gene_entity)
-            for gene_set_entity in gene_set_entities:
-                gene_set_entity['gene_set_name'] = gene_set_entity['name']
-                related_genes = map_gene_set_to_related_genes(gene_set_entity)
-                related_gene_info = []
-                for related_gene in related_genes:
-                    gene_info = Harmonizome.get(Entity.GENE, name=related_gene)
-                    related_gene_info.append(gene_info)
-                gene_set_entity['related_genes'] = related_gene_info
-                schema_info.append(gene_set_entity)
+    def _schema_from_kg(self, info):
+        schema_info = []
+        entities = info.split('\n\n')[:-1]
+        for entity in entities:
+            total_entity = entity.split('- ')
+            total_entity = [en.strip() for en in total_entity if len(en) > 0]
+            total_entity = [{en.split(':')[0].strip(): ':'.join(en.split(':')[1:]).strip()} for en in total_entity if len(en.split(':')) > 1]
+            schema_info.append(total_entity)
+        return {"KG nodes": schema_info}
 
-            result = {"Gene information": schema_info}
+    def _schema_from_harmonizome(self, info):
+        schema_info = []
+        gene_entities = info[-1]['gene_info']
+        gene_set_entities = info[-1]['gene_set_info']
+        for gene_entity in gene_entities:
+            gene_entity['gene_name'] = gene_entity['name']
+            schema_info.append(gene_entity)
+        for gene_set_entity in gene_set_entities:
+            gene_set_entity['gene_set_name'] = gene_set_entity['name']
+            related_genes = map_gene_set_to_related_genes(gene_set_entity)
+            related_gene_info = []
+            for related_gene in related_genes:
+                gene_info = Harmonizome.get(Entity.GENE, name=related_gene)
+                related_gene_info.append(gene_info)
+            gene_set_entity['related_genes'] = related_gene_info
+            schema_info.append(gene_set_entity)
+        return {"Gene information": schema_info}
 
-        elif 'wikipedia' in tool:
-            entities = [entity for entity in info.split('##') if len(entity) > 0]
-            for entity in entities:
-                key = entity.split('\n')[0].strip()
-                value = '\n'.join(entity.split('\n')[1:]).strip()
-                schema_info.append({'entity_name': key, 'context': value})
-            result = {"wikipedia_info": schema_info}
+    def _schema_from_wikipedia(self, info):
+        schema_info = []
+        entities = [entity for entity in info.split('##') if len(entity) > 0]
+        for entity in entities:
+            key = entity.split('\n')[0].strip()
+            value = '\n'.join(entity.split('\n')[1:]).strip()
+            schema_info.append({'entity_name': key, 'context': value})
+        return {"wikipedia_info": schema_info}
 
-        elif 'paperqa' in tool:
-            result = {'paper_info': info}
-
-            # result = {"graph_info": graph_info}
-        return json.dumps(result)
+    def _schema_from_paperqa(self, info):
+        return {'paper_info': info}
 
 
     def post_process_additional_info(self, input_info, tool, perturbation):

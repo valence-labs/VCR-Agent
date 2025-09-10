@@ -3,11 +3,8 @@ import json
 from flair.data import Sentence
 from flair.models.prefixed_tagger import PrefixedSequenceTagger
 from tqdm import tqdm
-from explain.kg.kg import KnowledgeGraph
-from collections import Counter
 import ast
 import pandas as pd
-from copy import deepcopy
 
 global tagger
 
@@ -88,52 +85,6 @@ def map_perturbation_to_ner(perturbations, file_name):
     perturbation_ner_dict = sorted(perturbation_ner_dict, key=lambda x: x['index'])
     with open(file_name, 'w') as f:
         json.dump(perturbation_ner_dict, f)
-
-
-def map_perturbation_to_kg_entity(perturbations, index_tag):
-    """
-    Generates the perturbation-KG entity mapping.
-    """
-    kg = KnowledgeGraph()
-
-    perturbation_dict = {}
-
-    kg_node_info = kg.node_info
-    kg_node_name_dict = {node['name']: idx for idx, node in kg_node_info.items()}
-    for pert_idx, pert in enumerate(tqdm(perturbations)):
-        pert = pert['perturbation']
-        perturbation_dict[pert_idx] = {}
-
-        context_list = pert['context']
-        if 'tahoe' in index_tag or 'rxrx' in index_tag:
-            perturbation_list = pert['perturbations']
-        else:
-            perturbation_list = [pert['perturbation']]
-        perturbation_dict[pert_idx]['kg_info'] = []
-        perturbation_dict[pert_idx]['org_data'] = []
-        for context in context_list:
-            for key, value in context.items():
-                if value in kg_node_name_dict.values():
-                    node_index = kg_node_name_dict[value]
-                    kg_info = kg_node_info[node_index]
-                    kg_info['node_index'] = node_index
-                    perturbation_dict[pert_idx]['kg_info'].append(kg_node_info[node_index])
-                    perturbation_dict[pert_idx]['org_data'].append({'type': 'context', 'key': key, 'value': value})
-                    print(key, value, node_index)
-        for perturbation in perturbation_list:
-            for key, value in perturbation.items():
-                if isinstance(value, list):
-                    value = value[0]
-                if value in kg_node_name_dict.keys():
-                    node_index = kg_node_name_dict[value]
-                    kg_info = kg_node_info[node_index]
-                    kg_info['node_index'] = node_index
-                    perturbation_dict[pert_idx]['kg_info'].append(kg_info)
-                    perturbation_dict[pert_idx]['org_data'].append({'type': 'perturbation', 'key': key, 'value': value})
-                    print(key, value, node_index)
-
-
-    json.dump(perturbation_dict, open(f'data/starkprimeKG/perturbation_kg_mapping_{index_tag}.json', 'w'))
 
 def json_to_csv(file_name):
     data = json.load(open(file_name, 'r'))

@@ -10,7 +10,7 @@ class StructuralEvaluator:
         Check whether the edge types are correct.
         """
         gt_graph = dag_to_networkx_graph(gt_dag)
-        if gen_dag is np.nan:
+        if np.isnan(gen_dag):
             return 0
         gen_graph = dag_to_networkx_graph(gen_dag)
 

@@ -1,6 +1,7 @@
 import re
 import networkx as nx
 import numpy as np
+import os
 
 from explain.util import load_data
 from explain.eval.utils import check_answer_format, is_format_correct
@@ -20,7 +21,7 @@ class SyntaxEvaluator:
         """
         Get the allowed primitives.
         """
-        DATA_DIR = 'data/curation_v1'
+        DATA_DIR = os.getenv("DATA_DIR")
         action_primitives, _, _, _ = load_data(DATA_DIR, "")
         action_primitives = [primitive['action'] for primitive in action_primitives]
         return action_primitives

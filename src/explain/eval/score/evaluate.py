@@ -13,8 +13,6 @@ from explain.eval.score.structural_score import StructuralEvaluator
 from explain.eval.rubrics.correctness import CorrectnessRubric
 from explain.eval.rubrics.plausibility import PlausibilityRubric
 
-print(os.getcwd())
-
 # structure explain object
 
 
@@ -35,8 +33,7 @@ def evaluate(gen_data, gt_data, score_file_name, metrics=['syntax', 'token_accur
     for i, (gt, gen) in enumerate(tqdm(zip(gt_structure_explain, structure_explain), total=len(gt_structure_explain))):
         
         if str(gt['index']) != str(gen['index']):
-            print(gt['index'], gen['index'])
-            raise ValueError('Index mismatch')
+            raise ValueError(f'Index mismatch: {gt["index"]} != {gen["index"]}')
         
         cur_score_dict = {'index': i}
 
@@ -104,13 +101,11 @@ def evaluate(gen_data, gt_data, score_file_name, metrics=['syntax', 'token_accur
         if 'token_accuracy' in key:
             for k in scores[0][key].keys():
                 score = round(np.mean([score[key][k] for score in scores]), 4)
-                print(key, k, score)
                 wandb.log({f"{key}/{k}": score})
         elif 'full_response' in key:
             pass
         else:
             score = round(np.mean([score[key] for score in scores]), 4)
-            print(key, score)
             wandb.log({key: score})
 
     wandb.finish()

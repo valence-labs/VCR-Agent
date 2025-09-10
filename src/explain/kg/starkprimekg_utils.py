@@ -58,7 +58,7 @@ def get_kg_entity_doc(perturbation_index, kg, with_rel=False):
     return ''.join(doc_parts)
 
 def get_kg_info(index, perturbation, tool, kg, is_with_rel, num_neighbor):
-     # NER
+    # NER
     perturbation_text = json.dumps(perturbation, indent=4)
     if 'tahoe' in index or 'rxrx' in index:
         perturbation_partial_text = json.dumps(perturbation['perturbation']['perturbations'], indent=4)

@@ -7,10 +7,12 @@ from nltk.translate.meteor_score import meteor_score
 import numpy as np
 from bert_score import score
 from sentence_transformers import SentenceTransformer, util
+from litellm import embedding as litellm_embedding
+
 from explain.llm._client import OpenAIClient
 from explain.llm import create_client
-
 from explain.eval.score.score_util import get_primitives_from_structure_hypothesis
+
 
 
 
@@ -51,7 +53,7 @@ class AccuracyEvaluator:
             bleu_score = 0.0
         else:
             try:
-                bleu_score = bleu_metric.corpus_score(gt_text, [gen_text]).score/100
+                bleu_score = bleu_metric.corpus_score(gen_text, [gt_text]).score/100
             except:
                 bleu_score = 0.0
         # ROUGE micro: concatenate sentences into one string each
@@ -121,10 +123,7 @@ class AccuracyEvaluator:
 
     def get_openai_embedding(self, text, model='text-embedding-3-large'):
         
-        response = self.embedding.create(
-            model=model,
-            input=text
-        )
+        response = litellm_embedding(model=model, input=text)
         return response.data[0].embedding
 
     def argument_similarity(self, gt_text: str, gen_text: str, mode='BERTScore') -> float:

@@ -115,7 +115,10 @@ def get_harmonizome_info(index, perturbation, is_ner=False):
         if 'tahoe' in index or 'rxrx' in index:
             chem_targets = [map_known_targets_to_genes(pert['known targets']) for pert in perturbation['perturbation']['perturbations'] if pert['perturbation type'] == 'chemical']
             gene_targets = [pert['gene symbol'] for pert in perturbation['perturbation']['perturbations'] if pert['perturbation type'] == 'genetic']
-            targets = list(set(*chem_targets + gene_targets))
+            if 'tahoe' in index:
+                targets = list(set(*chem_targets + gene_targets))
+            else:
+                targets = list(set(chem_targets + gene_targets))
             targets = [target for target in targets if len(target) > 0]
         else:
             targets = [perturbation['perturbation']['perturbation']['target']]
@@ -151,7 +154,10 @@ def get_harmonizome_info(index, perturbation, is_ner=False):
         disease_model_doc = ""
         # TODO: cell context mapping after NER for disease model (current version: search the matching word)
         if 'tahoe' in index or 'rxrx' in index:
-            cell_type = perturbation['perturbation']['context'][0]['cell type']
+            if 'tahoe' in index:
+                cell_type = perturbation['perturbation']['context'][0]['cell type']
+            else:
+                cell_type = perturbation['perturbation']['context'][0]['cell_type']
             try:
                 gene_set_info = Harmonizome.get(Entity.ATTRIBUTE, name=cell_type)
             except:

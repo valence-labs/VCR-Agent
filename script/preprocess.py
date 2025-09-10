@@ -2,7 +2,7 @@ import json
 import os
 import re
 from copy import deepcopy
-
+import argparse
 from explain.util import map_perturbation_to_ner
 from tqdm import tqdm
 
@@ -142,4 +142,19 @@ def remove_duplicates():
 
     return unique_no_idx
 
-preprocess_filter_with_reservation()
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--index', type=str, default='3')
+    return parser.parse_args()
+
+if __name__ == '__main__':
+    # args = parse_args()
+    for index in [3,4,5,6,8]:
+        path = f'data/rxrx/prioritized_context_perturbations_structured_data/perturbations_batch_{index}.json'
+        with open(path) as f:
+            data = json.load(f)
+        reserved_data = [d for d in data if d['reserved_bc_expt'] or d['reserved_bc_comp']]
+        print(len(reserved_data))
+        print(len(data))
+        json.dump(reserved_data, open(f'data/rxrx/reserved/reserved_perturbations_batch_{index}.json', 'w'))
+        map_perturbation_to_ner(reserved_data, f'data/rxrx/reserved/reserved_perturbation_ner_mapping_batch_{index}.json')

@@ -16,7 +16,7 @@ import networkx as nx
 # Global DrugBankSearcher instance to be shared across KnowledgeGraph instances
 _global_drugbank_searcher = None
 
-class KnowledgeGraph:
+class StarkPrimeKG:
     def __init__(self, save_address='/rxrx/data/user/hamed.shirzad/outgoing/stark_prime_kg', 
                  enc_language_model_name='pritamdeka/S-PubMedBERT-MS-MARCO', 
                  node_emb_save_address='/rxrx/data/user/hamed.shirzad/outgoing/stark_prime_kg',

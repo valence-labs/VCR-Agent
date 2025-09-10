@@ -11,10 +11,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from explain.llm.data_generator import DataGenerator
 from explain.util import set_perturbation_ner_mapping
 from explain.eval.score.evaluate import evaluate
-from explain.kg.kg_utils import get_kg_info
-from explain.kg.kg import KnowledgeGraph
+from explain.kg.starkprimekg_utils import get_kg_info
+from explain.kg.starkprimekg import StarkPrimeKG
 from explain.literature.harmonizome_utils import get_harmonizome_info
-from explain.literature.wikiepdia_utils import get_wikipedia_info
+from explain.literature.wikipedia_utils import get_wikipedia_info
 from explain.literature.paperqa_utils import get_paperqa_info
 from explain.literature.pubmed_utils import get_pubmed_info
 
@@ -133,7 +133,7 @@ if __name__ == '__main__':
         structure_explain_list = json.load(open(structure_explain_file_name, 'r'))
     # load kg
     if any('kg' in tool for tool in args.tool_list):
-        kg = KnowledgeGraph()
+        kg = StarkPrimeKG()
     
 
     processed_structure_indices = set(index_tag + str(d['index']) for d in structure_explain_list) if len(structure_explain_list) > 0 else set()
@@ -224,7 +224,7 @@ if __name__ == '__main__':
         structure_explain_list.append(structure_explain_dict)
         processed_structure_indices.add(index)
 
-        if i % 5 == 0 or len(structure_explain_list) == len(perturbations):
+        if i % 20 == 0 or len(structure_explain_list) == len(perturbations):
             # Sort report_list by index
             report_list.sort(key=lambda x: x['index'])
             structure_explain_list.sort(key=lambda x: x['index'])

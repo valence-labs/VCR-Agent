@@ -1,14 +1,9 @@
-from explain.literature.pubmed_vectors.abstract_retriever import AbstractRetriever
-from explain.util import extract_entity_from_text
 from operator import itemgetter
 import json
 import requests
 import sys
 
-db_file ="src/explain/literature/pubmed_vectors/pubmed_data.db"
-h5_file = "/rxrx/data/user/yunhui.jang/outgoing/pubmed_vectors/pubmed_embeddings.h5"
-
-retriever = AbstractRetriever(h5_file, db_file, chunk_size=250000, use_cuda=True)
+from explain.util import extract_entity_from_text
 
 def get_pubmed_info(index, perturbation, question, num_papers, mode='ner', paper_info_column=['title', 'abstract']):
     '''
@@ -23,31 +18,24 @@ def get_pubmed_info(index, perturbation, question, num_papers, mode='ner', paper
     else:
         query = question
 
-    if 'fast' in mode:
-        url = f"http://localhost:8003/find_matches"
-        payload = {"query": query, "k": num_papers+10}
-        try:
-            r = requests.post(url, json=payload, timeout=60)
-            r.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            print(f"[ERROR] request failed: {e}", file=sys.stderr)
-            sys.exit(1)
-        try:
-            data = r.json()
-        except Exception:
-            print(r.text)
-            sys.exit(0)
+    url = f"http://localhost:8003/find_matches"
+    payload = {"query": query, "k": num_papers+10}
+    try:
+        r = requests.post(url, json=payload, timeout=60)
+        r.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"[ERROR] request failed: {e}", file=sys.stderr)
+        sys.exit(1)
+    try:
+        data = r.json()
+    except Exception:
+        print(r.text)
+        sys.exit(0)
 
-        pmids = [doc['pmid'] for doc in data]
-        distances = [doc['distance'] for doc in data]
-        documents = [{'abstract': doc['abstract'], 'pmid': doc['pmid'], 'title': doc['title'], 'authors': doc['authors'], 'publication_year': doc['publication_year']} for doc in data]
-
-
-    else:    
-        pmids, distances, documents = retriever.search(query, num_papers+10)
+    documents = [{'abstract': doc['abstract'], 'pmid': doc['pmid'], 'title': doc['title'], 'authors': doc['authors'], 'publication_year': doc['publication_year']} for doc in data]
 
     papers_info = []
-    for i, (abstract, similarity) in enumerate(zip(documents, distances)):
+    for i, abstract in enumerate(documents):
         if abstract['abstract'] is None or abstract['abstract'] == 'Abstract not found':
             continue
         paper_info = {}

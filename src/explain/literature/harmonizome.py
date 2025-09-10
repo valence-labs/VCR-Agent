@@ -1,45 +1,19 @@
-"""Class for reading, parsing, and downloading data from the Harmonizome API.
-"""
-
 import gzip
 import json
 import os
 import logging
 
-# Support for both Python2.X and 3.X.
-# -----------------------------------------------------------------------------
-try:
-    from io import BytesIO
-    from urllib.request import urlopen
-    from urllib.error import HTTPError
-    from urllib.parse import quote_plus
-except ImportError:
-    from StringIO import StringIO as BytesIO
-    from urllib2 import urlopen, HTTPError
-    from urllib import quote_plus
-
-try:
-    input_shim = raw_input
-except NameError:
-    # If `raw_input` throws a `NameError`, the user is using Python 2.X.
-    input_shim = input
-
-
-# Enumerables and constants
-# -----------------------------------------------------------------------------
-
-class Enum(set):
-    """Simple Enum shim since Python 2.X does not have them.
-    """
-
-    def __getattr__(self, name):
-        if name in self:
-            return name
-        raise AttributeError
-
+from io import BytesIO
+from urllib.request import urlopen
+from urllib.error import HTTPError
+from urllib.parse import quote_plus
+from enum import Enum as PyEnum
+import numpy as np
+import pandas as pd
+from scipy.sparse import lil_matrix
 
 # The entity types supported by the Harmonizome API.
-class Entity(Enum):
+class Entity(PyEnum):
 
     DATASET = 'dataset'
     GENE = 'gene'
@@ -71,9 +45,6 @@ DOWNLOADS = [x for x in config.get('downloads')]
 DATASET_TO_PATH = config.get('datasets')
 
 
-# Harmonizome class
-# -----------------------------------------------------------------------------
-
 class Harmonizome(object):
 
     __version__ = VERSION
@@ -86,6 +57,8 @@ class Harmonizome(object):
         list starting at that cursor position.
         """
         try:
+            if isinstance(entity, PyEnum):
+                entity = entity.value
             if name:
                 name = quote_plus(name)
                 return _get_by_name(entity, name)
@@ -116,15 +89,15 @@ class Harmonizome(object):
         if datasets is None:
             datasets = cls.DATASETS
             warning = 'Warning: You are going to download all Harmonizome '\
-                      'data. This is roughly 30GB. Do you accept?\n(Y/N) '
-            resp = input_shim(warning)
+                    'data. This is roughly 30GB. Do you accept?\n(Y/N) '
+            resp = input(warning)
             if resp.lower() != 'y':
                 return
 
         for dataset in datasets:
             if dataset not in cls.DATASETS:
                 msg = '"%s" is not a valid dataset name. Check the `DATASETS`'\
-                      ' property for a complete list of names.' % dataset
+                    ' property for a complete list of names.' % dataset
                 raise AttributeError(msg)
             if not os.path.exists(dataset):
                 os.mkdir(dataset)
@@ -233,7 +206,6 @@ def _parse(fn, column_size=3, index_size=3, shape=None,
     Returns:
         (column_names, columns, index_names, index, data)
     '''
-    import numpy as np
 
     if index_fmt is None: index_fmt = np.ndarray
     if data_fmt is None: data_fmt = np.ndarray
@@ -268,9 +240,7 @@ def _parse(fn, column_size=3, index_size=3, shape=None,
 def _parse_df(fn, sparse=False, default_fill_value=None,
              column_apply=None, index_apply=None, df_args={},
              **kwargs):
-    import numpy as np
-    import pandas as pd
-    from scipy.sparse import lil_matrix
+
 
     data_fmt = lil_matrix if sparse else np.ndarray
     df_type = pd.SparseDataFrame if sparse else pd.DataFrame
