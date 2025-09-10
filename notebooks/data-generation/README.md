@@ -13,18 +13,6 @@ The data generation process follows:
 
 ## Setting
 
-If Julia is not installed, install Julia
-
-```bash
-JULIA_VERSION=1.11.6
-cd $HOME
-wget https://julialang-s3.julialang.org/bin/linux/x64/1.10/julia-$JULIA_VERSION-linux-x86_64.tar.gz
-tar -xvzf julia-$JULIA_VERSION-linux-x86_64.tar.gz
-ln -s julia-$JULIA_VERSION julia
-
-export PATH="$HOME/julia/bin:$PATH" # add to PATH (put this in ~/.bashrc or your sbatch script. Modify this to the corresponding Julia path)
-julia --version
-```
 
 Clone the PubMed-related repositories and download the pubmed_data.db file to data/
 ```bash
@@ -34,6 +22,19 @@ git clone https://github.com/domluna/pubmedFastRAG/tree/main
 
 ```bash
 python pubmed-vectors/download_pubmed.py
+```
+
+If Julia is not installed, install Julia
+
+```bash
+cd pubmedFastRAG
+JULIA_VERSION=1.11.6
+wget https://julialang-s3.julialang.org/bin/linux/x64/1.10/julia-$JULIA_VERSION-linux-x86_64.tar.gz
+tar -xvzf julia-$JULIA_VERSION-linux-x86_64.tar.gz
+ln -s julia-$JULIA_VERSION julia
+
+export PATH="julia/bin:$PATH" # add to PATH (put this in ~/.bashrc or your sbatch script. Modify this to the corresponding Julia path)
+julia --version
 ```
 
 ## Input

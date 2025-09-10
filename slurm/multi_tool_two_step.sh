@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=multi_tool
+#SBATCH --job-name=test
 #SBATCH --output=sbatch_log/%x.out
 #SBATCH --error=sbatch_log/%x.err
 #SBATCH --partition=hopper
@@ -13,6 +13,7 @@ nvidia-smi
 
 set -euo pipefail
 
+export PATH="julia/bin:$PATH" # add to PATH (put this in ~/.bashrc or your sbatch script. Modify this to the corresponding Julia path)
 
 # 1) Start embed server (8002)
 ( cd pubmedFastRAG && uv run embed.py --port 8002 --device cpu ) &
@@ -24,12 +25,13 @@ until nc -z 127.0.0.1 8002; do sleep 1; done
 JULIA_PID=$!
 until nc -z 127.0.0.1 8003; do sleep 1; done
 
-uv run src/explain/llm/generate.py \
-    --experiment_name multi_tool_order \
-    --wandb_mode online \
+uv run script/generate.py \
+    --experiment_name test \
+    --wandb_mode disabled \
     --mode report-explain \
     --tool_list '["pubmed-fast-ner", "kg-ner", "harmonizome", "wikipedia"]' \
-    --folder_name multi_tool ;
+    --folder_name test \
+    --kg_with_rel ;
 
 # optional: stop servers after test
 kill $EMBED_PID $JULIA_PID || true

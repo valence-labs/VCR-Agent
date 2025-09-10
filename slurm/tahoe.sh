@@ -14,6 +14,7 @@ nvidia-smi
 
 set -euo pipefail
 
+export PATH="julia/bin:$PATH" # add to PATH (put this in ~/.bashrc or your sbatch script. Modify this to the corresponding Julia path)
 
 # 1) Start embed server (8002)
 ( cd pubmedFastRAG && uv run embed.py --port 8002 --device cpu ) &
