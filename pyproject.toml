@@ -13,15 +13,35 @@ dependencies = [
   "loguru>=0.7.3",
   "pandas>=2.3.1",
   "tqdm>=4.67.1",
-  "cb-reach",
-  "enhanced-chat-client",
   "anthropic>=0.49.0",
   "google-auth>=2.40.3",
-  "langchain==0.3.26",
+  "pydantic>=2.8.2",
+  "datasets",
+  "verifiers>=0.1.2",
+  "google-cloud>=0.34.0",
+  "google-genai>=1.28.0",
+  "google-cloud-secret-manager>=2.24.0",
+  "litellm>=1.75.5",
+  "google-cloud-aiplatform>=1.38",
+  "rxrx-enhanced-chat-sdk>=0.0.5",
+  "diskcache>=5.6.3",
+  "nest-asyncio>=1.6.0",
+  "polars>=1.32.2",
+  "pyarrow>=21.0.0",
+  "google-cloud-bigquery>=3.35.1",
+  "duckdb>=1.0.0",
+  "rdkit>=2023.9.5",
+  "aiolimiter>=1.2.1",
+  "elasticsearch==8",
+  "fastavro>=1.12.0",
+  "db-dtypes>=1.4.3",
+  "anndata",
+  "pydeseq2",
+  "hdf5plugin",
+  "flair>=0.15.1",
   "langchain-community>=0.3.27",
-  "langchain-openai>=0.3.28",
-  "langchain-google-vertexai>=2.0.28",
   "wikipedia>=1.4.0",
+  "torchvision>=0.23.0",
 ]
 
 [project.optional-dependencies]
@@ -89,6 +109,7 @@ exclude = [
     "__pycache__/",
     ".venv/",
     "*.egg-info/",
+    "notebooks/",
 ]
 
 [tool.ruff.lint]
@@ -127,6 +148,12 @@ skip-magic-trailing-comma = false
 [dependency-groups]
 dev = [
     "ipykernel>=6.30.0",
+    "langchain>=0.3.27",
+    "langchain-core>=0.3.72",
+    "langsmith>=0.4.9",
+    "matplotlib>=3.10.5",
+    "rdkit>=2025.3.5",
+    "ruff>=0.12.5",
 ]
 
 [tool.ruff.lint.isort]

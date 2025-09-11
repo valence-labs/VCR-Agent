@@ -136,7 +136,7 @@ if __name__ == '__main__':
         kg = StarkPrimeKG()
     
 
-    processed_structure_indices = set(index_tag + str(d['index']) for d in structure_explain_list) if len(structure_explain_list) > 0 else set()
+    processed_structure_indices = set([d['index'] for d in structure_explain_list]) if len(structure_explain_list) > 0 else set()
     additional_info, paperqa_info, wikipedia_info, harmonizome_info, kg_info = "", "", "", "", ""
     extracted_graph_info, papers_info, pubmed_info = {}, {}, ""
     for i, perturbation in enumerate(tqdm(perturbations)):

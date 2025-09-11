@@ -26,7 +26,7 @@ until nc -z 127.0.0.1 8002; do sleep 1; done
 JULIA_PID=$!
 until nc -z 127.0.0.1 8003; do sleep 1; done
 
-uv run src/explain/llm/generate.py \
+uv run script/generate.py \
     --experiment_name multi_tool \
     --wandb_mode online \
     --mode report-explain \

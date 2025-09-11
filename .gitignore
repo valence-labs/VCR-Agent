@@ -209,10 +209,13 @@ __marimo__/
 
 digest.txt
 data/
-
-# mine
-*.toml
+notebooks/_dev/
+# parquet files:
+*.parquet
+*.pq
 *.ipynb
 *.json
 sbatch_log/
 wandb/
+unsloth_compiled_cache/
+slurm/
