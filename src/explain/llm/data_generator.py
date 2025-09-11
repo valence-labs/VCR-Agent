@@ -1,5 +1,3 @@
-from langchain_community.utilities.wikipedia import WikipediaAPIWrapper
-from langchain_community.tools import WikipediaQueryRun
 import json
 import re
 import os
@@ -78,7 +76,12 @@ class DataGenerator:
                     trimmed_tokens = tokens[:num_tokens]
                     trimmed_input_prompt = enc.decode(trimmed_tokens)
                     messages = [{"role": "user", "content": trimmed_input_prompt}]
-                    result = self.llm_client.generate(messages, )
+                    if mode == 'report':
+                        result = self.llm_client_report.generate(messages, )
+                    elif mode == 'explain':
+                        result = self.llm_client_explain.generate(messages, )
+                    elif mode == 'rephrase':
+                        result = self.llm_client_rephrase.generate(messages, )
                     break
                 except APIStatusError:
                     num_tokens -= 5000
