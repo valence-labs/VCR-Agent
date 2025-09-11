@@ -139,6 +139,8 @@ def get_harmonizome_info(index, perturbation, is_ner=False):
         else:
             names = [perturbation['perturbation']['perturbation']['name']]
         for name in names:
+            if len(name) == 0:
+                continue
             gene_set_doc = ""
             try:
                 gene_set_info = Harmonizome.get(Entity.ATTRIBUTE, name=name)
@@ -168,6 +170,8 @@ def get_harmonizome_info(index, perturbation, is_ner=False):
         else:
             perturbation_disease_model = perturbation['perturbation']['context']['disease_model']
             for word in perturbation_disease_model.split():
+                if len(word) == 0:
+                    continue
                 gene_set_info = Harmonizome.get(Entity.ATTRIBUTE, name=word)
                 if 'status' not in gene_set_info.keys():
                     break
