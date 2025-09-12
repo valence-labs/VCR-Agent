@@ -2,7 +2,6 @@ import json
 from urllib.request import urlopen
 from textwrap import dedent
 from concurrent.futures import ThreadPoolExecutor
-import numpy as np
 
 from explain.literature.harmonizome import Harmonizome, Entity
 from explain.util import extract_entity_from_text
@@ -138,10 +137,10 @@ def get_harmonizome_info(index, perturbation, is_ner=False):
             names = [pert['name'] for pert in perturbation['perturbation']['perturbations'] if pert['perturbation type'] == 'chemical']
         else:
             names = [perturbation['perturbation']['perturbation']['name']]
+        gene_set_doc = ""
         for name in names:
             if len(name) == 0:
                 continue
-            gene_set_doc = ""
             try:
                 gene_set_info = Harmonizome.get(Entity.ATTRIBUTE, name=name)
             except:

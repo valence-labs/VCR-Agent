@@ -42,6 +42,17 @@ dependencies = [
   "langchain-community>=0.3.27",
   "wikipedia>=1.4.0",
   "torchvision>=0.23.0",
+  "wandb>=0.21.4",
+  "fire>=0.7.1",
+  "einops>=0.8.1",
+  "sacrebleu>=2.5.1",
+  "rouge-score>=0.1.2",
+  "bert-score>=0.3.13",
+  "sentence-transformers>=5.1.0",
+  "pubchempy>=1.0.5",
+  "torch-geometric>=2.6.1",
+  "bio>=1.8.0",
+  "paper-qa>=5.29.1",
 ]
 
 [project.optional-dependencies]

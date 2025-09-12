@@ -7,6 +7,15 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "absl-py"
+version = "2.3.1"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/absl-py/absl_py-2.3.1.tar.gz", hash = "sha256:a97820526f7fbfd2ec1bce83f3f25e3a14840dac0d8e02a0b71cd75db3f77fc9" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/absl-py/absl_py-2.3.1-py3-none-any.whl", hash = "sha256:eeecf07f0c2a93ace0772c92e596ace6d3d3996c042b2128459aaae2a76de11d" },
+]
+
+[[package]]
 name = "accelerate"
 version = "1.10.1"
 source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
@@ -178,12 +187,30 @@ wheels = [
 ]
 
 [[package]]
+name = "async-timeout"
+version = "5.0.1"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/async-timeout/async_timeout-5.0.1.tar.gz", hash = "sha256:d9321a7a3d5a6a5e187e824d2fa0793ce379a202935782d555d6e9d2735677d3" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/async-timeout/async_timeout-5.0.1-py3-none-any.whl", hash = "sha256:39e3809566ff85354557ec2398b55e096c8364bacac9405a7a1fa429e77fe76c" },
+]
+
+[[package]]
 name = "attrs"
 version = "25.3.0"
 source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
 sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/attrs/attrs-25.3.0.tar.gz", hash = "sha256:75d7cefc7fb576747b2c81b4442d4d4a1ce0900973527c011d1030fd3bf4af1b" }
 wheels = [
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/attrs/attrs-25.3.0-py3-none-any.whl", hash = "sha256:427318ce031701fea540783410126f03899a97ffc6f61596ad581ac2e40e3bc3" },
+]
+
+[[package]]
+name = "beartype"
+version = "0.21.0"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/beartype/beartype-0.21.0.tar.gz", hash = "sha256:f9a5078f5ce87261c2d22851d19b050b64f6a805439e8793aecf01ce660d3244" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/beartype/beartype-0.21.0-py3-none-any.whl", hash = "sha256:b6a1bd56c72f31b0a496a36cc55df6e2f475db166ad07fa4acc7e74f4c7f34c0" },
 ]
 
 [[package]]
@@ -200,6 +227,43 @@ wheels = [
 ]
 
 [[package]]
+name = "bert-score"
+version = "0.3.13"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "packaging" },
+    { name = "pandas" },
+    { name = "requests" },
+    { name = "torch" },
+    { name = "tqdm" },
+    { name = "transformers" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/bert-score/bert_score-0.3.13.tar.gz", hash = "sha256:8ffe5838eac8cdd988b8b1a896af7f49071188c8c011a1ed160d71a9899a2ba4" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/bert-score/bert_score-0.3.13-py3-none-any.whl", hash = "sha256:bbbb4c7fcdaa46d7681aff49f37f96faa09ed74e1b150e659bdc6b58a66989b9" },
+]
+
+[[package]]
+name = "bio"
+version = "1.8.0"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "biopython" },
+    { name = "gprofiler-official" },
+    { name = "mygene" },
+    { name = "pandas" },
+    { name = "pooch" },
+    { name = "requests" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/bio/bio-1.8.0.tar.gz", hash = "sha256:b15bc8cd9b93bdaed83a9da57ac92708216beade2d4351d782f70da3868f95a5" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/bio/bio-1.8.0-py3-none-any.whl", hash = "sha256:8861fb3ef608d3ce8b2fd8dc8d9a901c4d29b58b9fbd30b5059d089c608a6e13" },
+]
+
+[[package]]
 name = "bioc"
 version = "2.1"
 source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
@@ -213,6 +277,35 @@ dependencies = [
 sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/bioc/bioc-2.1.tar.gz", hash = "sha256:7d9248198bdae291b0ebb218de2dc653c96d32a7eac2fa0ef4ed0c74ce45aaaa" }
 wheels = [
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/bioc/bioc-2.1-py3-none-any.whl", hash = "sha256:f1730d26821330f9f625058841612d6cfb616efb906fc682297fe04dd5d9398a" },
+]
+
+[[package]]
+name = "biopython"
+version = "1.85"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/biopython/biopython-1.85.tar.gz", hash = "sha256:5dafab74059de4e78f49f6b5684eddae6e7ce46f09cfa059c1d1339e8b1ea0a6" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/biopython/biopython-1.85-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:cc5b981b9e3060db7c355b6145dfe3ce0b6572e1601b31211f6d742b10543874" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/biopython/biopython-1.85-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:6fe47d704c2d3afac99aeb461219ec5f00273120d2d99835dc0a9a617f520141" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/biopython/biopython-1.85-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e54e495239e623660ad367498c2f7a1a294b1997ba603f2ceafb36fd18f0eba6" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/biopython/biopython-1.85-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d024ad48997ad53d53a77da24b072aaba8a550bd816af8f2e7e606a9918a3b43" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/biopython/biopython-1.85-cp312-cp312-win32.whl", hash = "sha256:6985e17a2911defcbd30275a12f5ed5de2765e4bc91a60439740d572fdbfdf43" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/biopython/biopython-1.85-cp312-cp312-win_amd64.whl", hash = "sha256:d6f8efb2db03f2ec115c5e8c764dbadf635e0c9ecd4c0e91fc8216c1b62f85f5" },
+]
+
+[[package]]
+name = "biothings-client"
+version = "0.4.1"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "httpx" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/biothings-client/biothings_client-0.4.1.tar.gz", hash = "sha256:5b34e09c905280b5bd2538f1f34b6fc780c53c8da9b4074e3ff304836046f613" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/biothings-client/biothings_client-0.4.1-py3-none-any.whl", hash = "sha256:9cbc17461b2bf6af6ed200929b886d6670d450af2034b428cd833f725695265a" },
 ]
 
 [[package]]
@@ -364,6 +457,28 @@ wheels = [
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/contourpy/contourpy-1.3.3-cp312-cp312-win32.whl", hash = "sha256:023b44101dfe49d7d53932be418477dba359649246075c996866106da069af69" },
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/contourpy/contourpy-1.3.3-cp312-cp312-win_amd64.whl", hash = "sha256:8153b8bfc11e1e4d75bcb0bff1db232f9e10b274e0929de9d608027e0d34ff8b" },
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/contourpy/contourpy-1.3.3-cp312-cp312-win_arm64.whl", hash = "sha256:07ce5ed73ecdc4a03ffe3e1b3e3c1166db35ae7584be76f65dbbe28a7791b0cc" },
+]
+
+[[package]]
+name = "coredis"
+version = "5.1.0"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "async-timeout" },
+    { name = "beartype" },
+    { name = "deprecated" },
+    { name = "packaging" },
+    { name = "pympler" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/coredis/coredis-5.1.0.tar.gz", hash = "sha256:603db5ee724c8501165382a86c51a9998c41ff9626b771bd9bab247311756fe1" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/coredis/coredis-5.1.0-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:b8c746016bde6ad8264f2c8bb5bab4e5e5a3b302a1745c928f6093806a116eb4" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/coredis/coredis-5.1.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:408d1756f66cc1f46344bb1cb02dc4f0d344a5dba1eb7cddb64e6e4cd7e0d74b" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/coredis/coredis-5.1.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:13272bace11a7d4b8c4c2b11319c4dffcd777e07f0942bfe9219bbfd62691d27" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/coredis/coredis-5.1.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0893cad36527f07e2ff0ee85af05b3e6a2e9a6d2471389cba790ef93892b5445" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/coredis/coredis-5.1.0-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:a1bcec533ea7e684398d5faa95f772195c69963f5cb913299844a7dd4b984252" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/coredis/coredis-5.1.0-py3-none-any.whl", hash = "sha256:afc934c4a1db935e2f5cb4af75a69158ae5730f896695ea936195f103b35f4cb" },
 ]
 
 [[package]]
@@ -559,6 +674,15 @@ wheels = [
 ]
 
 [[package]]
+name = "einops"
+version = "0.8.1"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/einops/einops-0.8.1.tar.gz", hash = "sha256:de5d960a7a761225532e0f1959e5315ebeafc0cd43394732f103ca44b9837e84" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/einops/einops-0.8.1-py3-none-any.whl", hash = "sha256:919387eb55330f5757c6bea9165c5ff5cfe63a642682ea788a6d472576d81737" },
+]
+
+[[package]]
 name = "elastic-transport"
 version = "8.17.1"
 source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
@@ -694,12 +818,62 @@ wheels = [
 ]
 
 [[package]]
+name = "fhaviary"
+version = "0.23.0"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "docstring-parser" },
+    { name = "httpx" },
+    { name = "pydantic" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/fhaviary/fhaviary-0.23.0.tar.gz", hash = "sha256:67f6b9d6d8fa7f90c6292b161329b29d89086c2674dbc75ea7a70ed4ac15c667" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/fhaviary/fhaviary-0.23.0-py3-none-any.whl", hash = "sha256:390665e66b5a07576d4efa8dd20b1bb34604279f0fbba80d6c3ff3fc52dd080c" },
+]
+
+[package.optional-dependencies]
+llm = [
+    { name = "fhlmi" },
+    { name = "litellm" },
+    { name = "packaging" },
+]
+
+[[package]]
+name = "fhlmi"
+version = "0.30.0"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "coredis" },
+    { name = "fhaviary" },
+    { name = "limits" },
+    { name = "litellm" },
+    { name = "pydantic" },
+    { name = "tiktoken" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/fhlmi/fhlmi-0.30.0.tar.gz", hash = "sha256:2bba2e39a93b0d222896b141668377d54659adb675cc56a42f2af0a6c67abae6" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/fhlmi/fhlmi-0.30.0-py3-none-any.whl", hash = "sha256:13303bc06f88cfff92645309128e5ea7a7d2946353f48b30c864ac6f29882bbe" },
+]
+
+[[package]]
 name = "filelock"
 version = "3.18.0"
 source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
 sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/filelock/filelock-3.18.0.tar.gz", hash = "sha256:adbc88eabb99d2fec8c9c1b229b171f18afa655400173ddc653d5d01501fb9f2" }
 wheels = [
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/filelock/filelock-3.18.0-py3-none-any.whl", hash = "sha256:c401f4f8377c4464e6db25fff06205fd89bdd83b65eb0488ed1b160f780e21de" },
+]
+
+[[package]]
+name = "fire"
+version = "0.7.1"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "termcolor" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/fire/fire-0.7.1.tar.gz", hash = "sha256:3b208f05c736de98fb343310d090dcc4d8c78b2a89ea4f32b837c586270a9cbf" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/fire/fire-0.7.1-py3-none-any.whl", hash = "sha256:e43fd8a5033a9001e7e2973bab96070694b9f12f2e0ecf96d4683971b5ab1882" },
 ]
 
 [[package]]
@@ -855,6 +1029,18 @@ wheels = [
 ]
 
 [[package]]
+name = "gitdb"
+version = "4.0.12"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "smmap" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/gitdb/gitdb-4.0.12.tar.gz", hash = "sha256:5ef71f855d191a3326fcfbc0d5da835f26b13fbcba60c32c21091c349ffdb571" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/gitdb/gitdb-4.0.12-py3-none-any.whl", hash = "sha256:67073e15955400952c6565cc3e707c554a4eea2e428946f7a4c162fab9bd9bcf" },
+]
+
+[[package]]
 name = "gitingest"
 version = "0.1.5"
 source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
@@ -873,6 +1059,18 @@ dependencies = [
 sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/gitingest/gitingest-0.1.5.tar.gz", hash = "sha256:34f36a99e5c24ce54f2a5c39b884ebffdc97ff70b33e7459182713098c04abe7" }
 wheels = [
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/gitingest/gitingest-0.1.5-py3-none-any.whl", hash = "sha256:6060670d6aa1e664ceec6e203525b6863a6eca78c044ad19a09841756657767b" },
+]
+
+[[package]]
+name = "gitpython"
+version = "3.1.45"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "gitdb" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/gitpython/gitpython-3.1.45.tar.gz", hash = "sha256:85b0ee964ceddf211c41b9f27a49086010a190fd8132a24e21f362a4b36a791c" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/gitpython/gitpython-3.1.45-py3-none-any.whl", hash = "sha256:8908cb2e02fb3b93b7eb0f2827125cb699869470432cc885f019b8fd0fccff77" },
 ]
 
 [[package]]
@@ -1086,6 +1284,18 @@ grpc = [
 ]
 
 [[package]]
+name = "gprofiler-official"
+version = "1.0.0"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/gprofiler-official/gprofiler-official-1.0.0.tar.gz", hash = "sha256:5015b47f10fbdcb59c57e342e815c9c07afbe57cd3984154f75b845ddef2445d" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/gprofiler-official/gprofiler_official-1.0.0-py3-none-any.whl", hash = "sha256:c582baf728e5a6cddac964e4085ca385e082c4ef0279e3af1a16a9af07ab5395" },
+]
+
+[[package]]
 name = "greenlet"
 version = "3.2.3"
 source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
@@ -1224,12 +1434,16 @@ dependencies = [
     { name = "aiolimiter" },
     { name = "anndata" },
     { name = "anthropic" },
+    { name = "bert-score" },
+    { name = "bio" },
     { name = "datasets" },
     { name = "db-dtypes" },
     { name = "diskcache" },
     { name = "duckdb" },
+    { name = "einops" },
     { name = "elasticsearch" },
     { name = "fastavro" },
+    { name = "fire" },
     { name = "flair" },
     { name = "gitingest" },
     { name = "google-auth" },
@@ -1245,15 +1459,22 @@ dependencies = [
     { name = "nest-asyncio" },
     { name = "numpy" },
     { name = "pandas" },
+    { name = "paper-qa" },
     { name = "polars" },
+    { name = "pubchempy" },
     { name = "pyarrow" },
     { name = "pydantic" },
     { name = "pydeseq2" },
     { name = "rdkit" },
+    { name = "rouge-score" },
     { name = "rxrx-enhanced-chat-sdk" },
+    { name = "sacrebleu" },
+    { name = "sentence-transformers" },
+    { name = "torch-geometric" },
     { name = "torchvision" },
     { name = "tqdm" },
     { name = "verifiers" },
+    { name = "wandb" },
     { name = "wikipedia" },
 ]
 
@@ -1281,12 +1502,16 @@ requires-dist = [
     { name = "aiolimiter", specifier = ">=1.2.1" },
     { name = "anndata" },
     { name = "anthropic", specifier = ">=0.49.0" },
+    { name = "bert-score", specifier = ">=0.3.13" },
+    { name = "bio", specifier = ">=1.8.0" },
     { name = "datasets" },
     { name = "db-dtypes", specifier = ">=1.4.3" },
     { name = "diskcache", specifier = ">=5.6.3" },
     { name = "duckdb", specifier = ">=1.0.0" },
+    { name = "einops", specifier = ">=0.8.1" },
     { name = "elasticsearch", specifier = "==8" },
     { name = "fastavro", specifier = ">=1.12.0" },
+    { name = "fire", specifier = ">=0.7.1" },
     { name = "flair", specifier = ">=0.15.1" },
     { name = "gitingest" },
     { name = "google-auth", specifier = ">=2.40.3" },
@@ -1303,16 +1528,23 @@ requires-dist = [
     { name = "nest-asyncio", specifier = ">=1.6.0" },
     { name = "numpy" },
     { name = "pandas", specifier = ">=2.3.1" },
+    { name = "paper-qa", specifier = ">=5.29.1" },
     { name = "polars", specifier = ">=1.32.2" },
+    { name = "pubchempy", specifier = ">=1.0.5" },
     { name = "pyarrow", specifier = ">=21.0.0" },
     { name = "pydantic", specifier = ">=2.8.2" },
     { name = "pydeseq2" },
     { name = "rdkit", specifier = ">=2023.9.5" },
+    { name = "rouge-score", specifier = ">=0.1.2" },
     { name = "ruff", marker = "extra == 'dev'" },
     { name = "rxrx-enhanced-chat-sdk", specifier = ">=0.0.5" },
+    { name = "sacrebleu", specifier = ">=2.5.1" },
+    { name = "sentence-transformers", specifier = ">=5.1.0" },
+    { name = "torch-geometric", specifier = ">=2.6.1" },
     { name = "torchvision", specifier = ">=0.23.0" },
     { name = "tqdm", specifier = ">=4.67.1" },
     { name = "verifiers", specifier = ">=0.1.2" },
+    { name = "wandb", specifier = ">=0.21.4" },
     { name = "wikipedia", specifier = ">=1.4.0" },
 ]
 provides-extras = ["dev", "all"]
@@ -1326,6 +1558,15 @@ dev = [
     { name = "matplotlib", specifier = ">=3.10.5" },
     { name = "rdkit", specifier = ">=2025.3.5" },
     { name = "ruff", specifier = ">=0.12.5" },
+]
+
+[[package]]
+name = "html2text"
+version = "2025.4.15"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/html2text/html2text-2025.4.15.tar.gz", hash = "sha256:948a645f8f0bc3abe7fd587019a2197a12436cd73d0d4908af95bfc8da337588" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/html2text/html2text-2025.4.15-py3-none-any.whl", hash = "sha256:00569167ffdab3d7767a4cdf589b7f57e777a5ed28d12907d8c58769ec734acc" },
 ]
 
 [[package]]
@@ -1767,6 +2008,15 @@ wheels = [
 ]
 
 [[package]]
+name = "latexcodec"
+version = "3.0.1"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/latexcodec/latexcodec-3.0.1.tar.gz", hash = "sha256:e78a6911cd72f9dec35031c6ec23584de6842bfbc4610a9678868d14cdfb0357" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/latexcodec/latexcodec-3.0.1-py3-none-any.whl", hash = "sha256:a9eb8200bff693f0437a69581f7579eb6bca25c4193515c09900ce76451e452e" },
+]
+
+[[package]]
 name = "legacy-api-wrap"
 version = "1.4.1"
 source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
@@ -2058,6 +2308,18 @@ wheels = [
 ]
 
 [[package]]
+name = "mygene"
+version = "3.2.2"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "biothings-client" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/mygene/mygene-3.2.2.tar.gz", hash = "sha256:e729cabbc28cf5afb221bca1ab637883b375cb1a3e2f067587ec79f71affdaea" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/mygene/mygene-3.2.2-py2.py3-none-any.whl", hash = "sha256:18d85d1b28ecee2be31d844607fb0c5f7d7c58573278432df819ee2a5e88fe46" },
+]
+
+[[package]]
 name = "mypy-extensions"
 version = "1.1.0"
 source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
@@ -2100,6 +2362,21 @@ source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/pytho
 sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/networkx/networkx-3.5.tar.gz", hash = "sha256:d4c6f9cf81f52d69230866796b82afbccdec3db7ae4fbd1b65ea750feed50037" }
 wheels = [
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/networkx/networkx-3.5-py3-none-any.whl", hash = "sha256:0030d386a9a06dee3565298b4a734b68589749a544acbb6c412dc9e2489ec6ec" },
+]
+
+[[package]]
+name = "nltk"
+version = "3.9.1"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "joblib" },
+    { name = "regex" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/nltk/nltk-3.9.1.tar.gz", hash = "sha256:87d127bd3de4bd89a4f81265e5fa59cb1b199b27440175370f7417d2bc7ae868" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/nltk/nltk-3.9.1-py3-none-any.whl", hash = "sha256:4fa26829c5b00715afe3061398a8989dc643b92ce7dd93fb4585a70930d168a1" },
 ]
 
 [[package]]
@@ -2357,6 +2634,46 @@ wheels = [
 ]
 
 [[package]]
+name = "paper-qa"
+version = "5.29.1"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "aiohttp" },
+    { name = "anyio" },
+    { name = "fhaviary", extra = ["llm"] },
+    { name = "fhlmi" },
+    { name = "html2text" },
+    { name = "httpx" },
+    { name = "numpy" },
+    { name = "paper-qa-pypdf" },
+    { name = "pybtex" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "rich" },
+    { name = "setuptools" },
+    { name = "tantivy" },
+    { name = "tenacity" },
+    { name = "tiktoken" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/paper-qa/paper_qa-5.29.1.tar.gz", hash = "sha256:c7c6b5403867d3c8b147d25053d4083cc9979152476fd8a535b7a3257e7b68fa" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/paper-qa/paper_qa-5.29.1-py3-none-any.whl", hash = "sha256:bdd5ff496e8cfdf661f749e71b2491a112cbe8ac7f707670c7e396ee69b9c003" },
+]
+
+[[package]]
+name = "paper-qa-pypdf"
+version = "5.29.1"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "paper-qa" },
+    { name = "pypdf" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/paper-qa-pypdf/paper_qa_pypdf-5.29.1.tar.gz", hash = "sha256:36520c7f9d96c56b584bfa345e363f6ca8dd31c81dfbbdef187a6f09b50d66b4" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/paper-qa-pypdf/paper_qa_pypdf-5.29.1-py3-none-any.whl", hash = "sha256:5311c0ad2b2ba1ca68174259023e1776230007da7d3738ece0ff63b1b90ccd01" },
+]
+
+[[package]]
 name = "parso"
 version = "0.8.4"
 source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
@@ -2426,6 +2743,32 @@ wheels = [
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/polars/polars-1.33.1-cp39-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:094a37d06789286649f654f229ec4efb9376630645ba8963b70cb9c0b008b3e1" },
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/polars/polars-1.33.1-cp39-abi3-win_amd64.whl", hash = "sha256:c9781c704432a2276a185ee25898aa427f39a904fbe8fde4ae779596cdbd7a9e" },
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/polars/polars-1.33.1-cp39-abi3-win_arm64.whl", hash = "sha256:c3cfddb3b78eae01a218222bdba8048529fef7e14889a71e33a5198644427642" },
+]
+
+[[package]]
+name = "pooch"
+version = "1.8.2"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "packaging" },
+    { name = "platformdirs" },
+    { name = "requests" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/pooch/pooch-1.8.2.tar.gz", hash = "sha256:76561f0de68a01da4df6af38e9955c4c9d1a5c90da73f7e40276a5728ec83d10" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/pooch/pooch-1.8.2-py3-none-any.whl", hash = "sha256:3529a57096f7198778a5ceefd5ac3ef0e4d06a6ddaf9fc2d609b806f25302c47" },
+]
+
+[[package]]
+name = "portalocker"
+version = "3.2.0"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "pywin32", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/portalocker/portalocker-3.2.0.tar.gz", hash = "sha256:1f3002956a54a8c3730586c5c77bf18fae4149e07eaf1c29fc3faf4d5a3f89ac" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/portalocker/portalocker-3.2.0-py3-none-any.whl", hash = "sha256:3cdc5f565312224bc570c49337bd21428bba0ef363bbcf58b9ef4a9f11779968" },
 ]
 
 [[package]]
@@ -2522,6 +2865,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pubchempy"
+version = "1.0.5"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/pubchempy/pubchempy-1.0.5.tar.gz", hash = "sha256:08f0b2a82a5caa5d61e14935d655da554602d7b5686fe661ab584c882ffff623" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/pubchempy/pubchempy-1.0.5-py3-none-any.whl", hash = "sha256:e936cfed31fa194042ad463be3c803dde5b12ef2f795caf336e3114127c34fa0" },
+]
+
+[[package]]
 name = "pure-eval"
 version = "0.2.3"
 source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
@@ -2564,6 +2916,19 @@ dependencies = [
 sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/pyasn1-modules/pyasn1_modules-0.4.2.tar.gz", hash = "sha256:677091de870a80aae844b1ca6134f54652fa2c8c5a52aa396440ac3106e941e6" }
 wheels = [
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/pyasn1-modules/pyasn1_modules-0.4.2-py3-none-any.whl", hash = "sha256:29253a9207ce32b64c3ac6600edc75368f98473906e8fd1043bd6b5b1de2c14a" },
+]
+
+[[package]]
+name = "pybtex"
+version = "0.25.1"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "latexcodec" },
+    { name = "pyyaml" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/pybtex/pybtex-0.25.1.tar.gz", hash = "sha256:9eaf90267c7e83e225af89fea65c370afbf65f458220d3946a9e3049e1eca491" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/pybtex/pybtex-0.25.1-py2.py3-none-any.whl", hash = "sha256:9053b0d619409a0a83f38abad5d9921de5f7b3ede00742beafcd9f10ad0d8c5c" },
 ]
 
 [[package]]
@@ -2663,12 +3028,33 @@ wheels = [
 ]
 
 [[package]]
+name = "pympler"
+version = "1.1"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "pywin32", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/pympler/pympler-1.1.tar.gz", hash = "sha256:1eaa867cb8992c218430f1708fdaccda53df064144d1c5656b1e6f1ee6000424" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/pympler/Pympler-1.1-py3-none-any.whl", hash = "sha256:5b223d6027d0619584116a0cbc28e8d2e378f7a79c1e5e024f9ff3b673c58506" },
+]
+
+[[package]]
 name = "pyparsing"
 version = "3.2.3"
 source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
 sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/pyparsing/pyparsing-3.2.3.tar.gz", hash = "sha256:b9c13f1ab8b3b542f72e28f634bad4de758ab3ce4546e4301970ad6fa77c38be" }
 wheels = [
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/pyparsing/pyparsing-3.2.3-py3-none-any.whl", hash = "sha256:a749938e02d6fd0b59b356ca504a24982314bb090c383e3cf201c95ef7e2bfcf" },
+]
+
+[[package]]
+name = "pypdf"
+version = "6.0.0"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/pypdf/pypdf-6.0.0.tar.gz", hash = "sha256:282a99d2cc94a84a3a3159f0d9358c0af53f85b4d28d76ea38b96e9e5ac2a08d" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/pypdf/pypdf-6.0.0-py3-none-any.whl", hash = "sha256:56ea60100ce9f11fc3eec4f359da15e9aec3821b036c1f06d2b660d35683abb8" },
 ]
 
 [[package]]
@@ -2915,6 +3301,18 @@ wheels = [
 ]
 
 [[package]]
+name = "rouge-score"
+version = "0.1.2"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "absl-py" },
+    { name = "nltk" },
+    { name = "numpy" },
+    { name = "six" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/rouge-score/rouge_score-0.1.2.tar.gz", hash = "sha256:c7d4da2683e68c9abf0135ef915d63a46643666f848e558a1b9f7ead17ff0f04" }
+
+[[package]]
 name = "rpds-py"
 version = "0.27.1"
 source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
@@ -3001,6 +3399,23 @@ wheels = [
 ]
 
 [[package]]
+name = "sacrebleu"
+version = "2.5.1"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "colorama" },
+    { name = "lxml" },
+    { name = "numpy" },
+    { name = "portalocker" },
+    { name = "regex" },
+    { name = "tabulate" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/sacrebleu/sacrebleu-2.5.1.tar.gz", hash = "sha256:1a088cc1c74ffaff0759c3191a85db09eecfa7a52e09be244e319d8d64e2fb11" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/sacrebleu/sacrebleu-2.5.1-py3-none-any.whl", hash = "sha256:7c9f7ee75bec3a5bf19dd87112dfd654952130e403ad30c48298fb7da3212d5d" },
+]
+
+[[package]]
 name = "safetensors"
 version = "0.5.3"
 source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
@@ -3071,6 +3486,25 @@ dependencies = [
 sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/segtok/segtok-1.5.11.tar.gz", hash = "sha256:8ab2dd44245bcbfec25b575dc4618473bbdf2af8c2649698cd5a370f42f3db23" }
 wheels = [
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/segtok/segtok-1.5.11-py3-none-any.whl", hash = "sha256:910616b76198c3141b2772df530270d3b706e42ae69a5b30ef115c7bd5d1501a" },
+]
+
+[[package]]
+name = "sentence-transformers"
+version = "5.1.0"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "huggingface-hub" },
+    { name = "pillow" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+    { name = "torch" },
+    { name = "tqdm" },
+    { name = "transformers" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/sentence-transformers/sentence_transformers-5.1.0.tar.gz", hash = "sha256:70c7630697cc1c64ffca328d6e8688430ebd134b3c2df03dc07cb3a016b04739" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/sentence-transformers/sentence_transformers-5.1.0-py3-none-any.whl", hash = "sha256:fc803929f6a3ce82e2b2c06e0efed7a36de535c633d5ce55efac0b710ea5643e" },
 ]
 
 [[package]]
@@ -3170,6 +3604,15 @@ dependencies = [
 sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/slowapi/slowapi-0.1.9.tar.gz", hash = "sha256:639192d0f1ca01b1c6d95bf6c71d794c3a9ee189855337b4821f7f457dddad77" }
 wheels = [
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/slowapi/slowapi-0.1.9-py3-none-any.whl", hash = "sha256:cfad116cfb84ad9d763ee155c1e5c5cbf00b0d47399a769b227865f5df576e36" },
+]
+
+[[package]]
+name = "smmap"
+version = "5.0.2"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/smmap/smmap-5.0.2.tar.gz", hash = "sha256:26ea65a03958fa0c8a1c7e8c7a58fdc77221b8910f6be2131affade476898ad5" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/smmap/smmap-5.0.2-py3-none-any.whl", hash = "sha256:b30115f0def7d7531d22a0fb6502488d879e75b260a9db4d0819cfb25403af5e" },
 ]
 
 [[package]]
@@ -3296,12 +3739,34 @@ wheels = [
 ]
 
 [[package]]
+name = "tantivy"
+version = "0.25.0"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/tantivy/tantivy-0.25.0.tar.gz", hash = "sha256:587acbaa08a6287eaa7591c21bc5af5a577c8a3c347b1121032241a5912f17b6" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/tantivy/tantivy-0.25.0-cp312-cp312-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:41c4ee2a3f3a095a933acf5222f922283db229fd15cb7c98d37e3a44596e4434" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/tantivy/tantivy-0.25.0-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:f5e6f893bf16308d121ad9afdeb703ed332ed05b0daa7268d5a7897b60d8d458" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/tantivy/tantivy-0.25.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5e2c40e9aa6ebaca4e7d83b2bdf0af4b28cd2e4c1aa323b1aa71da1bdca24e09" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/tantivy/tantivy-0.25.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6b0afc3e00982be99ce782f6e50ad6dd5696ebb24f7b46cbf6f4680df4a2cb34" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/tantivy/tantivy-0.25.0-cp312-none-win_amd64.whl", hash = "sha256:a976c5b77d7f561ae0a7877e516aae072604750994ad9934862b5c6e87d14f5a" },
+]
+
+[[package]]
 name = "tenacity"
 version = "9.1.2"
 source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
 sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/tenacity/tenacity-9.1.2.tar.gz", hash = "sha256:1169d376c297e7de388d18b4481760d478b0e99a777cad3a9c86e556f4b697cb" }
 wheels = [
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/tenacity/tenacity-9.1.2-py3-none-any.whl", hash = "sha256:f77bf36710d8b73a50b2dd155c97b870017ad21afe6ab300326b0371b3b05138" },
+]
+
+[[package]]
+name = "termcolor"
+version = "3.1.0"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/termcolor/termcolor-3.1.0.tar.gz", hash = "sha256:6a6dd7fbee581909eeec6a756cff1d7f7c376063b14e4a298dc4980309e55970" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/termcolor/termcolor-3.1.0-py3-none-any.whl", hash = "sha256:591dd26b5c2ce03b9e43f391264626557873ce1d379019786f99b0c2bee140aa" },
 ]
 
 [[package]]
@@ -3424,6 +3889,25 @@ wheels = [
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/torch/torch-2.8.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:b2aca0939fb7e4d842561febbd4ffda67a8e958ff725c1c27e244e85e982173c" },
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/torch/torch-2.8.0-cp312-cp312-win_amd64.whl", hash = "sha256:2f4ac52f0130275d7517b03a33d2493bab3693c83dcfadf4f81688ea82147d2e" },
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/torch/torch-2.8.0-cp312-none-macosx_11_0_arm64.whl", hash = "sha256:619c2869db3ada2c0105487ba21b5008defcc472d23f8b80ed91ac4a380283b0" },
+]
+
+[[package]]
+name = "torch-geometric"
+version = "2.6.1"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "aiohttp" },
+    { name = "fsspec" },
+    { name = "jinja2" },
+    { name = "numpy" },
+    { name = "psutil" },
+    { name = "pyparsing" },
+    { name = "requests" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/torch-geometric/torch_geometric-2.6.1.tar.gz", hash = "sha256:1f18f9d0fc4d2239d526221e4f22606a4a3895b5d965a9856d27610a3df662c6" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/torch-geometric/torch_geometric-2.6.1-py3-none-any.whl", hash = "sha256:8faeb353f9655f7dbec44c5e0b44c721773bdfb279994da96b9b8b12fd30f427" },
 ]
 
 [[package]]
@@ -3679,6 +4163,35 @@ dependencies = [
 sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/verifiers/verifiers-0.1.3.post0.tar.gz", hash = "sha256:63e14c75892214250f28a96077784c7bb1cff9439460389571a5f3fd8847fd24" }
 wheels = [
     { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/verifiers/verifiers-0.1.3.post0-py3-none-any.whl", hash = "sha256:2c4d9d4b4bfdd2158c29e5f3301fb4105b6c893bb0770fc14b7db5377af00809" },
+]
+
+[[package]]
+name = "wandb"
+version = "0.21.4"
+source = { registry = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "gitpython" },
+    { name = "packaging" },
+    { name = "platformdirs" },
+    { name = "protobuf" },
+    { name = "pydantic" },
+    { name = "pyyaml" },
+    { name = "requests" },
+    { name = "sentry-sdk" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/wandb/wandb-0.21.4.tar.gz", hash = "sha256:b350d50973409658deb455010fafcfa81e6be3470232e316286319e839ffb67b" }
+wheels = [
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/wandb/wandb-0.21.4-py3-none-macosx_10_14_x86_64.whl", hash = "sha256:c681ef7adb09925251d8d995c58aa76ae86a46dbf8de3b67353ad99fdef232d5" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/wandb/wandb-0.21.4-py3-none-macosx_12_0_arm64.whl", hash = "sha256:d35acc65c10bb7ac55d1331f7b1b8ab761f368f7b051131515f081a56ea5febc" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/wandb/wandb-0.21.4-py3-none-macosx_12_0_x86_64.whl", hash = "sha256:765e66b57b7be5f393ecebd9a9d2c382c9f979d19cdee4a3f118eaafed43fca1" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/wandb/wandb-0.21.4-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:06127ec49245d12fdb3922c1eca1ab611cefc94adabeaaaba7b069707c516cba" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/wandb/wandb-0.21.4-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:48d4f65f1be5f5a25b868695e09cdbfe481678220df349a8c2cbed3992fb497f" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/wandb/wandb-0.21.4-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:ebd11f78351a3ca22caa1045146a6d2ad9e62fed6d0de2e67a0db5710d75103a" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/wandb/wandb-0.21.4-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:595b9e77591a805653e05db8b892805ee0a5317d147ef4976353e4f1cc16ebdc" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/wandb/wandb-0.21.4-py3-none-win32.whl", hash = "sha256:f9c86eb7eb7d40c6441533428188b1ae3205674e80c940792d850e2c1fe8d31e" },
+    { url = "https://us-central1-python.pkg.dev/eng-ops-b1bb36c9/python-all/wandb/wandb-0.21.4-py3-none-win_amd64.whl", hash = "sha256:2da3d5bb310a9f9fb7f680f4aef285348095a4cc6d1ce22b7343ba4e3fffcd84" },
 ]
 
 [[package]]

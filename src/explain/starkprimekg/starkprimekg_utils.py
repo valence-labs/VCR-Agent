@@ -1,8 +1,5 @@
 import json
-import time
-import pubchempy as pcp
 import warnings
-import requests
 import os
 
 from explain.util import extract_entity_from_text
