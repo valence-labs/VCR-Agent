@@ -11,7 +11,25 @@ from typing import Any
 from dotenv import load_dotenv
 from loguru import logger
 
-from explain.eval.tools._base import ToolVerifier
+from explain.llm._access_token import set_env_secrets
+
+LITTELM_INSTALLED = False
+try:
+    import litellm  # noqa: F401
+
+    litellm.drop_params = True
+
+    LITTELM_INSTALLED = True
+except ImportError as e:
+    raise ImportError("litellm package required for LiteLLM client. Please run `pip install litellm`") from e
+
+OPENAI_INSTALLED = False
+try:
+    from openai import AsyncOpenAI, OpenAI
+
+    OPENAI_INSTALLED = True
+except ImportError as e:
+    raise ImportError("openai package required for OpenAI client. Please run `pip install openai`") from e
 
 load_dotenv()
 
@@ -33,10 +51,10 @@ class LLMResponse:
 class LLMConfig:
     """Configuration for LLM clients"""
 
-    provider: str = "anthropic"  # anthropic, gemini, openai
+    provider: str = "litellm"  # litellm, anthropic, gemini, openai
     model: str = "claude-sonnet-4@20250514"
-    max_tokens: int = 10000
-    temperature: float = 0.1
+    max_tokens: int | None = None
+    temperature: float = 1
     location: str | None = None
     project_id: str | None = None
 
@@ -51,6 +69,7 @@ class BaseLLMClient(ABC):
 
     def __init__(self, config: LLMConfig):
         self.config = config
+        set_env_secrets()
 
     @abstractmethod
     def generate(self, messages: list[dict[str, str]], **kwargs) -> LLMResponse:
@@ -71,7 +90,8 @@ class BaseLLMClient(ABC):
         """Format tools to the provider's format."""
         formatted_tools = []
         for tool in tools:
-            if isinstance(tool, ToolVerifier):
+            # avoid circular import with this
+            if hasattr(tool, "get_schema"):
                 tool_schema = tool.get_schema()
             else:
                 tool_schema = tool
@@ -454,25 +474,17 @@ class OpenAIClient(BaseLLMClient):
     def __init__(self, config: LLMConfig):
         super().__init__(config)
 
-        try:
-            from openai import AsyncOpenAI, OpenAI
+        if not OPENAI_INSTALLED:
+            raise ImportError("openai package required for OpenAI client. Please run `pip install openai`")
 
-            from explain.llm._access_token import set_env_secrets
+        self.sync_client = OpenAI()
+        self.async_client = AsyncOpenAI()
 
-            # Set up environment secrets
-            set_env_secrets()
+        # Default OpenAI models
+        if not config.model or config.model.startswith("claude") or config.model.startswith("gemini"):
+            self.config.model = "gpt-4o"
 
-            self.sync_client = OpenAI()
-            self.async_client = AsyncOpenAI()
-
-            # Default OpenAI models
-            if not config.model or config.model.startswith("claude") or config.model.startswith("gemini"):
-                self.config.model = "gpt-4.1"
-
-            logger.info(f"Initialized OpenAI client with model {self.config.model}")
-
-        except ImportError as e:
-            raise ImportError("openai package and explain.llm._access_token required for OpenAI client") from e
+        logger.info(f"Initialized OpenAI client with model {self.config.model}")
 
     def _format_tools(self, tools: list[Any]):
         """Wraps generic tool schemas in the format required by the OpenAI API."""
@@ -569,10 +581,8 @@ class LiteLLMClient(BaseLLMClient):
 
     def __init__(self, config: LLMConfig):
         super().__init__(config)
-        try:
-            import litellm  # noqa: F401
-        except ImportError as e:
-            raise ImportError("litellm package required for LiteLLM client. Please run `pip install litellm`") from e
+        if not LITTELM_INSTALLED:
+            raise ImportError("litellm package required for LiteLLM client. Please run `pip install litellm`")
 
         logger.info(f"Initialized LiteLLM client with model {self.config.model}")
 
@@ -589,7 +599,6 @@ class LiteLLMClient(BaseLLMClient):
 
     def generate(self, messages: list[dict[str, Any]], **kwargs) -> LLMResponse:
         """Generate response synchronously using litellm."""
-        import litellm
 
         if "tools" in kwargs and kwargs["tools"]:
             kwargs["tools"] = self._format_tools(kwargs["tools"])
@@ -600,6 +609,7 @@ class LiteLLMClient(BaseLLMClient):
                 messages=messages,
                 max_tokens=self.config.max_tokens,
                 temperature=self.config.temperature,
+                drop_params=True,
                 **kwargs,
             )
             message = response.choices[0].message
@@ -626,8 +636,6 @@ class LiteLLMClient(BaseLLMClient):
 
     async def agenerate(self, messages: list[dict[str, Any]], **kwargs) -> LLMResponse:
         """Generate response asynchronously using litellm."""
-        import litellm
-
         if "tools" in kwargs and kwargs["tools"]:
             kwargs["tools"] = self._format_tools(kwargs["tools"])
         try:
@@ -636,6 +644,7 @@ class LiteLLMClient(BaseLLMClient):
                 messages=messages,
                 max_tokens=self.config.max_tokens,
                 temperature=self.config.temperature,
+                drop_params=True,
                 **kwargs,
             )
             message = response.choices[0].message

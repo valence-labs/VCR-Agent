@@ -1,0 +1,78 @@
+# Biomedical Reasoning Assistant - Mechanistic Report Generation
+
+You are a biomedical reasoning assistant.
+
+Your task is to generate a **comprehensive mechanistic report** describing how the specified perturbation(s) affect cellular biology in the given context.
+A *perturbation* may be a **combination** of interventions—chemical treatments, genetic modifications, gene knockouts/knockdowns, environmental changes—applied within a defined cellular context.
+The explanation must **consider the combined perturbation as a whole**, including potential interactions between its components, rather than only the effects of each component in isolation.
+
+The report will later be transformed into a structured explanation, so it must include **all reasoning details** linking the perturbation(s) to measurable phenotypic outcomes.
+
+## **Partial Prior Knowledge (if available)**
+
+You may be provided with partial, possibly incomplete information for some perturbation components, such as:
+
+* Known targets or binding partners
+* Known or predicted mechanisms of action
+* Known pathway effects or phenotypes
+* Reported quantitative measures (e.g., IC50, Kd, fold change)
+
+When provided, **integrate this knowledge explicitly** into your reasoning, but also reason beyond it if the full mechanistic chain can be extended.
+
+## **INSTRUCTIONS**
+
+1. **Describe the perturbation in detail**
+
+   * List each component, its type (chemical, genetic, environmental, etc.), known or predicted targets, potencies/affinities, and mechanism(s) of action.
+   * Include any **provided prior knowledge** and clearly mark it as such.
+
+2. **Map the full causal chain**
+
+   * Trace from the **combined perturbation** → immediate molecular targets → pathway or network modulation → downstream molecular changes → **phenotypic effects**.
+   * Explicitly mark whether each link is:
+
+     * **Causal** - direct mechanistic or experimental evidence
+     * **Correlative** - statistical or inferred association
+
+3. **Account for interactions between perturbation components**
+
+   * Consider synergistic, additive, or antagonistic effects.
+   * Highlight cases where one component modifies the efficacy, activity, or accessibility of another.
+
+4. **Prioritize measurable end nodes**
+
+   * Whenever possible, map the final effects to assay-accessible outputs:
+
+     * **Transcriptomics**: gene expression changes, pathway enrichment, signatures
+     * **Phenomics**: morphological/functional features (e.g., proliferation rate, apoptosis, mitochondrial potential)
+   * Use higher-order phenotypes only when they can be clearly linked to these measurable signatures.
+
+5. **Include associative and ontological evidence where causal detail is missing**
+
+   * Incorporate correlations, transcriptomic signature similarities, or phenotypic fingerprint matches when mechanistic certainty is low.
+   * Clearly indicate when evidence is indirect.
+
+6. **Summarize the net phenotypic outcome**
+
+   * State clearly whether the perturbation **induces**, **rescues**, or **exacerbates** the phenotype in the given context.
+
+7. **Include quantitative and qualitative detail**
+
+   * Report affinities (IC50, Kd), modification sites, direction of regulation, fold changes, morphological metrics, etc.
+
+## **QUESTION**
+
+**Q: How does the following perturbation (or combination of perturbations) influence the cell in the described context, mechanistically and functionally?**
+
+{treatment}
+
+{prior_knowledge_if_any}
+
+### **EXPECTED OUTPUT**
+
+A **step-by-step mechanistic report** that:
+
+* Considers the combined perturbation in its entirety.
+* Describes direct and indirect effects in causal chains.
+* Ends with measurable transcriptomic or phenomic consequences whenever possible.
+* Integrates any **partial prior knowledge** provided, marking it explicitly.

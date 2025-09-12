@@ -67,7 +67,7 @@ def guess_max_turns(claim: str, allowed_primitives: list[str], default_max_turns
 
 
 def as_verifier_dataset(
-    df: pd.DataFrame, question_column: str = "question", answer_columns: list[str] = ["raw_response"]
+    df: pd.DataFrame, question_column: str = "question", answer_columns: list[str] | None = None
 ) -> Dataset:
     """
     Converts a DataFrame with specific experiment columns into a Hugging Face Dataset
@@ -76,13 +76,16 @@ def as_verifier_dataset(
     Args:
         df: A pandas DataFrame containing the experiment results.
             Expected columns include 'question', 'answer', and others to be packed into 'info'.
+        question_column: The column name for the question.
+        answer_columns: The column names for the answer. If None, the column name will be "response".
 
     Returns:
         A Hugging Face Dataset object ready for use with verifiers rubrics.
     """
     # First, convert the pandas DataFrame to a Hugging Face Dataset.
     dataset = Dataset.from_pandas(df)
-
+    if answer_columns is None:
+        answer_columns = ["response"]
     columns_of_interest = [question_column, *answer_columns]
 
     def format_for_verifier(example: dict) -> dict:

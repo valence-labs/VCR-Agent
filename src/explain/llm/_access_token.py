@@ -1,4 +1,5 @@
 import os
+from functools import lru_cache
 
 import dotenv
 from google.cloud import secretmanager
@@ -9,6 +10,7 @@ dotenv.load_dotenv()
 google_cloud_project = os.getenv("GOOGLE_CLOUD_PROJECT", "rxrx-medchem-auto-dev")
 
 
+@lru_cache(maxsize=1000)
 def access_secret_version(
     secret_name: str,
     project_id: str = google_cloud_project,
@@ -43,6 +45,7 @@ def access_secret_version(
     return data
 
 
+@lru_cache(maxsize=1000)
 def set_env_secrets(secret_list: list[str] | None = None):
     """
     Set environment variables from Google Cloud Secret Manager.

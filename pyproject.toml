@@ -103,8 +103,6 @@ pyg-lib = [
     # Windows CPU
     { url = "https://data.pyg.org/whl/torch-2.6.0+cpu/pyg_lib-0.4.0+pt26cpu-cp312-cp312-win_amd64.whl", marker = "sys_platform == 'win32'"},
 ]
-cb-reach = { path = "cb-reach/src", editable = true }
-enhanced-chat-client = { path = "cb-reach/enhanced-chat-client", editable = true }
 
 [tool.ruff]
 # Increase line length from default 88 to 120
@@ -115,13 +113,14 @@ target-version = "py312"
 
 # Exclude directories from linting
 exclude = [
-    "cb-reach/",
     ".git/",
     "__pycache__/",
     ".venv/",
     "*.egg-info/",
     "notebooks/",
 ]
+
+
 
 [tool.ruff.lint]
 # Enable a subset of rules - being less stringent

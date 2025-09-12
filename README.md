@@ -20,8 +20,7 @@ For detailed installation instructions, see [docs/installation.md](docs/installa
 
 **Automated Setup (Recommended)**
 ```bash
-# Clone with submodules
-git clone --recurse-submodules git@github.com:recursionpharma/hooke-explain.git
+git clone git@github.com:recursionpharma/hooke-explain.git
 cd hooke-explain
 
 # Run automated setup
@@ -33,7 +32,6 @@ uv run python -c "import explain; print('OK')"
 ## Project Structure
 
 - **src/explain/** - Main explanation package
-- **cb-reach/** - Git submodule for CB Reach functionality
 - **notebooks/** - Jupyter notebooks for experimentation
 - **docs/** - Documentation
 
@@ -52,12 +50,9 @@ You can also use ruff command directly if you prefer (e.g: `uv run ruff check --
 ```bash
 make help           # Show all available commands
 make setup          # Complete project setup
-make cb-reach        # setup cb-reach submodule and dependencies
 make test           # Run tests
 ```
 
-### Working with cb-reach
-You might need to install the cb-reach repo to get access to the programmatic API of enhanced-chat. In our setup we do not want to alter the original code, so you are stuck with using `poetry` for installation. <>
 ## Documentation
 
 - [Installation Guide](docs/installation.md) - Comprehensive setup instructions

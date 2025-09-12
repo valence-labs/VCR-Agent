@@ -1,14 +1,13 @@
-import random
 from typing import Any
 
-import numpy as np
 from pydantic import BaseModel, Field
 
 from explain.eval.tools._base import ToolVerifier
+from explain.utils.bio.expression import GeneExpressionClient
 
 
 class GeneExpressionArgs(BaseModel):
-    """Arguments for checking regulation expression."""
+    """Arguments for checking gene expression regulation."""
 
     source_entity: str = Field(description="The source entity causing regulation (e.g., compound, protein, pathway)")
     upregulated_genes: list[str] = Field(default=[], description="List of genes expected to be upregulated")
@@ -16,22 +15,20 @@ class GeneExpressionArgs(BaseModel):
     cell_type: str | None = Field(
         default=None, description="Cell type or cell line (e.g., HepG2, MCF7, primary hepatocytes)"
     )
-    gkos: list[str] = Field(default=[], description="List of gene knockouts applied as perturbations")
-    compounds: list[str] = Field(default=[], description="List of compound perturbations applied prior to measurement")
-    dose: float | None = Field(default=None, description="Dose/concentration used in uM")
+    perturbation: str | None = Field(default=None, description="Perturbation condition name")
+    reference: str = Field(default="DMSO", description="Reference condition name")
 
 
 class GeneExpressionVerifier(ToolVerifier):
-    """Tool for checking if a source entity regulates gene expression in specific conditions.
+    """Tool for checking if a source entity regulates gene expression in specific conditions."""
 
-    This tool verifies claims about gene regulation by querying knowledge bases
-    and experimental databases, accounting for cellular context and perturbation conditions.
-    """
-
-    effect_pval = 0.05
     name = "check_gene_expression"
-    description = "Check if a source entity regulates gene expression under specific conditions"
+    description = "Check if genes are regulated as expected under specific perturbation conditions"
     args_schema = GeneExpressionArgs
+
+    def __init__(self):
+        super().__init__()
+        self.expression_client = GeneExpressionClient()
 
     def _tool_logic(self, args: GeneExpressionArgs) -> tuple[float, dict[str, Any]]:
         """
@@ -40,21 +37,46 @@ class GeneExpressionVerifier(ToolVerifier):
         if not args.upregulated_genes and not args.downregulated_genes:
             return 0.0, {"error": "At least one gene list (upregulated or downregulated) must be provided"}
 
-        up_regulation_results = [random.uniform(0, 1) < self.effect_pval for _ in args.upregulated_genes]
-        down_regulation_results = [random.uniform(0, 1) < self.effect_pval for _ in args.downregulated_genes]
+        # Use provided perturbation or build from source entity
+        perturbation = args.perturbation or args.source_entity
+        cell_type = args.cell_type or "HUVEC"
 
-        all_results = up_regulation_results + down_regulation_results
-        reward = float(np.mean(all_results)) if all_results else 0.0
+        # Check each expected upregulated gene
+        up_results = []
+        for gene in args.upregulated_genes:
+            is_up = self.expression_client.is_upregulated(gene, perturbation, args.reference, cell_type)
+            up_results.append(is_up)
+
+        # Check each expected downregulated gene
+        down_results = []
+        for gene in args.downregulated_genes:
+            is_down = self.expression_client.is_downregulated(gene, perturbation, args.reference, cell_type)
+            down_results.append(is_down)
+
+        # Calculate accuracy
+        all_results = up_results + down_results
+        accuracy = sum(all_results) / len(all_results) if all_results else 0.0
+
+        # Get actual regulated genes for comparison
+        actual_up, actual_down = self.expression_client.get_regulated_genes(perturbation, args.reference, cell_type)
 
         feedback = {
             "source_entity": args.source_entity,
-            "downregulated": {
-                "requested": args.downregulated_genes,
-                "results": down_regulation_results,
-            },
+            "perturbation": perturbation,
+            "reference": args.reference,
+            "cell_type": cell_type,
             "upregulated": {
-                "requested": args.upregulated_genes,
-                "results": up_regulation_results,
+                "expected": args.upregulated_genes,
+                "results": up_results,
+                "actual_genes": actual_up[:20],  # Limit for readability
             },
+            "downregulated": {
+                "expected": args.downregulated_genes,
+                "results": down_results,
+                "actual_genes": actual_down[:20],  # Limit for readability
+            },
+            "accuracy": accuracy,
+            "verification_status": "VERIFIED" if accuracy > 0.5 else "NOT_VERIFIED",
         }
-        return reward, feedback
+
+        return accuracy, feedback

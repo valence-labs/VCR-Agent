@@ -13,12 +13,12 @@ class PlausibilityEvaluator:
     Evaluator of the biological plausibility of an explanation.
     """
 
-    def __init__(self, llm_provider: str = "anthropic", **kwargs):
+    def __init__(self, llm_provider: str = "litellm", **kwargs):
         """
         Initializes the plausibility evaluator.
 
         Args:
-            llm_provider: The LLM provider to use ('anthropic', 'gemini', or 'openai').
+            llm_provider: The LLM provider to use ('litellm', 'anthropic', 'gemini', or 'openai').
             **kwargs: Additional arguments for the LLM client.
         """
         self.llm_client = create_client(provider=llm_provider, **kwargs)
@@ -136,12 +136,12 @@ class PlausibilityRubric(JudgeRubric):
     The final reward is the sum of the scores for these three criteria.
     """
 
-    def __init__(self, llm_provider: str = "anthropic", **kwargs):
+    def __init__(self, llm_provider: str = "litellm", **kwargs):
         """
         Initializes the plausibility rubric.
 
         Args:
-            llm_provider: The LLM provider to use ('anthropic', 'gemini', or 'openai').
+            llm_provider: The LLM provider to use ('litellm', 'anthropic', 'gemini', or 'openai').
             **kwargs: Additional arguments for the JudgeRubric.
         """
         # Initialize the base rubric. The prompt and client are managed by the evaluator.

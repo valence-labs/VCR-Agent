@@ -83,7 +83,7 @@ class CorrectnessRubric(JudgeRubric):
     A rubric that evaluates the correctness of a response against a ground truth answer.
     """
 
-    def __init__(self, llm_provider: str = "anthropic", **kwargs):
+    def __init__(self, llm_provider: str = "litellm", **kwargs):
         """
         Initializes the correctness rubric.
 

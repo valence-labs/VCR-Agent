@@ -4,17 +4,14 @@
 
 - Python 3.12
 - [uv](https://docs.astral.sh/uv/) - Package manager (used for everything)
-- Git with SSH access to cb-reach repository
+- Git access for cloning the repository
 
 ## Quick Setup
 
-### 1. Clone with Submodules
+### 1. Clone Repository
 ```bash
-git clone --recurse-submodules git@github.com:recursionpharma/hooke-explain.git
+git clone git@github.com:recursionpharma/hooke-explain.git
 cd hooke-explain
-
-# If already cloned without submodules:
-git submodule update --init --recursive
 ```
 
 ### 2. Install Main Project (hooke-explain)
@@ -26,29 +23,13 @@ uv sync
 uv pip install -e .
 ```
 
-### 3. Install cb-reach Submodule
-```bash
-cd cb-reach
-
-# Convert Poetry project to uv and install
-uv sync
-
-# If uv sync fails, install dependencies manually
-# uv pip install -e .
-
-cd ..
-```
-
-
-### 4. Verify Installation
+### 3. Verify Installation
 ```bash
 # Test main project imports
 uv run python -c "import explain; print('Main project OK')"
 
-# Test cb-reach imports
-cd cb-reach
-uv run python -c "import cb_reach; print('cb-reach OK')"
-cd ..
+# Test project structure
+uv run python -c "from explain.eval.tools import knowledge_graph; print('Tools OK')"
 ```
 
 ## Development Workflow
@@ -75,10 +56,10 @@ The project includes convenient Makefile commands for common tasks:
 ```bash
 make help                # Show all available commands
 make install-uv          # Install uv package manager
-make setup-submodules    # Initialize git submodules
+
 make install             # Install main project
-make cb-reach            # Install cb-reach dependencies
-make setup               # Complete setup (submodules + dependencies)
+make install             # Install project dependencies
+make setup               # Complete setup (install dependencies)
 ```
 
 ### Development Commands
@@ -93,22 +74,18 @@ make test               # Run tests
 
 ### Common Issues
 
-**Import errors from cb-reach:**
+**Import errors:**
 ```bash
-# Check submodule status
-git submodule status
+# Reinstall project dependencies
+make install
 
-# Reinitialize if needed
-git submodule update --init --recursive
-
-# Install cb-reach dependencies with uv
-make cb-reach
+# Verify installation
+uv run python -c "import explain; print('Installation OK')"
 ```
 
 **Python version / dependencies conflicts:**
-- Both main project and cb-reach use Python 3.12
+- Project requires Python 3.12
 - Ensure you have Python 3.12 installed
-- cb-reach originally uses Poetry but we convert to uv
 
 
 **Manual environment activation (if needed):**
