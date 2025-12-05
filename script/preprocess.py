@@ -5,7 +5,7 @@ from copy import deepcopy
 import argparse
 from explain.util import map_perturbation_to_ner
 from tqdm import tqdm
-
+import pandas as pd
 from explain.utils.chem.pubchem import PubChemClient
 
 
@@ -21,8 +21,13 @@ def preprocess(input_path, preprocessed_path, mode='ner-pubchem'):
     preprocessed_file_path: preprocessed perturbation path
     '''
     # NER mapping
+
     if 'ner' in mode:
-        perturbations = json.load(open(os.path.join(input_path), 'r'))
+        if input_path.endswith('.parquet'):
+            df = pd.read_parquet(input_path)
+            perturbations = df.to_dict(orient='records')
+        else:
+            perturbations = json.load(open(os.path.join(input_path), 'r'))
         map_perturbation_to_ner(perturbations, preprocessed_path)
     # PubChem info mapping
     if 'pubchem' in mode:
