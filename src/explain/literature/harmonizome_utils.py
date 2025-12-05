@@ -139,6 +139,8 @@ def get_harmonizome_info(index, perturbation, is_ner=False):
             names = [perturbation['perturbation']['perturbation']['name']]
         gene_set_doc = ""
         for name in names:
+            if name is None:
+                continue
             if len(name) == 0:
                 continue
             try:
@@ -157,14 +159,18 @@ def get_harmonizome_info(index, perturbation, is_ner=False):
                 cell_type = perturbation['perturbation']['context'][0]['cell type']
             else:
                 cell_type = perturbation['perturbation']['context'][0]['cell_type']
-            try:
-                gene_set_info = Harmonizome.get(Entity.ATTRIBUTE, name=cell_type)
-            except:
-                gene_set_info = {'status': 'error'}
-            if 'status' not in gene_set_info.keys():
-                disease_model_doc += "### CELL TYPE INFORMATION\nThe cell type of the context is " + cell_type + ". "
-                disease_model_doc += harmonizome_gene_set_to_doc(gene_set_info)
-                gene_set_info_list.append(gene_set_info)
+            if cell_type is None:
+                pass
+            else:
+                try:
+                    gene_set_info = Harmonizome.get(Entity.ATTRIBUTE, name=cell_type)
+                except:
+                    gene_set_info = {'status': 'error'}
+                if 'status' not in gene_set_info.keys():
+                    if cell_type is not None:
+                        disease_model_doc += "### CELL TYPE INFORMATION\nThe cell type of the context is " + cell_type + ". "
+                    disease_model_doc += harmonizome_gene_set_to_doc(gene_set_info)
+                    gene_set_info_list.append(gene_set_info)
 
         else:
             perturbation_disease_model = perturbation['perturbation']['context']['disease_model']
