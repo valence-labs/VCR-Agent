@@ -69,6 +69,8 @@ julia --project=. -e 'using Pkg; Pkg.update(); Pkg.precompile()'
 cd ..
 ```
 
+Unzip data/mondo.json.zip.
+
 ## Input Format
 
 The input is a JSON list of perturbation records. Some fields may be missing.
