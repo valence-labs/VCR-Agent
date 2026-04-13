@@ -1,6 +1,6 @@
-import networkx as nx
 import re
 
+import networkx as nx
 
 
 def dag_to_networkx_graph(dag: str) -> nx.DiGraph:

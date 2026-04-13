@@ -1,5 +1,8 @@
-from explain.eval.score.score_util import dag_to_networkx_graph
 import numpy as np
+
+from explain.eval.score.score_util import dag_to_networkx_graph
+
+
 class StructuralEvaluator:
     def __init__(self,  **kwargs):
         pass
@@ -19,7 +22,7 @@ class StructuralEvaluator:
         gen_edges = {(src, tgt, rel) for src, tgt, rel in gen_graph.edges(data='relation')}
 
         correct_edges = gt_edges & gen_edges
-        
+
         # current version returns f1 score but we can add recall and precision later
         precision = len(correct_edges) / len(gen_edges) if len(gen_edges) > 0 else 0
         recall = len(correct_edges) / len(gt_edges) if len(gt_edges) > 0 else 0

@@ -1,7 +1,9 @@
 import json
-from explain.util import extract_entity_from_text
-from langchain_community.retrievers import WikipediaRetriever
 from concurrent.futures import ThreadPoolExecutor
+
+from langchain_community.retrievers import WikipediaRetriever
+
+from explain.util import extract_entity_from_text
 
 
 def get_wikipedia_info(index, perturbation, max_workers=8):

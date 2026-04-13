@@ -1,7 +1,7 @@
 from typing import Any
 
 
-class StructureExplain():
+class StructureExplain:
     """
     Base class for structre explain objects.
     """

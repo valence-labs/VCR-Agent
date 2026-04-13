@@ -53,7 +53,7 @@ class LLMConfig:
 
     provider: str = "litellm"  # litellm, anthropic, gemini, openai
     model: str = "claude-sonnet-4@20250514"
-    max_tokens: int | None = None
+    max_tokens: int = 16384
     temperature: float = 1
     location: str | None = None
     project_id: str | None = None

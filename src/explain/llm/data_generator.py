@@ -1,14 +1,14 @@
 import json
-import re
 import os
+import re
+
 import tiktoken
 from anthropic import APIStatusError
 
-from explain.util import load_data
-from explain.llm import create_client
+from explain.literature.harmonizome import Entity, Harmonizome
 from explain.literature.harmonizome_utils import map_gene_set_to_related_genes
-from explain.literature.harmonizome import Harmonizome, Entity
-
+from explain.llm import create_client
+from explain.util import load_data
 
 
 class DataGenerator:
@@ -22,7 +22,7 @@ class DataGenerator:
         self.llm_client_report = create_client(provider=model_name, project_id=project_id, location=location)
         self.llm_client_explain = create_client(provider=model_name, project_id=project_id, location=location)
         self.llm_client_rephrase = create_client(provider=model_name, project_id=project_id, location=location)
-        
+
 
         self.action_primitives, self.perturbation_cell_context, self.report_template, self.structure_explain_template = load_data(data_dir, kwargs['pert_path'])
         self.one_step_explain_template = open(os.path.join(data_dir, "templates/one-step.txt")).read()
@@ -30,7 +30,7 @@ class DataGenerator:
             self.structure_explain_template = open(os.path.join(data_dir, "templates/structure-explain-order.txt")).read()
         if 'openai' in model_name:
             self.encoding = tiktoken.encoding_for_model("gpt-4-1")
-        
+
         # Add caching for responses
         self.response_cache = {}
         self.max_cache_size = int(kwargs.get("max_cache_size",1000))
@@ -66,7 +66,7 @@ class DataGenerator:
                 result = self.llm_client_rephrase.generate(messages, )
         except APIStatusError:
             if self.model_name in ['openai']:
-                enc = tiktoken.encoding_for_model("gpt-4-1")  
+                enc = tiktoken.encoding_for_model("gpt-4-1")
             else:
                 enc = tiktoken.get_encoding("cl100k_base")
             tokens = enc.encode(input_prompt)
@@ -87,15 +87,12 @@ class DataGenerator:
                     num_tokens -= 5000
                     continue
 
-        if self.model_name in ['anthropic', 'litellm']:
-            response = result.messages[-1]['content'][0]['text']
-        else:
-            response = result.content
+        response = result.content
         # Store in cache with simple size control
         self.response_cache[cache_key] = response
         self._clean_cache()
         return response
-        
+
 
 
     def generate_report(self, perturbation, additional_info):
@@ -156,7 +153,7 @@ class DataGenerator:
         The future question is:
 
         ## QUESTION
-        **Q: How does the following perturbation influence the cell in the described context, mechanistically and functionally?**  
+        **Q: How does the following perturbation influence the cell in the described context, mechanistically and functionally?**
 
         ## PERTURBATION
         {perturbation}
@@ -226,13 +223,13 @@ class DataGenerator:
 
 
     def post_process_additional_info(self, input_info, tool, perturbation):
-        
-        tool_name_dict = {'kg': 'KNOWLEDGE GRAPH INFORMATION', 
-        'harmonizome': 'GENE INFORMATION', 
-        'wikipedia': 'WIKIPEDIA INFORMATION', 
+
+        tool_name_dict = {'kg': 'KNOWLEDGE GRAPH INFORMATION',
+        'harmonizome': 'GENE INFORMATION',
+        'wikipedia': 'WIKIPEDIA INFORMATION',
         'paperqa_list': 'RELATED PAPER LIST',
         'pubmed': 'RELATED PAPER LIST'}
-        
+
         if 'schema' in tool:
             result_info = self.schema_additional_info(input_info, tool)
         else:

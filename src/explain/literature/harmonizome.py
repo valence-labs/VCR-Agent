@@ -1,16 +1,17 @@
 import gzip
 import json
-import os
 import logging
-
+import os
+from enum import Enum as PyEnum
 from io import BytesIO
-from urllib.request import urlopen
 from urllib.error import HTTPError
 from urllib.parse import quote_plus
-from enum import Enum as PyEnum
+from urllib.request import urlopen
+
 import numpy as np
 import pandas as pd
 from scipy.sparse import lil_matrix
+
 
 # The entity types supported by the Harmonizome API.
 class Entity(PyEnum):
@@ -45,7 +46,7 @@ DOWNLOADS = [x for x in config.get('downloads')]
 DATASET_TO_PATH = config.get('datasets')
 
 
-class Harmonizome(object):
+class Harmonizome:
 
     __version__ = VERSION
     DATASETS = DATASET_TO_PATH.keys()
@@ -67,7 +68,7 @@ class Harmonizome(object):
             url = '%s/%s/%s' % (API_URL, VERSION, entity)
             result = json_from_url(url)
             return result
-        except HTTPError as e:
+        except HTTPError:
             return {'status': 'error'}
 
     @classmethod
@@ -82,7 +83,7 @@ class Harmonizome(object):
     def download(cls, datasets=None, what=None):
         """For each dataset, creates a directory and downloads files into it.
         """
-        # Why not check `if not datasets`? Because in principle, a user could 
+        # Why not check `if not datasets`? Because in principle, a user could
         # call `download([])`, which should download nothing, not everything.
         # Why might they do this? Imagine that the list of datasets is
         # dynamically generated in another user script.
@@ -121,7 +122,7 @@ class Harmonizome(object):
 
                 if response.code != 200:
                     raise Exception('This should not happen')
-                
+
                 if os.path.isfile(filename):
                     logging.info('Using cached `%s`' % (filename))
                 else:
@@ -184,7 +185,7 @@ def _download_and_decompress_file(response, filename):
 
 def _getfshape(fn, row_sep='\n', col_sep='\t', open_args={}):
     ''' Fast and efficient way of finding row/col height of file '''
-    with open(fn, 'r', newline=row_sep, **open_args) as f:
+    with open(fn, newline=row_sep, **open_args) as f:
         col_size = f.readline().count(col_sep) + 1
         row_size = sum(1 for line in f) + 1
         return (row_size, col_size)
@@ -202,7 +203,7 @@ def _parse(fn, column_size=3, index_size=3, shape=None,
     This only works if all of the data is of the same type, if it isn't a float
      use:
          data_dtype=np.float64
-    
+
     Returns:
         (column_names, columns, index_names, index, data)
     '''
@@ -221,7 +222,7 @@ def _parse(fn, column_size=3, index_size=3, shape=None,
     index = index_fmt((rows - column_size, index_size), dtype=index_dtype)
     data = data_fmt((rows - column_size, cols - index_size), dtype=data_dtype)
 
-    with open(fn, 'r', newline=row_sep, **open_args) as fh:
+    with open(fn, newline=row_sep, **open_args) as fh:
         header = np.array([next(fh).strip().split(col_sep)
                            for _ in range(column_size)])
 
@@ -281,7 +282,7 @@ def _df_column_uniquify(df):
             newitem = item
             while newitem in new_columns:
                     counter += 1
-                    newitem = "{}_{}".format(item, counter)
+                    newitem = f"{item}_{counter}"
             new_columns.append(newitem)
     df.columns = new_columns
     return df

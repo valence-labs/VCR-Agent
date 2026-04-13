@@ -1,10 +1,12 @@
-from Bio import Entrez
-from paperqa import ask, Settings
-import os
 import json
+import os
 from operator import itemgetter
 
+from Bio import Entrez
+from paperqa import Settings, ask
+
 from explain.util import extract_entity_from_text
+
 
 def search(query, num_papers=10):
     Entrez.email = 'yunhuijang@kaist.ac.kr'
@@ -37,21 +39,21 @@ def id_list_to_txt(studiesIdList, file_path):
             title = paper['MedlineCitation']['Article']['ArticleTitle']
             try:
                 abstract = paper['MedlineCitation']['Article']['Abstract']['AbstractText'][0]
-            except:
+            except (KeyError, IndexError):
                 continue
             try:
                 journal = paper['MedlineCitation']['Article']['Journal']['Title']
-            except:
+            except (KeyError, IndexError):
                 journal = 'N/A'
             try:
                 pubdate_year = paper['MedlineCitation']['Article']['Journal']['JournalIssue']['PubDate']['Year']
-            except:
+            except (KeyError, IndexError):
                 pubdate_year = 'N/A'
             try:
                 authors = ''
                 for author in paper['MedlineCitation']['Article']['AuthorList']:
                     authors += f"{author['ForeName']} {author['LastName']}, "
-            except:
+            except (KeyError, IndexError):
                 authors = 'N/A'
 
             os.makedirs(file_path, exist_ok=True)
@@ -72,7 +74,7 @@ def id_list_to_txt(studiesIdList, file_path):
             json.dump(papers_info, f, indent=4)
         return papers_info
 
-    
+
 def get_paperqa_info(index, perturbation, question, num_papers=10, mode='paperqa', paper_info_column=['title', 'abstract']):
     mode = mode.replace('-schema', '').replace('-rephrase', '')
     perturbation_text = json.dumps(perturbation, indent=4)
@@ -80,12 +82,13 @@ def get_paperqa_info(index, perturbation, question, num_papers=10, mode='paperqa
 
     entity_list = list(entities.keys())
     entity_text = ', '.join(entity_list)
-    file_path = f'data/papers/{index}_{'_'.join(entity_list)}'
-    
+    entity_suffix = '_'.join(entity_list)
+    file_path = f'data/papers/{index}_{entity_suffix}'
+
     # Check if papers_info.json already exists to avoid re-processing
     papers_info_path = f'{file_path}/papers_info.json'
     if os.path.exists(papers_info_path):
-        with open(papers_info_path, 'r') as f:
+        with open(papers_info_path) as f:
             papers_info = json.load(f)
         print(f"File {file_path} already exists")
     else:
@@ -105,7 +108,7 @@ def get_paperqa_info(index, perturbation, question, num_papers=10, mode='paperqa
     papers_info = papers_info[:num_papers]
     get_ac = itemgetter(*paper_info_column)
 
-    papers_info = [dict(zip(paper_info_column, get_ac(d))) for d in papers_info if all(k in d for k in paper_info_column)]
+    papers_info = [dict(zip(paper_info_column, get_ac(d), strict=False)) for d in papers_info if all(k in d for k in paper_info_column)]
     # return answer for the question with paperqa
     if mode in ['paperqa', 'paperqa_only']:
 
@@ -113,8 +116,8 @@ def get_paperqa_info(index, perturbation, question, num_papers=10, mode='paperqa
             question,
             settings=Settings(temperature=0.5, paper_directory=file_path)
         )
-        
-        answer = answer_response.session.answer 
+
+        answer = answer_response.session.answer
     # return only list of papers
     elif mode in ['paperqa_list', 'paperqa_list_rephrase']:
         answer = ""
@@ -125,31 +128,31 @@ def get_paperqa_info(index, perturbation, question, num_papers=10, mode='paperqa
 def load_papers_from_txt_files(file_path):
     """
     Load all txt files from file_path and extract paper information.
-    
+
     Args:
         file_path (str): Path to directory containing txt files
-        
+
     Returns:
         list: List of dictionaries containing paper information
     """
     papers_info = []
-    
+
     if not os.path.exists(file_path):
         print(f"Directory {file_path} does not exist")
         return papers_info
-    
+
     txt_files = [f for f in os.listdir(file_path) if f.endswith('.txt')]
-    
+
     for txt_file in txt_files:
         file_path_full = os.path.join(file_path, txt_file)
         try:
-            with open(file_path_full, 'r', encoding='utf-8') as f:
+            with open(file_path_full, encoding='utf-8') as f:
                 content = f.read()
-            
+
             # Parse the content to extract paper information
             lines = content.split('\n')
             paper_info = {}
-            
+
             for line in lines:
                 line = line.strip()
                 if line.startswith('Title: '):
@@ -167,40 +170,16 @@ def load_papers_from_txt_files(file_path):
                         abstract_content = content[abstract_start + 9:].strip()  # Remove 'Abstract\n' prefix
                         paper_info['abstract'] = abstract_content
                     break
-            
+
             # Only add if we have at least title and abstract
             if 'title' in paper_info and 'abstract' in paper_info:
                 papers_info.append(paper_info)
-                
+
         except Exception as e:
             print(f"Error reading file {txt_file}: {e}")
             continue
-    
+
     return papers_info
 
 
-def batch_get_paperqa_info(perturbations, questions, num_papers=10, mode='paperqa_list'):
-    """
-    Batch process multiple perturbations to get paper information efficiently.
-    
-    Args:
-        perturbations (list): List of perturbation dictionaries
-        questions (list): List of questions corresponding to perturbations
-        num_papers (int): Number of papers to retrieve per perturbation
-        mode (str): Mode for paperqa processing
-        
-    Returns:
-        list: List of (answer, papers_info) tuples
-    """
-    results = []
-    
-    for i, (perturbation, question) in enumerate(zip(perturbations, questions)):
-        try:
-            answer, papers_info = get_paperqa_info(i, perturbation, question, num_papers, mode)
-            results.append((answer, papers_info))
-        except Exception as e:
-            print(f"Error processing perturbation {i}: {e}")
-            results.append(("", []))
-    
-    return results
 

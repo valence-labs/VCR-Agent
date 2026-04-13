@@ -1,17 +1,19 @@
+import os
 import re
+
 import networkx as nx
 import numpy as np
-import os
 
-from explain.util import load_data
-from explain.eval.utils import check_answer_format, is_format_correct
 from explain.eval.score.score_util import dag_to_networkx_graph, get_primitives_from_structure_hypothesis
+from explain.eval.utils import check_answer_format, is_format_correct
+from explain.util import load_data
+
 
 class SyntaxEvaluator:
     """
     Checks the syntax and schema gates of the generated explanations.
     """
-    
+
     def __init__(self,  **kwargs):
         self.allowed_primitives = self.get_allowed_primitives()
 

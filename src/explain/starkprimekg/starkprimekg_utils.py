@@ -1,68 +1,61 @@
 import json
-import warnings
 import os
+import warnings
 
 from explain.util import extract_entity_from_text
 from explain.utils.chem.pubchem import PubChemClient
 
-DATA_DIR = '/mnt/ps/home/CORP/yunhui.jang/research/hooke-explain/data'
-with open(os.path.join(DATA_DIR, 'mondo.json'), 'r') as f:
-    mondo_data = json.load(f)
-mondo_nodes = mondo_data['graphs'][0]['nodes']
-mondo_node_label_dict = {node['lbl']: idx for idx, node in enumerate(mondo_nodes) if 'lbl' in node.keys()}
-mondo_label_node_dict = {v: k for k, v in mondo_node_label_dict.items()}
-mondo_node_synonyms = {node['lbl']: node['meta']['synonyms'] for node in mondo_nodes if 'meta' in node.keys() and 'synonyms' in node['meta'].keys()}
+DATA_DIR = os.environ.get('DATA_DIR', 'data')
+
+# Lazy-loaded MONDO data (only initialized when KG tool is actually used)
+_mondo_loaded = False
+mondo_node_label_dict = {}
+mondo_label_node_dict = {}
+mondo_node_synonyms = {}
+mondo_synonym_to_label = {}
 
 pubchem_client = PubChemClient()
 
-# Fast MONDO synonym lookup: synonym value -> label
-mondo_synonym_to_label = {}
-for lbl, syns in mondo_node_synonyms.items():
-    try:
-        for syn in syns:
-            v = syn.get('val')
-            if v:
-                mondo_synonym_to_label[v] = lbl
-    except Exception:
-        continue
 
-def entity_matching_info(perturbation_index):
-    """
-    Get the corresponding KG node information from the perturbation index. (Exact entity matching)
-    """
-    index_tag = '_'.join(perturbation_index.split('_')[:-1])
-    if len(index_tag) > 0:
-        index_tag = '_' + index_tag
-    perturbation_kg_mapping = json.load(open(f'data/starkprimeKG/perturbation_kg_mapping{index_tag}.json', 'r'))
-    perturbation_index = str(perturbation_index)
-    kg_infos = perturbation_kg_mapping[perturbation_index]['kg_info']
-    org_infos = perturbation_kg_mapping[perturbation_index]['org_data']
+def _load_mondo():
+    """Load MONDO ontology data lazily on first use."""
+    global _mondo_loaded, mondo_node_label_dict, mondo_label_node_dict
+    global mondo_node_synonyms, mondo_synonym_to_label
+    if _mondo_loaded:
+        return
+    mondo_path = os.path.join(DATA_DIR, 'mondo.json')
+    if not os.path.exists(mondo_path):
+        warnings.warn(
+            f"mondo.json not found at {mondo_path}. Disease synonym matching will be disabled. "
+            f"Set DATA_DIR env var to the directory containing mondo.json.",
+            stacklevel=2,
+        )
+        _mondo_loaded = True
+        return
+    with open(mondo_path) as f:
+        mondo_data = json.load(f)
+    mondo_nodes = mondo_data['graphs'][0]['nodes']
+    mondo_node_label_dict.update({node['lbl']: idx for idx, node in enumerate(mondo_nodes) if 'lbl' in node.keys()})
+    mondo_label_node_dict.update({v: k for k, v in mondo_node_label_dict.items()})
+    mondo_node_synonyms.update({node['lbl']: node['meta']['synonyms'] for node in mondo_nodes if 'meta' in node.keys() and 'synonyms' in node['meta'].keys()})
+    for lbl, syns in mondo_node_synonyms.items():
+        try:
+            for syn in syns:
+                v = syn.get('val')
+                if v:
+                    mondo_synonym_to_label[v] = lbl
+        except Exception:
+            continue
+    _mondo_loaded = True
 
-    return kg_infos, org_infos
-
-def get_kg_entity_doc(perturbation_index, kg, with_rel=False):
-    kg_infos, org_infos = entity_matching_info(perturbation_index)
-    doc_parts = []
-    
-    for kg_info, org_info in zip(kg_infos, org_infos):
-        kg_node_index = int(kg_info['node_index'])
-        if with_rel:
-            doc_info = kg.doc_info_with_rel[kg_node_index]
-        else:
-            doc_info = kg.doc_info_without_rel[kg_node_index]
-
-        doc_parts.append(f"This is the document information of {org_info['type']} {org_info['value']}.\n")
-        doc_parts.append(doc_info)
-        doc_parts.append("\n")
-
-    return ''.join(doc_parts)
 
 def get_kg_info(index, perturbation, tool, kg, is_with_rel, num_neighbor):
-    # NER
-    if 'tahoe' in index or 'rxrx' in index:
-        perturbation_partial_text = json.dumps(perturbation['perturbation']['perturbations'], indent=4)
+    # NER - detect data format from structure
+    pert_data = perturbation['perturbation']
+    if 'perturbations' in pert_data:
+        perturbation_partial_text = json.dumps(pert_data['perturbations'], indent=4)
     else:
-        perturbation_partial_text = json.dumps(perturbation['perturbation']['perturbation'], indent=4)
+        perturbation_partial_text = json.dumps(pert_data['perturbation'], indent=4)
     context_text = json.dumps(perturbation['perturbation']['context'], indent=4)
     perturbation_entity = extract_entity_from_text(perturbation_partial_text, index)
     # Get NER entities
@@ -106,6 +99,7 @@ def get_ner_node_index(entity_dict, kg):
     - node_list: list of matching node indices in starkPrimeKG
     - unmatching_entities: list of entities that are not matched
     """
+    _load_mondo()
 
     index_list = []
     unmatching_entities = []
@@ -122,7 +116,7 @@ def get_ner_node_index(entity_dict, kg):
                 index_list.append({'entity': entity, 'node': int(cached_idx)})
             else:
                 unmatching_entities.append(entity)
-                warnings.warn(f"Could not find the node index for {tag} {entity} in the KG.")
+                warnings.warn(f"Could not find the node index for {tag} {entity} in the KG.", stacklevel=2)
             continue
 
         node_index = kg._kg_node_name_lower.get(entity_lower)
@@ -178,7 +172,7 @@ def get_ner_node_index(entity_dict, kg):
             kg._ner_entity_cache[cache_key] = node_index
         else:
             unmatching_entities.append(entity)
-            warnings.warn(f"Could not find the node index for {tag} {entity} in the KG.")
+            warnings.warn(f"Could not find the node index for {tag} {entity} in the KG.", stacklevel=2)
             kg._ner_entity_cache[cache_key] = None
 
     return index_list, unmatching_entities

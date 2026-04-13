@@ -23,7 +23,7 @@ class BinaryCorrectnessEvaluator:
         self.parser = Parser()
         self.judge_prompt_template = """
         You are an expert biologist comparing a model's response to a ground truth answer.
-        
+
         Question:
         ```
         {question}
@@ -38,10 +38,10 @@ class BinaryCorrectnessEvaluator:
         ```
         {response}
         ```
-                
+
         Assess how similar the model's response is to the ground truth answer.
         Consider the factual accuracy, completeness, and key biological concepts mentioned.
-        
+
         Respond either "yes" or "no" only. If the response is correct, respond "yes". If the response is incorrect, respond "no".
         Your final respond should be in the tag <answer>yes</answer> or <answer>no</answer>.
         """

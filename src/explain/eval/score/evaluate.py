@@ -1,17 +1,15 @@
-import os
 import json
+
 import numpy as np
-import pandas as pd
-from tqdm import tqdm
 import wandb
+from tqdm import tqdm
 
-
-from explain.eval.score.syntax_score import SyntaxEvaluator
-from explain.eval.score.accuracy_score import AccuracyEvaluator
-from explain.eval.score.structure_explain import StructureExplain
-from explain.eval.score.structural_score import StructuralEvaluator
 from explain.eval.rubrics.correctness import CorrectnessRubric
 from explain.eval.rubrics.plausibility import PlausibilityRubric
+from explain.eval.score.accuracy_score import AccuracyEvaluator
+from explain.eval.score.structural_score import StructuralEvaluator
+from explain.eval.score.structure_explain import StructureExplain
+from explain.eval.score.syntax_score import SyntaxEvaluator
 
 # structure explain object
 
@@ -30,20 +28,20 @@ def evaluate(gen_data, gt_data, score_file_name, metrics=['syntax', 'token_accur
 
     scores = []
 
-    for i, (gt, gen) in enumerate(tqdm(zip(gt_structure_explain, structure_explain), total=len(gt_structure_explain))):
-        
+    for i, (gt, gen) in enumerate(tqdm(zip(gt_structure_explain, structure_explain, strict=False), total=len(gt_structure_explain))):
+
         if str(gt['index']) != str(gen['index']):
             raise ValueError(f'Index mismatch: {gt["index"]} != {gen["index"]}')
-        
+
         cur_score_dict = {'index': i}
 
 
         for key, value in gen.items():
             gen[key] = str(value)
 
-        
+
         if 'syntax' in metrics:
-            score = syntax_evaluator.primitive_validity(gen['explain']) 
+            score = syntax_evaluator.primitive_validity(gen['explain'])
             cur_score_dict['syntax'] = score
         # token accuracy for structure hypothesis
         if 'token_accuracy' in metrics:
@@ -72,7 +70,7 @@ def evaluate(gen_data, gt_data, score_file_name, metrics=['syntax', 'token_accur
         if 'primitive_level_f1' in metrics:
             score = accuracy_evaluator.primitive_level_f1(gt['explain'], gen['explain'])
             cur_score_dict['primitive_level_f1'] = score
-        if 'argument_similarity' in metrics:    
+        if 'argument_similarity' in metrics:
             for mode in ['BERTScore', 'SentenceTransformers', 'openai_embeddings']:
                 # argument similarity for paragraph
                 score = accuracy_evaluator.argument_similarity(gt['answer'], gen['answer'], mode)
@@ -82,13 +80,13 @@ def evaluate(gen_data, gt_data, score_file_name, metrics=['syntax', 'token_accur
                 cur_score_dict[f'argument_similarity/structure_hypothesis/{mode}'] = score
         if 'llm/correctness' in metrics:
             llm_state = {}
-            
+
             score = correctness_rubric.judge(prompt=gt['question'], answer=gt['explain'], completion=gen['explain'], state=llm_state)
             cur_score_dict['llm/correctness'] = score['correctness']
             cur_score_dict['llm/correctness/full_response'] = score['full_response']
         if 'llm/plausibility' in metrics:
             llm_state = {}
-            
+
             score = plausibility_rubric.judge(prompt=gt['question'], completion=gen['explain'], answer='', state=llm_state)
             for key in score.keys():
                 cur_score_dict[f'llm/plausibility/{key}'] = score[key]

@@ -1,11 +1,13 @@
+import argparse
 import json
 import os
 import re
 from copy import deepcopy
-import argparse
-from explain.util import map_perturbation_to_ner
-from tqdm import tqdm
+
 import pandas as pd
+from tqdm import tqdm
+
+from explain.util import map_perturbation_to_ner
 from explain.utils.chem.pubchem import PubChemClient
 
 
@@ -27,11 +29,11 @@ def preprocess(input_path, preprocessed_path, mode='ner-pubchem'):
             df = pd.read_parquet(input_path)
             perturbations = df.to_dict(orient='records')
         else:
-            perturbations = json.load(open(os.path.join(input_path), 'r'))
+            perturbations = json.load(open(os.path.join(input_path)))
         map_perturbation_to_ner(perturbations, preprocessed_path)
     # PubChem info mapping
     if 'pubchem' in mode:
-        processed_perturbations = json.load(open(preprocessed_path, 'r'))
+        processed_perturbations = json.load(open(preprocessed_path))
         map_pubchem_info(processed_perturbations, preprocessed_path)
 
 def map_pubchem_info(perturbations, preprocessed_path):
@@ -55,54 +57,6 @@ def map_pubchem_info(perturbations, preprocessed_path):
         if i % 50 == 0 or i == len(perturbations) - 1:
             with open(preprocessed_path, 'w') as f:
                 json.dump(perturbations, f)
-
-def preprocess_filter_with_reservation(input_path='/rxrx/data/user/yunhui.jang/outgoing/hunflair'):
-    '''
-    Filter with reserved bc experiment or reserved bc compound
-    '''
-    reserved_bc_expt_count = 0
-    reserved_bc_comp_count = 0
-    reserved_all_count = 0
-    total_count = 0
-    for file in tqdm(sorted(os.listdir(input_path), key=natural_key)):
-        if 'rxrx' in file:
-            index = file.split('_')[-1].split('.')[0]
-            perturbations_rxrx = json.load(open(os.path.join(input_path, file), 'r'))
-                # remove duplicates
-            perturbations_rxrx = dedupe_ignoring_index(perturbations_rxrx, keep="first", drop_index_in_output=True)
-            reserved_bc_expt = [pert for pert in perturbations_rxrx if pert['perturbation']['all_reserved_bc_expt']]
-            reserved_bc_comp = [pert for pert in perturbations_rxrx if pert['perturbation']['reserved_bc_comp']]
-            reserved_all = [pert for pert in perturbations_rxrx if pert['perturbation']['all_reserved_bc_expt'] and pert['perturbation']['reserved_bc_comp']]
-            reserved_bc_expt_count += len(reserved_bc_expt)
-            reserved_bc_comp_count += len(reserved_bc_comp)
-            reserved_all_count += len(reserved_all)
-            total_count += len(perturbations_rxrx)
-            perturbation_rxrx_filtered = [pert for pert in perturbations_rxrx if pert['perturbation']['all_reserved_bc_expt'] or pert['perturbation']['reserved_bc_comp']]
-
-            with open(f'/rxrx/data/user/yunhui.jang/outgoing/preprocessed/preprocessed_perturbation_ner_mapping_rxrx_{index}.json', 'w') as f:
-                print(len(perturbation_rxrx_filtered), len(perturbations_rxrx))
-                json.dump(perturbation_rxrx_filtered, f)
-        
-    print(reserved_bc_expt_count, reserved_bc_comp_count, reserved_all_count, total_count)
-    print(reserved_bc_expt_count/total_count, reserved_bc_comp_count/total_count, reserved_all_count/total_count)
-
-
-def preprocess_filter_with_ner_matching(num_samples=30000, input_path='/rxrx/data/user/yunhui.jang/outgoing/hunflair'):
-    data = []
-    for file in tqdm(sorted(os.listdir(input_path), key=natural_key)[:2]):
-        if 'rxrx' in file:
-            perturbations_rxrx = json.load(open(os.path.join(input_path, file), 'r'))
-            perturbations_rxrx = dedupe_ignoring_index(perturbations_rxrx, keep="first", drop_index_in_output=True)
-            perturbations_rxrx = [pert for pert in perturbations_rxrx if not pert['perturbation']['all_reserved_bc_expt'] and not pert['perturbation']['reserved_bc_comp']]
-            data.extend(perturbations_rxrx)
-    
-    data_with_chemical = [d for d in data if 'Chemical' in d['perturbation_entity'].values()]
-    # TODO
-    data_with_chemical = sorted(data_with_chemical, key=lambda x: len(x['perturbation_entity']))
-    data_with_chemical = data_with_chemical[:num_samples]
-
-    return data_with_chemical
-        
 
 def _freeze(obj, drop_keys=frozenset({"index"}), list_as_multiset=False):
         """

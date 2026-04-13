@@ -25,7 +25,7 @@ class PlausibilityEvaluator:
         self.parser = Parser()
         self.judge_prompt_template = """
         You are an expert biologist. Evaluate the following response for its scientific plausibility, coherence and correctness.
-        
+
         Question:
         ```
         {question}
@@ -35,12 +35,12 @@ class PlausibilityEvaluator:
         ```
         {response}
         ```
-                
+
         Assess the explanation on a scale of 0-10 for the following criteria:
         1. `scientific_accuracy`: **Scientific Accuracy**: Are the claims biologically correct and consistent with the question?
         2. `logical_consistency`: **Logical Consistency**: Do the conclusions logically follow from the premises?
         3. `mechanistic_clarity`:  **Mechanistic Clarity**: Is the underlying biological mechanism clearly explained?
-        
+
         Your response MUST be a single JSON object containing the numeric scores (0-10) for each criterion. Do not include any other text or explanations.
         You should only use the following keys: `scientific_accuracy`, `logical_consistency`, `mechanistic_clarity`.
         Example of a valid response:

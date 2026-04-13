@@ -46,15 +46,21 @@ def access_secret_version(
 
 
 @lru_cache(maxsize=1000)
-def set_env_secrets(secret_list: list[str] | None = None):
+def set_env_secrets(secret_list: tuple[str, ...] | None = None):
     """
     Set environment variables from Google Cloud Secret Manager.
+    Skips secrets that are already set in the environment (e.g. from .env).
 
     Args:
-        secret_list (Optional[list[str]], optional): The list of secrets to set. Defaults to ["OPENAI_API_KEY"].
+        secret_list (Optional[tuple[str, ...]], optional): The list of secrets to set. Defaults to ("OPENAI_API_KEY",).
     """
     if secret_list is None:
-        secret_list = ["OPENAI_API_KEY"]
+        secret_list = ("OPENAI_API_KEY",)
     for secret in secret_list:
-        secret_data = access_secret_version(secret)
-        os.environ[secret] = secret_data
+        if os.environ.get(secret):
+            continue
+        try:
+            secret_data = access_secret_version(secret)
+            os.environ[secret] = secret_data
+        except Exception:
+            pass

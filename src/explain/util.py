@@ -1,10 +1,10 @@
-import os
+import ast
 import json
+import os
+
 from flair.data import Sentence
 from flair.models.prefixed_tagger import PrefixedSequenceTagger
 from tqdm import tqdm
-import ast
-import pandas as pd
 
 global tagger
 
@@ -34,7 +34,7 @@ def extract_entity_from_text(text, pert_idx):
     """
     Extract the entity from the perturbation.
     """
-    
+
     if perturbation_ner_mapping is not None and pert_idx in perturbation_ner_mapping_data_indices:
         index = perturbation_ner_mapping_data_indices.index(pert_idx)
         perturbation = perturbation_ner_mapping[index]
@@ -55,7 +55,7 @@ def map_perturbation_to_ner(perturbations, file_name):
     """
     if os.path.exists(file_name):
         print(f'{file_name} already exists')
-        perturbation_ner_dict = json.load(open(file_name, 'r'))
+        perturbation_ner_dict = json.load(open(file_name))
     else:
         perturbation_ner_dict = []
     index_set = set([pert_dict['index'] for pert_dict in perturbation_ner_dict])
@@ -67,13 +67,20 @@ def map_perturbation_to_ner(perturbations, file_name):
         cur_dict['index'] = pert_idx
         if isinstance(perturbation, str):
             perturbation = ast.literal_eval(perturbation)
-        cur_dict['perturbation'] = perturbation
-        if 'tahoe' in file_name or 'rxrx' in file_name:
-            perturbation_partial_text = json.dumps(perturbation['perturbations'], indent=4)
+        # Store so downstream tools can access perturbation['perturbation']['context'] etc.
+        # If input has nested 'perturbation' key, unwrap it to avoid double-nesting
+        if 'perturbation' in perturbation and isinstance(perturbation['perturbation'], dict):
+            cur_dict['perturbation'] = perturbation['perturbation']
+            pert_data = perturbation['perturbation']
         else:
-            perturbation_partial_text = json.dumps(perturbation['perturbation'], indent=4)
+            cur_dict['perturbation'] = perturbation
+            pert_data = perturbation
+        if 'tahoe' in file_name or 'rxrx' in file_name:
+            perturbation_partial_text = json.dumps(pert_data['perturbations'], indent=4)
+        else:
+            perturbation_partial_text = json.dumps(pert_data.get('perturbation', pert_data.get('perturbations', {})), indent=4)
         perturbation_entity = extract_entity_from_text(perturbation_partial_text, pert_idx)
-        context_text = json.dumps(perturbation['context'], indent=4)
+        context_text = json.dumps(pert_data['context'], indent=4)
         context_entity = extract_entity_from_text(context_text, pert_idx)
         cur_dict['perturbation_entity'] = perturbation_entity
         cur_dict['context_entity'] = context_entity
@@ -86,10 +93,5 @@ def map_perturbation_to_ner(perturbations, file_name):
     perturbation_ner_dict = sorted(perturbation_ner_dict, key=lambda x: x['index'])
     with open(file_name, 'w') as f:
         json.dump(perturbation_ner_dict, f)
-
-def json_to_csv(file_name):
-    data = json.load(open(file_name, 'r'))
-    df = pd.DataFrame(data)
-    df.to_csv(file_name.replace('.json', '.csv'), index=False)
 
 

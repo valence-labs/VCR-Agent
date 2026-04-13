@@ -1,28 +1,24 @@
 from collections import Counter
 from typing import Any
-from sacrebleu.metrics import BLEU
-import sacrebleu
-from rouge_score import rouge_scorer
-from nltk.translate.meteor_score import meteor_score
+
 import numpy as np
+import sacrebleu
 from bert_score import score
-from sentence_transformers import SentenceTransformer, util
 from litellm import embedding as litellm_embedding
+from nltk.translate.meteor_score import meteor_score
+from rouge_score import rouge_scorer
+from sacrebleu.metrics import BLEU
+from sentence_transformers import SentenceTransformer, util
 
-from explain.llm._client import OpenAIClient
-from explain.llm import create_client
 from explain.eval.score.score_util import get_primitives_from_structure_hypothesis
-
-
-
-
+from explain.llm import create_client
 
 
 class AccuracyEvaluator:
     """
     Checks the syntax and schema gates of the generated explanations.
     """
-    
+
     def __init__(self,  **kwargs):
         self.embedding_client = create_client(provider='openai')
         self.embedding = self.embedding_client.client.sync_client.embeddings
@@ -54,7 +50,7 @@ class AccuracyEvaluator:
         else:
             try:
                 bleu_score = bleu_metric.corpus_score(gen_text, [gt_text]).score/100
-            except:
+            except Exception:
                 bleu_score = 0.0
         # ROUGE micro: concatenate sentences into one string each
         rouge_scorer_micro = rouge_scorer.RougeScorer(["rouge1", "rouge2", "rougeL"], use_stemmer=True)
@@ -68,7 +64,7 @@ class AccuracyEvaluator:
         # sentence-level BLEU (sacrebleu.sentence_bleu) then average
         bleu_vals = []
 
-        for r, h in zip(gt_text, gen_text):
+        for r, h in zip(gt_text, gen_text, strict=False):
             # sentence BLEU
             bleu_vals.append(sacrebleu.sentence_bleu(h, [r]).score)
 
@@ -96,7 +92,7 @@ class AccuracyEvaluator:
         for key in token_score.keys():
             if np.isnan(token_score[key]):
                 token_score[key] = 0
-            else:   
+            else:
                 token_score[key] = round(token_score[key], 4)
 
         return token_score
@@ -122,7 +118,7 @@ class AccuracyEvaluator:
         return round(f1, 4)
 
     def get_openai_embedding(self, text, model='text-embedding-3-large'):
-        
+
         response = litellm_embedding(model=model, input=text)
         return response.data[0].embedding
 
@@ -135,8 +131,8 @@ class AccuracyEvaluator:
         if mode == 'BERTScore':
             precision, recall, f1 = score([gt_text], [gen_text], lang='en')
             return round(f1.item(), 4)
-        
-        
+
+
         elif mode == 'SentenceTransformers':
             model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")  # strong 768-d encoder
 

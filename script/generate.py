@@ -1,23 +1,23 @@
-import os
-import json
 import argparse
-from tqdm import tqdm
-import pandas as pd
-import wandb
-import time
+import json
+import os
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from explain.llm.data_generator import DataGenerator
-from explain.util import set_perturbation_ner_mapping
+import pandas as pd
+import wandb
+from tqdm import tqdm
+
 from explain.eval.score.evaluate import evaluate
-from explain.starkprimekg.starkprimekg_utils import get_kg_info
-from explain.starkprimekg.starkprimekg import StarkPrimeKG
 from explain.literature.harmonizome_utils import get_harmonizome_info
-from explain.literature.wikipedia_utils import get_wikipedia_info
 from explain.literature.paperqa_utils import get_paperqa_info
 from explain.literature.pubmed_utils import get_pubmed_info
-
+from explain.literature.wikipedia_utils import get_wikipedia_info
+from explain.llm.data_generator import DataGenerator
+from explain.starkprimekg.starkprimekg import StarkPrimeKG
+from explain.starkprimekg.starkprimekg_utils import get_kg_info
+from explain.util import set_perturbation_ner_mapping
 
 
 def parse_args():
@@ -78,7 +78,7 @@ def fetch_tool_info(tool_name):
         pubmed_info = data_generator.post_process_additional_info(pubmed_info, tool_name, perturbation)
         result["pubmed_info"] = pubmed_info
         result['additional'] = pubmed_info
-    
+
 
     end = time.time()
     result["elapsed"] = end - start
@@ -96,7 +96,7 @@ if __name__ == '__main__':
         index_tag = f'rxrx_{number_in_pert_path}_'
     else:
         index_tag = ''
-    perturbation_ner_mapping = json.load(open(args.pert_path, 'r'))
+    perturbation_ner_mapping = json.load(open(args.pert_path))
     perturbation_ner_mapping_data_indices = [index_tag + str(item['index']) for item in perturbation_ner_mapping]
     set_perturbation_ner_mapping(perturbation_ner_mapping, perturbation_ner_mapping_data_indices)
 
@@ -125,16 +125,16 @@ if __name__ == '__main__':
         perturbations = perturbations[:args.max_items]
     if os.path.exists(report_file_name):
         if report_file_name.endswith('.json'):
-            report_list = json.load(open(report_file_name, 'r'))
+            report_list = json.load(open(report_file_name))
         elif report_file_name.endswith('.csv'):
             report_list = pd.read_csv(report_file_name)
             report_list = report_list.to_dict(orient='records')
     if os.path.exists(structure_explain_file_name):
-        structure_explain_list = json.load(open(structure_explain_file_name, 'r'))
+        structure_explain_list = json.load(open(structure_explain_file_name))
     # load kg
     if any('kg' in tool for tool in args.tool_list):
         kg = StarkPrimeKG()
-    
+
 
     processed_structure_indices = set([d['index'] for d in structure_explain_list]) if len(structure_explain_list) > 0 else set()
     additional_info, paperqa_info, wikipedia_info, harmonizome_info, kg_info = "", "", "", "", ""
@@ -154,7 +154,7 @@ if __name__ == '__main__':
         perturbation_text = json.dumps(perturbation, indent=4)
         question = "**Q: How does the following perturbation influence the cell in the described context, mechanistically and functionally?**\n\n"
         question += perturbation_text
-        
+
         # Search for additional information
         if args.mode == 'explain-only' and len(report_list) > i:
             pass
@@ -220,7 +220,7 @@ if __name__ == '__main__':
         time_end = time.time()
         print(f"Time taken for structure explain generation: {time_end - time_start} seconds")
 
-        
+
         structure_explain_list.append(structure_explain_dict)
         processed_structure_indices.add(index)
 
@@ -233,11 +233,12 @@ if __name__ == '__main__':
             with open(structure_explain_file_name, 'w') as f:
                 json.dump(structure_explain_list, f)
 
-    if index_tag == "":
+    gt_path = 'data/curation_v1/results/structure-explain-results-v4-claude4.csv'
+    if index_tag == "" and os.path.exists(gt_path):
         # Do the evaluation for the dataset with GT (EC)
         gen_data = structure_explain_list
         gen_data.sort(key=lambda x: str(x['index']))
-        gt_data = pd.read_csv('data/curation_v1/results/structure-explain-results-v4-claude4.csv')[:len(gen_data)]
+        gt_data = pd.read_csv(gt_path)[:len(gen_data)]
         gt_data = gt_data.to_dict(orient='records')
         gt_data.sort(key=lambda x: str(x['index']))
 

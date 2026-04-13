@@ -1,9 +1,11 @@
-from operator import itemgetter
 import json
-import requests
 import sys
+from operator import itemgetter
+
+import requests
 
 from explain.util import extract_entity_from_text
+
 
 def get_pubmed_info(index, perturbation, question, num_papers, mode='ner', paper_info_column=['title', 'abstract']):
     '''
@@ -11,14 +13,14 @@ def get_pubmed_info(index, perturbation, question, num_papers, mode='ner', paper
     fast: use fastrag server (if not, use AbstractRetriever)
     ner: use ner entities (if not, use question text)
     '''
-    if 'ner' in mode:   
+    if 'ner' in mode:
         perturbation_text = json.dumps(perturbation, indent=4)
         entities = extract_entity_from_text(perturbation_text, index)
         query = ', '.join(entities.keys())
     else:
         query = question
 
-    url = f"http://localhost:8003/find_matches"
+    url = "http://localhost:8003/find_matches"
     payload = {"query": query, "k": num_papers+10}
     try:
         r = requests.post(url, json=payload, timeout=60)
@@ -35,7 +37,7 @@ def get_pubmed_info(index, perturbation, question, num_papers, mode='ner', paper
     documents = [{'abstract': doc['abstract'], 'pmid': doc['pmid'], 'title': doc['title'], 'authors': doc['authors'], 'publication_year': doc['publication_year']} for doc in data]
 
     papers_info = []
-    for i, abstract in enumerate(documents):
+    for abstract in documents:
         if abstract['abstract'] is None or abstract['abstract'] == 'Abstract not found':
             continue
         paper_info = {}
@@ -49,7 +51,7 @@ def get_pubmed_info(index, perturbation, question, num_papers, mode='ner', paper
             break
 
     get_ac = itemgetter(*paper_info_column)
-    papers_info = [dict(zip(paper_info_column, get_ac(d))) for d in papers_info if all(k in d for k in paper_info_column)]
+    papers_info = [dict(zip(paper_info_column, get_ac(d), strict=False)) for d in papers_info if all(k in d for k in paper_info_column)]
 
 
     return papers_info

@@ -20,7 +20,7 @@ def create_client(model: str | None = None, provider: str = "litellm", **kwargs)
         "anthropic": "claude-sonnet-4@20250514",
         "gemini": "gemini-2.5-flash",
         "openai": "gpt-4.1",
-        "litellm": "claude-sonnet-4@20250514",
+        "litellm": "anthropic/claude-sonnet-4-20250514",
     }
 
     if model is None:
