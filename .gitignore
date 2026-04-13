@@ -219,3 +219,7 @@ sbatch_log/
 wandb/
 unsloth_compiled_cache/
 slurm/
+.agent/
+.claude/
+.codex/
+processed_placeholders/
