@@ -1,4 +1,6 @@
-# Data Generation Workflow
+# VCR-Agent (Towards Autonomous Mechanistic Reasoning in Virtual Cells)
+
+![VCR-Agent](assets/fig1_main_v2.png)
 
 An LLM data generation agent that integrates multiple tools (NER, PubMedSearch, KG search, Wikipedia, Harmonizome) to generate structured biological explanations. Includes an evaluation framework with token-based, embedding-based, and LLM-judging metrics.
 
