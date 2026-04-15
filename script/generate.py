@@ -28,7 +28,7 @@ def parse_args():
                         default='test')
     parser.add_argument('--experiment_name', type=str, help='Experiment name',
                         default='test')
-    parser.add_argument('--tool_list', type=json.loads, default=["kg-ner"], help='Comma-separated list of tools (e.g., wikipedia)')
+    parser.add_argument('--tool_list', type=json.loads, default=["pubmed-fast-ner", "kg-ner", "harmonizome", "wikipedia"], help='Comma-separated list of tools (e.g., wikipedia)')
     parser.add_argument('--wandb_mode', type=str, default='disabled')
     parser.add_argument('--mode', type=str, default='report-explain',
         help='Mode to run the experiment (report-explain, explain-only)')

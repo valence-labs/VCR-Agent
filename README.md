@@ -2,14 +2,16 @@
 
 ![VCR-Agent](assets/fig1_main_v2.png)
 
-An LLM data generation agent that integrates multiple tools (NER, PubMedSearch, KG search, Wikipedia, Harmonizome) to generate structured biological explanations. Includes an evaluation framework with token-based, embedding-based, and LLM-judging metrics.
+This is the official code repository for the paper titled [Towards Autonomous Mechanistic Reasoning in Virtual Cells](https://arxiv.org/abs/2604.11661).
 
-## Workflow Overview
+Abstract: Large language models (LLMs) have recently gained significant attention as a promising approach to accelerate scientific discovery. However, their application in open-ended scientific domains such as biology remains limited, primarily due to the lack of factually grounded and actionable explanations. To address this, we introduce a structured explanation formalism for virtual cells that represents biological reasoning as mechanistic action graphs, enabling systematic verification and falsification. Building upon this, we propose VCR-Agent, a multi-agent framework that integrates biologically grounded knowledge retrieval with a verifier-based filtering approach to generate and validate mechanistic reasoning autonomously. Using this framework, we release VC-Traces dataset, which consists of verified mechanistic explanations derived from the Tahoe-100M atlas. Empirically, we demonstrate that training with these explanations improves factual precision and provides a more effective supervision signal for downstream gene expression prediction. These results underscore the importance of reliable mechanistic reasoning for virtual cells, achieved through the synergy of multi-agent and rigorous verification.
+
+
+## Overview
 
 1. **Input**: Perturbation + Context data (JSON)
 2. **Preprocessing**: NER entity extraction (HunFlair2) + PubChem synonym search
-3. **LLM Agent**: Report and structured explanation generation with external tools
-4. **Evaluation**: Token-based, Embedding-based, LLM-judging
+3. **Multi-Agent**: Report and structured explanation generation with external tools
 
 ## Setup
 
@@ -120,7 +122,7 @@ DATA_DIR=data/curation_v1 uv run script/preprocess.py --input_path "$INPUT_PATH"
 
 The preprocessed output adds `perturbation_entity` and `context_entity` fields (NER results) and optional `pubchem_info` for chemical perturbations.
 
-## LLM Agent and Evaluation
+## Multi-Agent
 
 The agent generates both a report and structured explanation using external tools.
 
@@ -151,7 +153,7 @@ DATA_DIR=data/curation_v1 uv run script/generate.py \
   --experiment_name multi_tool_order \
   --wandb_mode disabled \
   --mode report-explain \
-  --model_type litellm \
+  --model_type anthropic \
   --tool_list '["pubmed-fast-ner", "kg-ner", "harmonizome", "wikipedia"]' \
   --folder_name multi_tool \
   --pert_path "$PREPROCESSED_PATH" \
@@ -165,18 +167,17 @@ kill $EMBED_PID $JULIA_PID || true
 
 | Argument | Default | Description |
 |----------|---------|-------------|
-| `--model_type` | `litellm` | LLM provider (`litellm`, `anthropic`, `openai`, `gemini`). Use `litellm` with API keys in `.env` |
-| `--tool_list` | `["kg-ner"]` | JSON list of tools to use |
+| `--model_type` | `anthropic` | LLM provider (`anthropic`, `openai`, `gemini`). Use `litellm` with API keys in `.env` |
+| `--tool_list` | `["pubmed-fast-ner", "kg-ner", "harmonizome", "wikipedia"]` | JSON list of tools to use |
 | `--mode` | `report-explain` | `report-explain` or `explain-only` |
-| `--kg_with_rel` | `false` | Include KG relation info |
+| `--kg_with_rel` | `true` | Include KG relation info |
 | `--wandb_mode` | `disabled` | W&B logging (`online`, `offline`, `disabled`) |
 | `--max_items` | `0` | Limit perturbations to process (0 = all) |
-| `--pert_path` | `data/perturbation_ner_mapping.json` | Preprocessed perturbation file |
+| `--pert_path` | `` | Preprocessed perturbation file (Result of preprocessing step) |
 
 ## Notebooks
 
 - `notebooks/data-generation/data_generation.ipynb` - Interactive data generation walkthrough
-- `notebooks/data-generation/kg_ner.ipynb` - KG NER integration demo
 
 ## Troubleshooting
 
