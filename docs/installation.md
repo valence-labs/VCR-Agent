@@ -10,11 +10,11 @@
 
 ### 1. Clone Repository
 ```bash
-git clone git@github.com:recursionpharma/hooke-explain.git
-cd hooke-explain
+git clone <repository-url>
+cd 
 ```
 
-### 2. Install Main Project (hooke-explain)
+### 2. Install Main Project ()
 ```bash
 # Install dependencies
 uv sync

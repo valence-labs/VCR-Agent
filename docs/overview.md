@@ -2,7 +2,7 @@
 
 ## Project Goals
 
-Hooke Explain is a framework for generating and verifying biological hypotheses using LLM-callable tools, designed for both evaluation and multi-turn reinforcement learning (RL) training.
+ is a framework for generating and verifying biological hypotheses using LLM-callable tools, designed for both evaluation and multi-turn reinforcement learning (RL) training.
 This system enables Large Language Models (LLMs) to systematically verify biological hypotheses through:
 
 - **Verification tools** with detailed standardized JSON outputs (including the `reward`  and `feedback`  keys), and pydantic model schema

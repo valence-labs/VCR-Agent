@@ -9,7 +9,7 @@ from explain.util import extract_entity_from_text
 
 
 def search(query, num_papers=10):
-    Entrez.email = 'yunhuijang@kaist.ac.kr'
+    Entrez.email = 'anonymous@example.com'
     handle = Entrez.esearch(db='pubmed',
     sort='relevance',
     retmax=str(num_papers),
@@ -20,7 +20,7 @@ def search(query, num_papers=10):
 
 def fetch_details(id_list):
     ids = ','.join(id_list)
-    Entrez.email = 'yunhuijang@kaist.ac.kr'
+    Entrez.email = 'anonymous@example.com'
     handle = Entrez.efetch(db='pubmed',
     retmode='xml',
     id=ids)

@@ -989,7 +989,7 @@ wheels = [
 ]
 
 [[package]]
-name = "hooke-explain"
+name = ""
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
@@ -1055,7 +1055,7 @@ requires-dist = [
     { name = "google-cloud", specifier = ">=0.34.0" },
     { name = "google-cloud-secret-manager", specifier = ">=2.24.0" },
     { name = "google-genai", specifier = ">=1.28.0" },
-    { name = "hooke-explain", extras = ["dev"], marker = "extra == 'all'" },
+    { name = "", extras = ["dev"], marker = "extra == 'all'" },
     { name = "langchain-community", specifier = ">=0.3.27" },
     { name = "litellm", specifier = ">=1.75.5" },
     { name = "loguru", specifier = ">=0.7.3" },

@@ -1,10 +1,10 @@
 [project]
-name = "hooke-explain"
+name = ""
 version = "0.1.0"
-description = "Global repository for the Hooke Explain project"
+description = ""
 readme = "README.md"
 authors = [
-    {name = "Recursion Pharmaceuticals", email = "devs@recursionpharma.com"},
+    {name = "Anonymous"},
 ]
 requires-python = ">=3.12,<3.13"
 dependencies = [
@@ -45,7 +45,7 @@ dev = [
     "ruff",
 ]
 
-all = ["hooke-explain[dev]"]
+all = [""]
 
 [build-system]
 requires = [

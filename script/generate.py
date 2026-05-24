@@ -102,10 +102,10 @@ if __name__ == '__main__':
 
 
     if args.wandb_id != "":
-        wandb.init(entity='valencelabs', project="hooke-explain-datagen", mode=args.wandb_mode, name=f"{args.experiment_name}_{args.tool_list}_{args.kg_num_neighbor}",
+        wandb.init(project="", mode=args.wandb_mode, name=f"{args.experiment_name}_{args.tool_list}_{args.kg_num_neighbor}",
         id=args.wandb_id, resume=True)
     else:
-        wandb.init(entity='valencelabs', project="hooke-explain-datagen", mode=args.wandb_mode, name=f"{args.experiment_name}_{args.tool_list}_{args.kg_num_neighbor}")
+        wandb.init(project="", mode=args.wandb_mode, name=f"{args.experiment_name}_{args.tool_list}_{args.kg_num_neighbor}")
     wandb.config.update(args)
 
     data_generator = DataGenerator(args.model_type, args.tool_list, order=args.order, pert_path=args.pert_path)
